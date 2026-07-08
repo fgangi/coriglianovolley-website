@@ -9,9 +9,7 @@ da un **pannello web** senza toccare il codice.
 
 - **[Astro](https://astro.build)** — genera il sito in pagine statiche (frontend).
 - **[Sanity](https://www.sanity.io)** — CMS headless: il pannello redazione è integrato su `/admin`.
-- **Hosting** — pensato per Cloudflare Pages / Netlify (build statica + CDN).
-
-La proposta di struttura approvata è in [`docs/`](docs/).
+- **Hosting** — pensato per Cloudflare Pages (build statica + CDN).
 
 ```
 web/
@@ -23,7 +21,6 @@ web/
 │  └─ sanity/schemaTypes/   Definizione dei contenuti (i "moduli" della redazione)
 ├─ sanity.config.ts     Configurazione del pannello /admin
 └─ astro.config.mjs
-docs/                   Documentazione (proposta al committente)
 ```
 
 ## Sviluppo in locale
@@ -69,6 +66,7 @@ con link ufficiale) — la Lega non offre un widget pubblico da incorporare.
 
 ## Deploy
 
-Build di produzione: `web/` con comando `npm run build`, cartella di output `web/dist`.
-Impostare su Cloudflare/Netlify le variabili `PUBLIC_SANITY_PROJECT_ID` e `PUBLIC_SANITY_DATASET`,
-e aggiungere l'origine del sito di produzione tra i **CORS origins** del progetto Sanity.
+Pensato per **Cloudflare Pages**. Build di produzione: cartella radice `web/`, comando
+`npm run build`, output `dist`. Impostare le variabili `PUBLIC_SANITY_PROJECT_ID` e
+`PUBLIC_SANITY_DATASET`, e aggiungere l'origine del sito di produzione tra i **CORS origins**
+del progetto Sanity.

@@ -14,6 +14,8 @@ const { PUBLIC_SANITY_PROJECT_ID, PUBLIC_SANITY_DATASET } = loadEnv(
 // https://astro.build/config
 export default defineConfig({
   site: 'https://www.coriglianovolley.it',
+  // Espone il dev server sulla rete locale (test da mobile via IP del PC).
+  server: { host: true },
   integrations: [
     sanity({
       projectId: PUBLIC_SANITY_PROJECT_ID,
