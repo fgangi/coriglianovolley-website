@@ -1,0 +1,22 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import PageHero from '../../components/PageHero.astro';
+---
+<Layout title="Chi siamo">
+  <PageHero eyebrow="La squadra" title="Chi siamo" />
+  <section class="section">
+    <div class="container narrow prose">
+      <p class="lead">Il ritorno in Serie A3 è il traguardo di un progetto sportivo che affonda le radici nella nostra città e nella passione di tutta la comunità.</p>
+      <p>Questo testo è un segnaposto: la storia, i valori e gli obiettivi della società verranno forniti dalla dirigenza e inseriti qui. Racconta chi siamo, da dove veniamo e dove vogliamo arrivare.</p>
+      <h2>La nostra missione</h2>
+      <p>Portare la pallavolo ai massimi livelli sul territorio, valorizzare i giovani del vivaio e costruire un legame forte con i tifosi e le famiglie.</p>
+      <h2>Il palazzetto</h2>
+      <p>Le informazioni sull'impianto di gioco, su come raggiungerlo e sugli orari verranno completate nella sezione contatti.</p>
+    </div>
+  </section>
+</Layout>
+<style>
+  .prose { display: flex; flex-direction: column; gap: 1.1rem; }
+  .prose h2 { margin-top: 1.2rem; }
+  .prose p { color: var(--ink-soft); }
+</style>

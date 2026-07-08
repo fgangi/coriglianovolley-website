@@ -1,0 +1,30 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import PageHero from '../../components/PageHero.astro';
+const cards = [
+  { href: '/squadra/roster', title: 'Roster', desc: 'I giocatori della prima squadra, divisi per ruolo.' },
+  { href: '/squadra/staff', title: 'Staff', desc: 'Allenatori, dirigenza e staff medico.' },
+  { href: '/squadra/chi-siamo', title: 'Chi siamo', desc: 'La storia e i valori della società.' },
+];
+---
+<Layout title="Squadra">
+  <PageHero eyebrow="La squadra" title="Squadra" lead="Chi scende in campo e chi lavora dietro le quinte." />
+  <section class="section">
+    <div class="container">
+      <div class="grid cols-3">
+        {cards.map((c) => (
+          <a class="card hub" href={c.href}>
+            <h3>{c.title}</h3>
+            <p>{c.desc}</p>
+            <span class="more">Vai →</span>
+          </a>
+        ))}
+      </div>
+    </div>
+  </section>
+</Layout>
+<style>
+  .hub { padding: 26px 24px; display: flex; flex-direction: column; gap: 8px; transition: transform .14s ease, border-color .14s ease; }
+  .hub:hover { transform: translateY(-3px); border-color: var(--ink-faint); }
+  .hub .more { margin-top: 8px; color: var(--accent); font-weight: 650; font-size: .9rem; }
+</style>

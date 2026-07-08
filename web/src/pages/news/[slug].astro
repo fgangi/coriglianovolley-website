@@ -1,0 +1,49 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { sfetch, img, richText, formatData } from '../../lib/sanity';
+import { newsSlugsQuery, newsBySlugQuery } from '../../lib/queries';
+
+export async function getStaticPaths() {
+  const slugs = await sfetch<any[]>(newsSlugsQuery, {}, []);
+  return slugs.filter((s) => s.slug).map((s) => ({ params: { slug: s.slug } }));
+}
+
+const { slug } = Astro.params;
+const post = await sfetch<any>(newsBySlugQuery, { slug }, null);
+if (!post) return Astro.redirect('/news');
+const cover = img(post.copertina, 1200, 630);
+const html = richText(post.corpo);
+---
+<Layout title={post.titolo} description={post.estratto}>
+  <article class="post">
+    <div class="container narrow">
+      <a class="back" href="/news">← Tutte le news</a>
+      <div class="post-meta">
+        <span class="pill">{post.settore === 'giovanile' ? 'Settore giovanile' : 'Prima squadra'}</span>
+        <span class="tag">{formatData(post.data)}</span>
+      </div>
+      <h1>{post.titolo}</h1>
+      {post.estratto && <p class="lead">{post.estratto}</p>}
+    </div>
+    {cover && <figure class="cover"><div class="container narrow"><img src={cover} alt={post.titolo} /></div></figure>}
+    <div class="container narrow">
+      {html ? <div class="prose" set:html={html} /> : <p class="muted">Contenuto in aggiornamento.</p>}
+    </div>
+  </article>
+</Layout>
+<style>
+  .post { padding: clamp(30px, 6vw, 60px) 0 clamp(40px, 8vw, 80px); }
+  .back { display: inline-block; margin-bottom: 20px; color: var(--accent); font-weight: 600; font-size: .9rem; }
+  .post-meta { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+  .post h1 { margin-bottom: 12px; }
+  .cover { margin: clamp(24px, 4vw, 40px) 0; }
+  .cover img { width: 100%; border-radius: var(--radius); border: 1px solid var(--line); }
+  .prose { display: flex; flex-direction: column; gap: 1.05rem; font-size: 1.05rem; line-height: 1.7; }
+  .prose :global(h2) { font-size: 1.5rem; margin-top: 1rem; }
+  .prose :global(h3) { font-size: 1.2rem; margin-top: .6rem; }
+  .prose :global(p) { color: var(--ink-soft); }
+  .prose :global(a) { color: var(--accent); text-decoration: underline; }
+  .prose :global(blockquote) { border-left: 3px solid var(--accent); padding-left: 16px; color: var(--ink-soft); font-style: italic; margin: 0; }
+  .prose :global(img) { border-radius: var(--radius); border: 1px solid var(--line); }
+  .prose :global(ul), .prose :global(ol) { color: var(--ink-soft); padding-left: 1.3rem; display: flex; flex-direction: column; gap: .4rem; }
+</style>

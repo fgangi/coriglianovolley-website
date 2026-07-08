@@ -1,0 +1,66 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import PageHero from '../../components/PageHero.astro';
+import { sfetch, img } from '../../lib/sanity';
+import { rosterQuery } from '../../lib/queries';
+
+const roster = await sfetch<any[]>(rosterQuery, {}, []);
+const RUOLI: Record<string, string> = {
+  palleggiatore: 'Palleggiatori', opposto: 'Opposti', schiacciatore: 'Schiacciatori',
+  centrale: 'Centrali', libero: 'Liberi',
+};
+const ordine = ['palleggiatore', 'opposto', 'schiacciatore', 'centrale', 'libero'];
+const gruppi = ordine
+  .map((r) => ({ ruolo: r, label: RUOLI[r], giocatori: roster.filter((g) => g.ruolo === r) }))
+  .filter((g) => g.giocatori.length > 0);
+---
+<Layout title="Roster">
+  <PageHero eyebrow="La squadra" title="Roster" lead="I giocatori della prima squadra per la stagione in corso." />
+  <section class="section">
+    <div class="container">
+      {roster.length === 0 ? (
+        <div class="empty"><strong>Roster non ancora inserito</strong>I giocatori aggiunti nel pannello appariranno qui, raggruppati per ruolo.</div>
+      ) : (
+        gruppi.map((g) => (
+          <div class="ruolo-group">
+            <h2 class="ruolo-title">{g.label}</h2>
+            <div class="grid cols-4">
+              {g.giocatori.map((p) => {
+                const foto = img(p.foto, 480, 560);
+                return (
+                  <div class="card player">
+                    <div class="ph">
+                      {foto ? <img src={foto} alt={`${p.nome} ${p.cognome}`} loading="lazy" /> : <div class="ph-empty" aria-hidden="true"></div>}
+                      {p.numero != null && <span class="num">{p.numero}</span>}
+                    </div>
+                    <div class="pinfo">
+                      <h3>{p.nome} <strong>{p.cognome}</strong></h3>
+                      <span class="tag">{[p.altezza ? p.altezza + ' cm' : null, p.nazionalita].filter(Boolean).join(' · ')}</span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        ))
+      )}
+    </div>
+  </section>
+</Layout>
+<style>
+  .ruolo-group + .ruolo-group { margin-top: clamp(30px, 5vw, 52px); }
+  .ruolo-title { font-size: 1rem; text-transform: uppercase; letter-spacing: .12em; color: var(--ink-faint); font-weight: 700;
+    padding-bottom: 10px; border-bottom: 1px solid var(--line); margin-bottom: 22px; }
+  .player { display: flex; flex-direction: column; }
+  .ph { position: relative; aspect-ratio: 4 / 5; background: var(--surface-2); overflow: hidden; }
+  .ph img { width: 100%; height: 100%; object-fit: cover; }
+  .ph-empty { width: 100%; height: 100%; background:
+    radial-gradient(circle at 50% 38%, var(--surface) 0 30%, transparent 31%),
+    linear-gradient(180deg, var(--surface-2), var(--surface)); }
+  .num { position: absolute; top: 10px; right: 12px; font-weight: 900; font-size: 1.6rem; color: var(--accent);
+    background: var(--ground); width: 42px; height: 42px; border-radius: 10px; display: grid; place-items: center; box-shadow: var(--shadow); }
+  .pinfo { padding: 14px 16px 18px; }
+  .pinfo h3 { font-weight: 500; }
+  .pinfo h3 strong { font-weight: 820; }
+  .pinfo .tag { display: block; margin-top: 4px; }
+</style>

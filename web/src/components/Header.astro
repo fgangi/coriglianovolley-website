@@ -1,0 +1,43 @@
+---
+interface Props { nomeSquadra: string; bigliettiUrl?: string; }
+const { nomeSquadra, bigliettiUrl } = Astro.props;
+const path = Astro.url.pathname.replace(/\/$/, '') || '/';
+const links = [
+  { href: '/', label: 'Home' },
+  { href: '/squadra', label: 'Squadra' },
+  { href: '/partite', label: 'Partite' },
+  { href: '/news', label: 'News' },
+  { href: '/settore-giovanile', label: 'Giovanile' },
+  { href: '/gallery', label: 'Gallery' },
+  { href: '/sponsor', label: 'Sponsor' },
+  { href: '/contatti', label: 'Contatti' },
+];
+const isActive = (href: string) => (href === '/' ? path === '/' : path === href || path.startsWith(href + '/'));
+const iniziali = nomeSquadra.split(' ').map((w) => w[0]).join('').slice(0, 2).toUpperCase();
+---
+<header class="site-header">
+  <div class="container bar">
+    <a class="brand" href="/">
+      <span class="mark">{iniziali}</span>
+      <span>{nomeSquadra}</span>
+    </a>
+    <button class="nav-toggle" aria-label="Apri menu" aria-expanded="false" data-nav-toggle>
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </button>
+    <nav class="nav" data-nav>
+      {links.map((l) => (
+        <a href={l.href} aria-current={isActive(l.href) ? 'page' : undefined}>{l.label}</a>
+      ))}
+      {bigliettiUrl && <a class="cta" href={bigliettiUrl} target="_blank" rel="noopener">Biglietti</a>}
+    </nav>
+  </div>
+</header>
+<script>
+  const toggle = document.querySelector('[data-nav-toggle]');
+  const nav = document.querySelector('[data-nav]');
+  toggle?.addEventListener('click', () => {
+    const open = nav?.getAttribute('data-open') === 'true';
+    nav?.setAttribute('data-open', String(!open));
+    toggle.setAttribute('aria-expanded', String(!open));
+  });
+</script>

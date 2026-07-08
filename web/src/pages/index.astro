@@ -1,0 +1,115 @@
+---
+import Layout from '../layouts/Layout.astro';
+import NewsCard from '../components/NewsCard.astro';
+import PartitaRow from '../components/PartitaRow.astro';
+import { sfetch, img, formatData } from '../lib/sanity';
+import {
+  settingsQuery, risultatiQuery, prossimePartiteQuery,
+  newsInEvidenzaQuery, newsListQuery, sponsorQuery,
+} from '../lib/queries';
+
+const settings = await sfetch<any>(settingsQuery, {}, null);
+const [risultati, prossime, evidenza, ultime, sponsor] = await Promise.all([
+  sfetch<any[]>(risultatiQuery, { limit: 3 }, []),
+  sfetch<any[]>(prossimePartiteQuery, { limit: 1 }, []),
+  sfetch<any[]>(newsInEvidenzaQuery, {}, []),
+  sfetch<any[]>(newsListQuery, { settore: 'prima-squadra', limit: 3 }, []),
+  sfetch<any[]>(sponsorQuery, {}, []),
+]);
+const news = (evidenza.length ? evidenza : ultime).slice(0, 3);
+const prossima = settings?.prossimaPartita ?? prossime[0] ?? null;
+const nome = settings?.nomeSquadra ?? 'Corigliano Volley';
+---
+<Layout>
+  <!-- HERO -->
+  <section class="hero">
+    <div class="container hero-inner">
+      <div class="hero-copy">
+        <span class="pill">Serie A3 Maschile{settings?.stagione ? ` · ${settings.stagione}` : ''}</span>
+        <h1>{nome}</h1>
+        <p class="lead">La casa ufficiale della nostra squadra: risultati, calendario, roster, news e settore giovanile. Forza ragazzi.</p>
+        <div class="hero-cta">
+          <a class="btn primary" href="/partite">Calendario &amp; risultati</a>
+          <a class="btn ghost" href="/squadra">Conosci la squadra</a>
+        </div>
+      </div>
+      {prossima && (
+        <aside class="next-match card">
+          <span class="eyebrow">Prossima partita</span>
+          <div class="nm-team">{prossima.dove === 'casa' ? nome : prossima.avversario}</div>
+          <div class="nm-vs">vs</div>
+          <div class="nm-team">{prossima.dove === 'casa' ? prossima.avversario : nome}</div>
+          <div class="nm-when">{formatData(prossima.data, true)}</div>
+          {prossima.luogo && <div class="nm-where">{prossima.dove === 'casa' ? '🏠' : '✈️'} {prossima.luogo}</div>}
+        </aside>
+      )}
+    </div>
+  </section>
+
+  <!-- RISULTATI -->
+  <section class="section">
+    <div class="container">
+      <div class="section-head between">
+        <div><span class="eyebrow">Campo</span><h2>Ultimi risultati</h2></div>
+        <a class="btn" href="/partite">Tutte le partite</a>
+      </div>
+      {risultati.length ? (
+        <div class="grid cols-3">{risultati.map((m) => <PartitaRow m={m} />)}</div>
+      ) : (
+        <div class="empty"><strong>Ancora nessun risultato</strong>I risultati appariranno qui dopo le prime giornate.</div>
+      )}
+    </div>
+  </section>
+
+  <!-- NEWS -->
+  <section class="section">
+    <div class="container">
+      <div class="section-head between">
+        <div><span class="eyebrow">In evidenza</span><h2>Ultime news</h2></div>
+        <a class="btn" href="/news">Tutte le news</a>
+      </div>
+      {news.length ? (
+        <div class="grid cols-3">{news.map((n) => <NewsCard item={n} />)}</div>
+      ) : (
+        <div class="empty"><strong>Nessuna notizia pubblicata</strong>Le notizie inserite nel pannello appariranno qui.</div>
+      )}
+    </div>
+  </section>
+
+  <!-- SPONSOR -->
+  {sponsor.length > 0 && (
+    <section class="section">
+      <div class="container">
+        <div class="section-head"><span class="eyebrow">Insieme a noi</span><h2>I nostri partner</h2></div>
+        <div class="sponsor-strip">
+          {sponsor.map((sp) => {
+            const logo = img(sp.logo, 240);
+            const inner = logo ? <img src={logo} alt={sp.nome} loading="lazy" /> : <span>{sp.nome}</span>;
+            return sp.url ? <a href={sp.url} target="_blank" rel="noopener" class="sp">{inner}</a> : <div class="sp">{inner}</div>;
+          })}
+        </div>
+      </div>
+    </section>
+  )}
+</Layout>
+
+<style>
+  .hero { background: linear-gradient(180deg, var(--surface) 0%, var(--ground) 100%); border-bottom: 1px solid var(--line); }
+  .hero-inner { display: grid; grid-template-columns: 1.5fr 1fr; gap: clamp(24px, 5vw, 60px); align-items: center; padding: clamp(48px, 9vw, 110px) 0; }
+  @media (max-width: 860px) { .hero-inner { grid-template-columns: 1fr; } }
+  .hero-copy .pill { margin-bottom: 18px; }
+  .hero-copy h1 { margin: 0 0 14px; }
+  .hero-copy .lead { max-width: 46ch; }
+  .hero-cta { display: flex; gap: 12px; margin-top: 26px; flex-wrap: wrap; }
+  .next-match { padding: 26px 24px; text-align: center; box-shadow: var(--shadow); }
+  .next-match .eyebrow { display: block; margin-bottom: 14px; }
+  .nm-team { font-size: 1.3rem; font-weight: 820; letter-spacing: -.01em; }
+  .nm-vs { color: var(--ink-faint); font-size: .8rem; text-transform: uppercase; letter-spacing: .1em; margin: 6px 0; font-weight: 700; }
+  .nm-when { margin-top: 16px; font-weight: 600; color: var(--ink); }
+  .nm-where { color: var(--ink-faint); font-size: .9rem; margin-top: 4px; }
+  .sponsor-strip { display: flex; flex-wrap: wrap; gap: 14px; align-items: center; }
+  .sp { flex: 0 1 auto; min-width: 130px; height: 84px; display: grid; place-items: center; padding: 16px 22px;
+    background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); }
+  .sp img { max-height: 52px; width: auto; object-fit: contain; }
+  .sp span { font-weight: 700; color: var(--ink-soft); }
+</style>

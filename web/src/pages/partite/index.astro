@@ -1,0 +1,94 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import PageHero from '../../components/PageHero.astro';
+import PartitaRow from '../../components/PartitaRow.astro';
+import { sfetch, img, formatData } from '../../lib/sanity';
+import { calendarioQuery, classificaQuery } from '../../lib/queries';
+
+const [partite, classifica] = await Promise.all([
+  sfetch<any[]>(calendarioQuery, {}, []),
+  sfetch<any>(classificaQuery, {}, null),
+]);
+const prossime = partite.filter((m) => !m.giocata);
+const giocate = partite.filter((m) => m.giocata).reverse();
+const clImg = classifica?.modalita === 'immagine' ? img(classifica.immagine, 1000) : null;
+---
+<Layout title="Partite & classifica">
+  <PageHero eyebrow="Campo" title="Partite &amp; classifica" lead="Calendario, risultati e classifica aggiornata del girone." />
+
+  <section class="section">
+    <div class="container">
+      <!-- PROSSIME -->
+      <div class="section-head"><span class="eyebrow">In arrivo</span><h2>Prossime partite</h2></div>
+      {prossime.length ? (
+        <div class="grid cols-2">{prossime.map((m) => <PartitaRow m={m} />)}</div>
+      ) : (
+        <div class="empty"><strong>Nessuna partita in calendario</strong>Le partite inserite nel pannello appariranno qui.</div>
+      )}
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container">
+      <!-- RISULTATI -->
+      <div class="section-head"><span class="eyebrow">Archivio</span><h2>Risultati</h2></div>
+      {giocate.length ? (
+        <div class="grid cols-2">{giocate.map((m) => <PartitaRow m={m} />)}</div>
+      ) : (
+        <div class="empty"><strong>Ancora nessun risultato</strong>I risultati appariranno qui dopo le prime giornate.</div>
+      )}
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container">
+      <!-- CLASSIFICA -->
+      <div class="section-head between">
+        <div><span class="eyebrow">Girone</span><h2>Classifica</h2></div>
+        {classifica?.aggiornataAl && <span class="tag">Aggiornata al {formatData(classifica.aggiornataAl)}</span>}
+      </div>
+
+      {!classifica ? (
+        <div class="empty"><strong>Classifica non ancora pubblicata</strong>Verrà aggiornata dalla redazione (immagine o tabella) con il link ufficiale della Lega.</div>
+      ) : clImg ? (
+        <figure class="cl-img"><img src={clImg} alt="Classifica Serie A3" /></figure>
+      ) : classifica.righe?.length ? (
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>#</th><th>Squadra</th><th>Punti</th><th>G</th><th>V</th><th>P</th></tr></thead>
+            <tbody>
+              {classifica.righe.map((r: any, i: number) => (
+                <tr class={/corigliano/i.test(r.squadra ?? '') ? 'ours' : ''}>
+                  <td class="tabnums">{i + 1}</td>
+                  <td>{r.squadra}</td>
+                  <td class="tabnums"><strong>{r.punti ?? 0}</strong></td>
+                  <td class="tabnums">{r.giocate ?? '—'}</td>
+                  <td class="tabnums">{r.vinte ?? '—'}</td>
+                  <td class="tabnums">{r.perse ?? '—'}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : (
+        <div class="empty"><strong>Classifica in aggiornamento</strong></div>
+      )}
+
+      {classifica?.linkUfficiale && (
+        <a class="btn" style="margin-top:16px;" href={classifica.linkUfficiale} target="_blank" rel="noopener">
+          Classifica ufficiale su Legavolley →
+        </a>
+      )}
+    </div>
+  </section>
+</Layout>
+<style>
+  .cl-img { margin: 0; border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; background: var(--surface); }
+  .table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); }
+  table { border-collapse: collapse; width: 100%; min-width: 480px; }
+  th, td { text-align: left; padding: 12px 16px; border-bottom: 1px solid var(--line-soft); }
+  thead th { font-size: .72rem; text-transform: uppercase; letter-spacing: .08em; color: var(--ink-faint); background: var(--surface-2); }
+  tbody tr:last-child td { border-bottom: none; }
+  tr.ours { background: var(--accent-tint); }
+  tr.ours td { color: var(--accent-strong); font-weight: 650; }
+</style>

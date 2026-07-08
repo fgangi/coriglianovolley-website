@@ -1,0 +1,21 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import PageHero from '../../components/PageHero.astro';
+import NewsCard from '../../components/NewsCard.astro';
+import { sfetch } from '../../lib/sanity';
+import { newsListQuery } from '../../lib/queries';
+
+const news = await sfetch<any[]>(newsListQuery, { settore: 'prima-squadra', limit: 60 }, []);
+---
+<Layout title="News">
+  <PageHero eyebrow="Aggiornamenti" title="News" lead="Tutte le notizie della prima squadra." />
+  <section class="section">
+    <div class="container">
+      {news.length ? (
+        <div class="grid cols-3">{news.map((n) => <NewsCard item={n} />)}</div>
+      ) : (
+        <div class="empty"><strong>Nessuna notizia pubblicata</strong>Le notizie inserite nel pannello appariranno qui, dalla più recente.</div>
+      )}
+    </div>
+  </section>
+</Layout>

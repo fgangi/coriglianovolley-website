@@ -1,0 +1,42 @@
+---
+import { formatData } from '../lib/sanity';
+interface Props { m: any; }
+const { m } = Astro.props;
+const casa = m.dove === 'casa';
+const nostra = 'Corigliano';
+const sinistra = casa ? nostra : m.avversario;
+const destra = casa ? m.avversario : nostra;
+const giocata = m.giocata && m.setCasa != null && m.setTrasferta != null;
+const win = giocata && ((casa && m.setCasa > m.setTrasferta) || (!casa && m.setTrasferta > m.setCasa));
+---
+<div class={`match ${giocata ? 'played' : 'upcoming'}`}>
+  <div class="meta">
+    <span class="tag">{m.competizione ?? 'Serie A3'}{m.giornata ? ` · ${m.giornata}` : ''}</span>
+    <span class="tag">{formatData(m.data, !giocata)}</span>
+  </div>
+  <div class="teams">
+    <span class={`team ${casa ? 'ours' : ''}`}>{sinistra}</span>
+    {giocata
+      ? <span class={`score ${win ? 'win' : 'loss'}`}>{m.setCasa}<span class="sep">–</span>{m.setTrasferta}</span>
+      : <span class="vs">vs</span>}
+    <span class={`team right ${!casa ? 'ours' : ''}`}>{destra}</span>
+  </div>
+  {giocata && m.parziali && <div class="parziali tabnums">{m.parziali}</div>}
+  {!giocata && m.luogo && <div class="parziali">{casa ? '🏠 ' : '✈️ '}{m.luogo}</div>}
+  {m.reportUrl && <a class="report" href={m.reportUrl} target="_blank" rel="noopener">Report ufficiale →</a>}
+</div>
+<style>
+  .match { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px 18px; display: flex; flex-direction: column; gap: 10px; }
+  .match.upcoming { border-left: 3px solid var(--accent); }
+  .meta { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+  .teams { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 12px; }
+  .team { font-weight: 700; font-size: 1.02rem; }
+  .team.right { text-align: right; }
+  .team.ours { color: var(--accent); }
+  .vs { font-size: .8rem; color: var(--ink-faint); text-transform: uppercase; letter-spacing: .08em; font-weight: 700; }
+  .score { font-weight: 850; font-size: 1.5rem; font-variant-numeric: tabular-nums; letter-spacing: .02em; }
+  .score .sep { margin: 0 .3rem; color: var(--ink-faint); font-weight: 500; }
+  .score.win { color: var(--accent); }
+  .parziali { font-size: .86rem; color: var(--ink-faint); }
+  .report { font-size: .84rem; font-weight: 650; color: var(--accent); }
+</style>

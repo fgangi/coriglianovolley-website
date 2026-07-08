@@ -1,0 +1,55 @@
+---
+import Layout from '../layouts/Layout.astro';
+import PageHero from '../components/PageHero.astro';
+import { sfetch } from '../lib/sanity';
+import { settingsQuery } from '../lib/queries';
+
+const s = await sfetch<any>(settingsQuery, {}, null);
+const social = s?.social ?? {};
+const socialLinks = [
+  ['Instagram', social.instagram], ['Facebook', social.facebook], ['YouTube', social.youtube],
+  ['X', social.x], ['TikTok', social.tiktok],
+].filter(([, url]) => !!url);
+---
+<Layout title="Contatti">
+  <PageHero eyebrow="Scrivici" title="Contatti" lead="Come raggiungerci e restare in contatto con la società." />
+  <section class="section">
+    <div class="container">
+      <div class="grid cols-2">
+        <div class="card info">
+          <h3>Recapiti</h3>
+          <dl>
+            {s?.email && (<><dt>Email</dt><dd><a href={`mailto:${s.email}`}>{s.email}</a></dd></>)}
+            {s?.telefono && (<><dt>Telefono</dt><dd><a href={`tel:${s.telefono}`}>{s.telefono}</a></dd></>)}
+            {s?.indirizzo && (<><dt>Sede / palazzetto</dt><dd style="white-space:pre-line;">{s.indirizzo}</dd></>)}
+          </dl>
+          {!s?.email && !s?.telefono && !s?.indirizzo && (
+            <p class="muted">I recapiti verranno inseriti nel pannello, alla voce “Impostazioni sito”.</p>
+          )}
+          {socialLinks.length > 0 && (
+            <div class="social">
+              {socialLinks.map(([label, url]) => (<a class="btn" href={url} target="_blank" rel="noopener">{label}</a>))}
+            </div>
+          )}
+        </div>
+        <div class="card info">
+          <h3>Ufficio stampa &amp; sponsor</h3>
+          <p>Per collaborazioni, richieste stampa o opportunità di sponsorizzazione, scrivici all'indirizzo email della società: ti risponderemo il prima possibile.</p>
+          {s?.bigliettiUrl && (
+            <a class="btn primary" style="margin-top:14px;" href={s.bigliettiUrl} target="_blank" rel="noopener">Vai alla biglietteria →</a>
+          )}
+        </div>
+      </div>
+    </div>
+  </section>
+</Layout>
+<style>
+  .info { padding: 26px 24px; }
+  .info h3 { margin-bottom: 14px; }
+  dl { display: grid; grid-template-columns: auto 1fr; gap: 8px 20px; margin: 0; }
+  dt { color: var(--ink-faint); font-size: .82rem; text-transform: uppercase; letter-spacing: .06em; font-weight: 700; align-self: center; }
+  dd { margin: 0; font-weight: 550; }
+  dd a { color: var(--accent); }
+  .social { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 20px; }
+  .info p { color: var(--ink-soft); }
+</style>

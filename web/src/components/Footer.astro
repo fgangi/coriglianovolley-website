@@ -1,0 +1,53 @@
+---
+interface Props { settings: any; }
+const { settings } = Astro.props;
+const s = settings ?? {};
+const social = s.social ?? {};
+const anno = new Date().getFullYear();
+const socialLinks = [
+  ['Instagram', social.instagram], ['Facebook', social.facebook], ['YouTube', social.youtube],
+  ['X', social.x], ['TikTok', social.tiktok],
+].filter(([, url]) => !!url);
+---
+<footer class="site-footer">
+  <div class="container">
+    <div class="cols">
+      <div>
+        <div class="brand" style="color:#fff; margin-bottom:12px;">
+          <span class="mark">{(s.nomeSquadra ?? 'CV').split(' ').map((w:string)=>w[0]).join('').slice(0,2).toUpperCase()}</span>
+          <span>{s.nomeSquadra ?? 'Corigliano Volley'}</span>
+        </div>
+        <p style="color:#C9C2C2; max-width:34ch;">{s.stagione ? `Stagione ${s.stagione} · ` : ''}Serie A3 maschile.</p>
+        {socialLinks.length > 0 && (
+          <div class="social">
+            {socialLinks.map(([label, url]) => (<a href={url} target="_blank" rel="noopener">{label}</a>))}
+          </div>
+        )}
+      </div>
+      <div>
+        <h4>Naviga</h4>
+        <div class="fnav">
+          <a href="/squadra">Squadra</a>
+          <a href="/partite">Partite &amp; classifica</a>
+          <a href="/news">News</a>
+          <a href="/settore-giovanile">Settore giovanile</a>
+          <a href="/gallery">Gallery</a>
+          <a href="/sponsor">Sponsor</a>
+        </div>
+      </div>
+      <div>
+        <h4>Contatti</h4>
+        <div class="fnav">
+          {s.email && <a href={`mailto:${s.email}`}>{s.email}</a>}
+          {s.telefono && <a href={`tel:${s.telefono}`}>{s.telefono}</a>}
+          {s.indirizzo && <span style="color:#C9C2C2; white-space:pre-line;">{s.indirizzo}</span>}
+          {s.bigliettiUrl && <a href={s.bigliettiUrl} target="_blank" rel="noopener">Biglietteria</a>}
+        </div>
+      </div>
+    </div>
+    <div class="foot-bottom">
+      <span>© {anno} {s.nomeSquadra ?? 'Corigliano Volley'}</span>
+      <span>Sito realizzato con Astro + Sanity</span>
+    </div>
+  </div>
+</footer>

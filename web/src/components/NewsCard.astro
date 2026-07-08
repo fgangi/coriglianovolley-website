@@ -1,0 +1,31 @@
+---
+import { img, formatData } from '../lib/sanity';
+interface Props { item: any; }
+const { item } = Astro.props;
+const cover = img(item.copertina, 640, 400);
+---
+<a class="card news-card" href={`/news/${item.slug}`}>
+  <div class="thumb">
+    {cover ? <img src={cover} alt={item.titolo} loading="lazy" /> : <div class="thumb-ph" aria-hidden="true"></div>}
+    {item.settore === 'giovanile' && <span class="pill on-thumb">Giovanile</span>}
+  </div>
+  <div class="body">
+    <span class="tag">{formatData(item.data)}</span>
+    <h3>{item.titolo}</h3>
+    {item.estratto && <p>{item.estratto}</p>}
+    <span class="more">Leggi →</span>
+  </div>
+</a>
+<style>
+  .news-card { display: flex; flex-direction: column; transition: transform .14s ease, border-color .14s ease; }
+  .news-card:hover { transform: translateY(-3px); border-color: var(--ink-faint); }
+  .thumb { position: relative; aspect-ratio: 16 / 10; background: var(--surface-2); overflow: hidden; }
+  .thumb img { width: 100%; height: 100%; object-fit: cover; }
+  .thumb-ph { width: 100%; height: 100%;
+    background: repeating-linear-gradient(135deg, var(--surface-2), var(--surface-2) 12px, var(--surface) 12px, var(--surface) 24px); }
+  .pill.on-thumb { position: absolute; top: 10px; left: 10px; background: var(--accent); color: var(--accent-ink); }
+  .body { padding: 16px 18px 18px; display: flex; flex-direction: column; gap: 6px; }
+  .body h3 { margin: 2px 0; }
+  .body p { font-size: .92rem; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .more { margin-top: 6px; font-size: .88rem; font-weight: 650; color: var(--accent); }
+</style>

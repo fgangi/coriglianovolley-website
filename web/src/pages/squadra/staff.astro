@@ -1,0 +1,50 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import PageHero from '../../components/PageHero.astro';
+import { sfetch, img } from '../../lib/sanity';
+import { staffQuery } from '../../lib/queries';
+
+const staff = await sfetch<any[]>(staffQuery, {}, []);
+const AREE: Record<string, string> = { tecnico: 'Staff tecnico', dirigenza: 'Dirigenza', medico: 'Staff medico' };
+const ordine = ['tecnico', 'dirigenza', 'medico'];
+const gruppi = ordine
+  .map((a) => ({ area: a, label: AREE[a], membri: staff.filter((m) => (m.area ?? 'tecnico') === a) }))
+  .filter((g) => g.membri.length > 0);
+---
+<Layout title="Staff">
+  <PageHero eyebrow="La squadra" title="Staff" lead="Le persone che guidano e supportano il gruppo." />
+  <section class="section">
+    <div class="container">
+      {staff.length === 0 ? (
+        <div class="empty"><strong>Staff non ancora inserito</strong>I membri aggiunti nel pannello appariranno qui.</div>
+      ) : (
+        gruppi.map((g) => (
+          <div class="area-group">
+            <h2 class="area-title">{g.label}</h2>
+            <div class="grid cols-4">
+              {g.membri.map((m) => {
+                const foto = img(m.foto, 400, 400);
+                return (
+                  <div class="card member">
+                    <div class="ph">{foto ? <img src={foto} alt={m.nome} loading="lazy" /> : <div class="ph-empty" aria-hidden="true"></div>}</div>
+                    <div class="minfo"><h3>{m.nome}</h3><span class="tag">{m.ruolo}</span></div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        ))
+      )}
+    </div>
+  </section>
+</Layout>
+<style>
+  .area-group + .area-group { margin-top: clamp(30px, 5vw, 52px); }
+  .area-title { font-size: 1rem; text-transform: uppercase; letter-spacing: .12em; color: var(--ink-faint); font-weight: 700;
+    padding-bottom: 10px; border-bottom: 1px solid var(--line); margin-bottom: 22px; }
+  .ph { aspect-ratio: 1 / 1; background: var(--surface-2); overflow: hidden; }
+  .ph img { width: 100%; height: 100%; object-fit: cover; }
+  .ph-empty { width: 100%; height: 100%; background: linear-gradient(180deg, var(--surface-2), var(--surface)); }
+  .minfo { padding: 14px 16px 18px; }
+  .minfo .tag { display: block; margin-top: 2px; }
+</style>

@@ -1,0 +1,24 @@
+# Dipendenze
+node_modules/
+
+# Build / output
+dist/
+.output/
+.vercel/
+.netlify/
+
+# Ambiente (contiene il project ID Sanity: NON committare)
+.env
+.env.*
+!.env.example
+
+# Cache e strumenti
+.astro/
+*.log
+.cache/
+
+# Sistema operativo / editor
+.DS_Store
+Thumbs.db
+*.swp
+.idea/
