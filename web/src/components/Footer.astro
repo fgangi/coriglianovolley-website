@@ -1,7 +1,9 @@
 ---
+import { img } from '../lib/sanity';
 interface Props { settings: any; }
 const { settings } = Astro.props;
 const s = settings ?? {};
+const logoUrl = img(s.logo, 200);
 const social = s.social ?? {};
 const anno = new Date().getFullYear();
 const socialLinks = [
@@ -14,9 +16,14 @@ const socialLinks = [
     <div class="cols">
       <div>
         <div class="brand" style="color:#fff; margin-bottom:12px;">
-          <span class="mark">{(s.nomeSquadra ?? 'CV').split(' ').map((w:string)=>w[0]).join('').slice(0,2).toUpperCase()}</span>
+          {logoUrl
+            ? <img class="mark-img" src={logoUrl} alt={`Logo ${s.nomeSquadra ?? 'Corigliano Volley'}`} />
+            : <span class="mark">{(s.nomeSquadra ?? 'CV').split(' ').map((w:string)=>w[0]).join('').slice(0,2).toUpperCase()}</span>}
           <span>{s.nomeSquadra ?? 'Corigliano Volley'}</span>
         </div>
+        <style>
+          .site-footer .brand .mark-img { height: 44px; width: auto; max-width: 140px; object-fit: contain; display: block; }
+        </style>
         <p style="color:#C9C2C2; max-width:34ch;">{s.stagione ? `Stagione ${s.stagione} · ` : ''}Serie A3 maschile.</p>
         {socialLinks.length > 0 && (
           <div class="social">

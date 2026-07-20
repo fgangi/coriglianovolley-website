@@ -1,6 +1,6 @@
 ---
-interface Props { nomeSquadra: string; bigliettiUrl?: string; }
-const { nomeSquadra, bigliettiUrl } = Astro.props;
+interface Props { nomeSquadra: string; bigliettiUrl?: string; logoUrl?: string | null; }
+const { nomeSquadra, bigliettiUrl, logoUrl } = Astro.props;
 const path = Astro.url.pathname.replace(/\/$/, '') || '/';
 const links = [
   { href: '/', label: 'Home' },
@@ -18,9 +18,14 @@ const iniziali = nomeSquadra.split(' ').map((w) => w[0]).join('').slice(0, 2).to
 <header class="site-header">
   <div class="container bar">
     <a class="brand" href="/">
-      <span class="mark">{iniziali}</span>
+      {logoUrl
+        ? <img class="mark-img" src={logoUrl} alt={`Logo ${nomeSquadra}`} />
+        : <span class="mark">{iniziali}</span>}
       <span>{nomeSquadra}</span>
     </a>
+    <style>
+      .brand .mark-img { height: 40px; width: auto; max-width: 130px; object-fit: contain; display: block; }
+    </style>
     <button class="nav-toggle" aria-label="Apri menu" aria-expanded="false" data-nav-toggle>
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
     </button>
