@@ -2,9 +2,12 @@
 import Layout from '../layouts/Layout.astro';
 import PageHero from '../components/PageHero.astro';
 import { sfetch, img } from '../lib/sanity';
-import { sponsorQuery } from '../lib/queries';
+import { sponsorQuery, settingsQuery } from '../lib/queries';
 
 const sponsor = await sfetch<any[]>(sponsorQuery, {}, []);
+const settings = await sfetch<any>(settingsQuery, {}, null);
+const mikasaLogo = img(settings?.loghiLega?.mikasaLogo, 320);
+const mikasaUrl = settings?.loghiLega?.mikasaUrl;
 const LIV: Record<string, string> = { main: 'Main sponsor', gold: 'Gold', silver: 'Silver', partner: 'Partner' };
 const ordine = ['main', 'gold', 'silver', 'partner'];
 const gruppi = ordine
@@ -32,6 +35,19 @@ const gruppi = ordine
             </div>
           </div>
         ))
+      )}
+
+      {mikasaLogo && (
+        <div class="liv-group">
+          <h2 class="liv-title">Pallone ufficiale</h2>
+          <div class="sponsor-grid" data-livello="main">
+            {mikasaUrl ? (
+              <a href={mikasaUrl} target="_blank" rel="noopener" class="sp"><img src={mikasaLogo} alt="Mikasa" loading="lazy" /></a>
+            ) : (
+              <div class="sp"><img src={mikasaLogo} alt="Mikasa" loading="lazy" /></div>
+            )}
+          </div>
+        </div>
       )}
     </div>
   </section>

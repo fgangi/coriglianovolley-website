@@ -19,6 +19,20 @@ export const siteSettings = defineType({
       options: { hotspot: true },
     }),
     defineField({
+      name: 'loghiLega',
+      title: 'Loghi obbligatori Lega (Serie A3)',
+      type: 'object',
+      description:
+        'Loghi richiesti dalla Lega. Carica i file e i link quando la Lega fornisce materiali e indicazioni: compaiono automaticamente in home / sponsor.',
+      options: { collapsible: true, collapsed: false },
+      fields: [
+        { name: 'legaCredemLogo', title: 'Logo congiunto Lega / Credem Banca', type: 'image', options: { hotspot: true } },
+        { name: 'legaCredemUrl', title: 'Link sito Main Sponsor (Credem Banca)', type: 'url' },
+        { name: 'mikasaLogo', title: 'Logo Mikasa', type: 'image', options: { hotspot: true } },
+        { name: 'mikasaUrl', title: 'Link sito Mikasa', type: 'url' },
+      ],
+    }),
+    defineField({
       name: 'stagione',
       title: 'Stagione in corso',
       type: 'string',

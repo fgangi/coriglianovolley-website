@@ -3,6 +3,7 @@ const groq = String.raw;
 
 export const settingsQuery = groq`*[_type == "siteSettings"][0]{
   nomeSquadra, stagione, logo, bigliettiUrl, newsletterUrl, email, telefono, indirizzo, social,
+  loghiLega,
   prossimaPartita->{data, avversario, dove, competizione, luogo, giornata}
 }`;
 
