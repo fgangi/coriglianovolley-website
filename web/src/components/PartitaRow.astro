@@ -29,7 +29,7 @@ const win = giocata && ((casa && m.setCasa > m.setTrasferta) || (!casa && m.setT
   .match { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px 18px; display: flex; flex-direction: column; gap: 10px; }
   .match.upcoming { border-left: 3px solid var(--accent); }
   .meta { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
-  .teams { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 12px; }
+  .teams { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: 12px; }
   .team { font-weight: 700; font-size: 1.02rem; }
   .team.right { text-align: right; }
   .team.ours { color: var(--accent); }
