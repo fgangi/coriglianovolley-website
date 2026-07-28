@@ -1,30 +1,53 @@
 ---
 import Layout from '../../layouts/Layout.astro';
 import PageHero from '../../components/PageHero.astro';
-const cards = [
-  { href: '/squadra/roster', title: 'Roster', desc: 'I giocatori della prima squadra, divisi per ruolo.' },
-  { href: '/squadra/staff', title: 'Staff', desc: 'Allenatori, dirigenza e staff medico.' },
-  { href: '/squadra/chi-siamo', title: 'Chi siamo', desc: 'La storia e i valori della società.' },
-];
+import RosterGrid from '../../components/RosterGrid.astro';
+import StaffGrid from '../../components/StaffGrid.astro';
+import { sfetch, img } from '../../lib/sanity';
+import { rosterQuery, staffQuery, settingsQuery } from '../../lib/queries';
+
+const [roster, staff, settings] = await Promise.all([
+  sfetch<any[]>(rosterQuery, {}, []),
+  sfetch<any[]>(staffQuery, {}, []),
+  sfetch<any>(settingsQuery, {}, null),
+]);
+const fotoSquadra = img(settings?.fotoSquadra, 1400);
+const stagione = settings?.stagione;
 ---
-<Layout title="Squadra">
-  <PageHero eyebrow="La squadra" title="Squadra" lead="Chi scende in campo e chi lavora dietro le quinte." />
+<Layout title="La squadra" description="Il roster e lo staff della prima squadra.">
+  <PageHero
+    eyebrow="Prima squadra"
+    title="La squadra"
+    lead={stagione ? `Giocatori e staff della stagione ${stagione}.` : 'Giocatori e staff della prima squadra.'}
+  />
+
+  {fotoSquadra && (
+    <div class="container team-photo">
+      <img src={fotoSquadra} alt={`Foto di squadra ${settings?.nomeSquadra ?? ''}`} />
+    </div>
+  )}
+
+  <section class="section" id="roster" style="scroll-margin-top: 110px;">
+    <div class="container">
+      <div class="section-head"><span class="eyebrow">In campo</span><h2>Roster</h2></div>
+      <RosterGrid roster={roster} />
+    </div>
+  </section>
+
+  <section class="section" id="staff" style="scroll-margin-top: 110px;">
+    <div class="container">
+      <div class="section-head"><span class="eyebrow">Dietro le quinte</span><h2>Staff</h2></div>
+      <StaffGrid staff={staff} />
+    </div>
+  </section>
+
   <section class="section">
     <div class="container">
-      <div class="grid cols-3">
-        {cards.map((c) => (
-          <a class="card hub" href={c.href}>
-            <h3>{c.title}</h3>
-            <p>{c.desc}</p>
-            <span class="more">Vai →</span>
-          </a>
-        ))}
-      </div>
+      <a class="btn" href="/squadra/chi-siamo">Scopri la nostra storia →</a>
     </div>
   </section>
 </Layout>
 <style>
-  .hub { padding: 26px 24px; display: flex; flex-direction: column; gap: 8px; transition: transform .14s ease, border-color .14s ease; }
-  .hub:hover { transform: translateY(-3px); border-color: var(--ink-faint); }
-  .hub .more { margin-top: 8px; color: var(--accent); font-weight: 650; font-size: .9rem; }
+  .team-photo { margin-top: clamp(24px, 4vw, 40px); }
+  .team-photo img { width: 100%; border-radius: var(--radius); border: 1px solid var(--line); }
 </style>

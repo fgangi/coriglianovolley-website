@@ -61,6 +61,22 @@ export function youtubeEmbed(url?: string): string | null {
   return m ? `https://www.youtube.com/embed/${m[1]}` : null;
 }
 
+/**
+ * Costruisce l'URL da usare nell'iframe della mappa. Accetta:
+ *  - il codice <iframe ...> copiato da Google Maps ("Condividi → Incorpora una mappa")
+ *  - l'URL di embed (https://www.google.com/maps/embed?pb=...)
+ *  - coordinate "lat,lng" o un indirizzo/nome luogo
+ */
+export function mapEmbedSrc(value?: string): string | null {
+  if (!value) return null;
+  const v = value.trim();
+  const fromIframe = v.match(/<iframe[^>]*\ssrc=["']([^"']+)["']/i);
+  const raw = fromIframe ? fromIframe[1] : v;
+  const url = raw.replace(/&amp;/g, '&');
+  if (/^https?:\/\//i.test(url)) return url;
+  return `https://www.google.com/maps?q=${encodeURIComponent(url)}&z=16&output=embed`;
+}
+
 /** Data in formato italiano leggibile. */
 export function formatData(iso?: string, withTime = false): string {
   if (!iso) return '';

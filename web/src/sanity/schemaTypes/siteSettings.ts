@@ -39,6 +39,19 @@ export const siteSettings = defineType({
       description: 'Es. 2026/2027',
     }),
     defineField({
+      name: 'storia',
+      title: 'La nostra storia (pagina Chi siamo)',
+      type: 'blockContent',
+      description: 'Testo di presentazione della società, mostrato nella pagina "Chi siamo".',
+    }),
+    defineField({
+      name: 'fotoSquadra',
+      title: 'Foto di squadra',
+      type: 'image',
+      options: { hotspot: true },
+      description: 'Foto di gruppo mostrata nelle pagine Squadra e Chi siamo.',
+    }),
+    defineField({
       name: 'prossimaPartita',
       title: 'Prossima partita (in evidenza in home)',
       type: 'reference',
@@ -66,9 +79,33 @@ export const siteSettings = defineType({
       type: 'string',
     }),
     defineField({
-      name: 'telefono',
-      title: 'Telefono',
-      type: 'string',
+      name: 'telefoni',
+      title: 'Telefoni',
+      type: 'array',
+      description: 'Puoi inserire più numeri: usa "Aggiungi" per ognuno.',
+      of: [
+        {
+          type: 'object',
+          fields: [
+            {
+              name: 'etichetta',
+              title: 'Etichetta',
+              type: 'string',
+              description: 'Es. Segreteria, Ufficio stampa, Biglietteria (facoltativa).',
+            },
+            {
+              name: 'numero',
+              title: 'Numero',
+              type: 'string',
+              validation: (r: any) => r.required(),
+            },
+          ],
+          preview: {
+            select: { numero: 'numero', etichetta: 'etichetta' },
+            prepare: ({ numero, etichetta }: any) => ({ title: numero, subtitle: etichetta }),
+          },
+        },
+      ],
     }),
     defineField({
       name: 'indirizzo',
@@ -78,10 +115,11 @@ export const siteSettings = defineType({
     }),
     defineField({
       name: 'mappaPosizione',
-      title: 'Posizione sulla mappa',
-      type: 'string',
+      title: 'Mappa (Google Maps)',
+      type: 'text',
+      rows: 3,
       description:
-        'Coordinate "latitudine,longitudine" (es. 39.6483734,16.5111021) o nome del luogo. Serve a puntare la mappa nel punto esatto. Se vuoto, viene usato l\'indirizzo qui sopra.',
+        'Da Google Maps: Condividi → "Incorpora una mappa" → Copia HTML, e incolla qui il codice. In alternativa puoi inserire coordinate "lat,lng" o il nome del luogo. Se vuoto viene usato l\'indirizzo qui sopra.',
     }),
     defineField({
       name: 'social',

@@ -10,6 +10,10 @@ const socialLinks = [
   ['Instagram', social.instagram], ['Facebook', social.facebook], ['YouTube', social.youtube],
   ['X', social.x], ['TikTok', social.tiktok],
 ].filter(([, url]) => !!url);
+// Elenco telefoni (con supporto al vecchio campo singolo)
+const telefoni: { etichetta?: string; numero: string }[] =
+  (s?.telefoni?.length ? s.telefoni : s?.telefono ? [{ numero: s.telefono }] : []) ?? [];
+const telHref = (n: string) => 'tel:' + n.replace(/[^\d+]/g, '');
 ---
 <Layout title="Contatti">
   <PageHero eyebrow="Scrivici" title="Contatti" lead="Come raggiungerci e restare in contatto con la società." />
@@ -20,10 +24,15 @@ const socialLinks = [
           <h3>Recapiti</h3>
           <dl>
             {s?.email && (<><dt>Email</dt><dd><a href={`mailto:${s.email}`}>{s.email}</a></dd></>)}
-            {s?.telefono && (<><dt>Telefono</dt><dd><a href={`tel:${s.telefono}`}>{s.telefono}</a></dd></>)}
+            {telefoni.map((t) => (
+              <>
+                <dt>{t.etichetta || 'Telefono'}</dt>
+                <dd><a href={telHref(t.numero)}>{t.numero}</a></dd>
+              </>
+            ))}
             {s?.indirizzo && (<><dt>Sede / palazzetto</dt><dd style="white-space:pre-line;">{s.indirizzo}</dd></>)}
           </dl>
-          {!s?.email && !s?.telefono && !s?.indirizzo && (
+          {!s?.email && telefoni.length === 0 && !s?.indirizzo && (
             <p class="muted">I recapiti verranno inseriti nel pannello, alla voce “Impostazioni sito”.</p>
           )}
           {socialLinks.length > 0 && (

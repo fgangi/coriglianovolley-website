@@ -15,8 +15,9 @@ const nav: Item[] = [
   {
     href: '/squadra', label: 'Squadra',
     children: [
-      { href: '/squadra/roster', label: 'Roster' },
-      { href: '/squadra/staff', label: 'Staff' },
+      { href: '/squadra', label: 'La squadra' },
+      { href: '/squadra#roster', label: 'Roster' },
+      { href: '/squadra#staff', label: 'Staff' },
       { href: '/squadra/chi-siamo', label: 'Chi siamo' },
     ],
   },
@@ -67,16 +68,21 @@ const iniziali = nomeSquadra.split(' ').map((w) => w[0]).join('').slice(0, 2).to
 
     <nav class="mainnav" data-nav aria-label="Navigazione principale">
       {nav.map((item) => item.children ? (
-        <div class="mainnav-item has-sub" data-sub>
-          <div class="mainnav-top">
-            <a class="mainnav-link" href={item.href} aria-current={isActive(item.href) ? 'page' : undefined}>{item.label}</a>
-            <button class="caret" type="button" aria-label={`Sottomenu ${item.label}`} aria-expanded="false" data-caret>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
-            </button>
-          </div>
+        <div class="mainnav-item has-sub" data-sub data-open="false">
+          <button
+            class="mainnav-link mainnav-trigger"
+            type="button"
+            aria-expanded="false"
+            aria-haspopup="true"
+            data-active={isActive(item.href) ? 'true' : undefined}
+            data-trigger
+          >
+            {item.label}
+            <svg class="caret-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
           <div class="submenu">
             {item.children.map((c) => (
-              <a href={c.href} aria-current={path === c.href.split('#')[0] && c.href.includes('#') ? undefined : (path === c.href ? 'page' : undefined)}>{c.label}</a>
+              <a href={c.href} aria-current={path === c.href && !c.href.includes('#') ? 'page' : undefined}>{c.label}</a>
             ))}
           </div>
         </div>
@@ -88,22 +94,60 @@ const iniziali = nomeSquadra.split(' ').map((w) => w[0]).join('').slice(0, 2).to
   </div>
 </header>
 <script>
-  const toggle = document.querySelector('[data-nav-toggle]');
+  const navToggle = document.querySelector('[data-nav-toggle]');
   const nav = document.querySelector('[data-nav]');
-  toggle?.addEventListener('click', () => {
+  const items = Array.from(document.querySelectorAll('[data-sub]'));
+
+  /** Chiude tutte le tendine, tranne quella indicata. */
+  function closeSubmenus(except) {
+    items.forEach((item) => {
+      if (item === except) return;
+      item.setAttribute('data-open', 'false');
+      item.querySelector('[data-trigger]')?.setAttribute('aria-expanded', 'false');
+    });
+  }
+
+  function closeMobileNav() {
+    nav?.setAttribute('data-open', 'false');
+    navToggle?.setAttribute('aria-expanded', 'false');
+  }
+
+  navToggle?.addEventListener('click', (e) => {
+    e.stopPropagation();
     const open = nav?.getAttribute('data-open') === 'true';
     nav?.setAttribute('data-open', String(!open));
-    toggle.setAttribute('aria-expanded', String(!open));
+    navToggle.setAttribute('aria-expanded', String(!open));
+    if (open) closeSubmenus();
   });
-  // Accordion dei sottomenu (attivo su mobile; su desktop il caret è pointer-events:none)
-  document.querySelectorAll('[data-caret]').forEach((btn) => {
-    btn.addEventListener('click', (e) => {
+
+  // Le voci con tendina si aprono al click (niente hover: evita chiusure
+  // accidentali passando dal bottone al menu, e click che finiscono sotto).
+  items.forEach((item) => {
+    const trigger = item.querySelector('[data-trigger]');
+    trigger?.addEventListener('click', (e) => {
       e.preventDefault();
-      const item = btn.closest('.mainnav-item');
-      if (!item) return;
+      e.stopPropagation();
       const open = item.getAttribute('data-open') === 'true';
+      closeSubmenus(item);
       item.setAttribute('data-open', String(!open));
-      btn.setAttribute('aria-expanded', String(!open));
+      trigger.setAttribute('aria-expanded', String(!open));
     });
+  });
+
+  // Click fuori dal menu: chiude tutto.
+  document.addEventListener('click', (e) => {
+    if (!(e.target instanceof Element)) return;
+    if (e.target.closest('.mainnav') || e.target.closest('[data-nav-toggle]')) return;
+    closeSubmenus();
+    closeMobileNav();
+  });
+
+  // Esc chiude; il tasto riporta il focus al trigger aperto.
+  document.addEventListener('keydown', (e) => {
+    if (e.key !== 'Escape') return;
+    const aperto = items.find((i) => i.getAttribute('data-open') === 'true');
+    closeSubmenus();
+    closeMobileNav();
+    (aperto?.querySelector('[data-trigger]'))?.focus();
   });
 </script>

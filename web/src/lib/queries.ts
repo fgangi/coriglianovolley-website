@@ -2,7 +2,7 @@
 const groq = String.raw;
 
 export const settingsQuery = groq`*[_type == "siteSettings"][0]{
-  nomeSquadra, stagione, logo, bigliettiUrl, newsletterUrl, direttaUrl, email, telefono, indirizzo, mappaPosizione, social,
+  nomeSquadra, stagione, logo, fotoSquadra, storia, bigliettiUrl, newsletterUrl, direttaUrl, email, telefono, telefoni, indirizzo, mappaPosizione, social,
   loghiLega,
   prossimaPartita->{data, avversario, dove, competizione, luogo, giornata}
 }`;
@@ -26,7 +26,7 @@ export const prossimePartiteQuery = groq`*[_type == "partita" && giocata != true
 }`;
 
 export const risultatiQuery = groq`*[_type == "partita" && giocata == true] | order(data desc)[0...$limit]{
-  _id, data, avversario, dove, competizione, giornata, setCasa, setTrasferta, parziali, reportUrl
+  _id, data, avversario, dove, competizione, giornata, giocata, setCasa, setTrasferta, parziali, reportUrl
 }`;
 
 export const calendarioQuery = groq`*[_type == "partita"] | order(data asc){

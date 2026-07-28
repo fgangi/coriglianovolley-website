@@ -10,6 +10,10 @@
   --line:#E6DEDF; --line-soft:#EFEAEA;
   --accent:#CE1B2C; --accent-strong:#B21826; --accent-ink:#FFFFFF; --accent-tint:#FBE6E8;
   --black:#141011;
+  /* Tipografia: --font-display per i titoli, --font-body per il testo.
+     Per cambiare font in futuro basta sostituire questi due valori. */
+  --font-body: 'Archivo Variable', system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-display: var(--font-body);
   --radius:14px; --maxw:1120px; --contentw:760px;
   --shadow:0 1px 2px rgba(20,16,17,.05), 0 8px 30px rgba(20,16,17,.06);
 }
@@ -18,7 +22,7 @@
 html { scroll-behavior: smooth; }
 body {
   margin: 0; background: var(--ground); color: var(--ink);
-  font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-family: var(--font-body);
   line-height: 1.6; -webkit-font-smoothing: antialiased;
   overflow-wrap: break-word;
 }
@@ -33,7 +37,8 @@ main { display: block; min-height: 60vh; }
 .section + .section { padding-top: 0; }
 
 /* --- typography --- */
-h1, h2, h3 { margin: 0; letter-spacing: -.02em; text-wrap: balance; line-height: 1.08; }
+h1, h2, h3 { margin: 0; font-family: var(--font-display); letter-spacing: -.02em; text-wrap: balance; line-height: 1.08; }
+.brand, .eyebrow, .score, .num, .rp-num, .nm-team { font-family: var(--font-display); }
 h1 { font-size: clamp(2rem, 5.5vw, 3.4rem); font-weight: 800; }
 h2 { font-size: clamp(1.5rem, 3.4vw, 2.1rem); font-weight: 780; }
 h3 { font-size: 1.15rem; font-weight: 720; letter-spacing: -.01em; }
@@ -80,7 +85,7 @@ p { margin: 0; color: var(--ink-soft); }
 
 /* --- header --- */
 .site-header {
-  position: sticky; top: 0; z-index: 50;
+  position: sticky; top: 0; z-index: 1000;
   background: color-mix(in srgb, var(--ground) 90%, transparent);
   backdrop-filter: saturate(140%) blur(10px);
   border-bottom: 1px solid var(--line);
@@ -104,56 +109,78 @@ p { margin: 0; color: var(--ink-soft); }
 
 /* Navigazione */
 .mainnav { display: flex; align-items: center; gap: 2px; }
-.mainnav-link { display: inline-flex; align-items: center; gap: .25rem; padding: .5rem .55rem; border-radius: 8px; font-size: .88rem; font-weight: 560; color: var(--ink-soft); white-space: nowrap; }
-.mainnav-link:hover, .mainnav-link[aria-current="page"] { color: var(--ink); background: var(--surface-2); }
+.mainnav-link {
+  display: inline-flex; align-items: center; gap: .3rem; padding: .5rem .55rem; border-radius: 8px;
+  font-size: .88rem; font-weight: 560; color: var(--ink-soft); white-space: nowrap;
+  font-family: inherit; border: 0; background: transparent; cursor: pointer; line-height: inherit;
+}
+.mainnav-link:hover,
+.mainnav-link[aria-current="page"],
+.mainnav-link[data-active="true"] { color: var(--ink); background: var(--surface-2); }
 .mainnav-link.cta { color: var(--accent-ink); background: var(--accent); }
 .mainnav-link.cta:hover { background: var(--accent-strong); color: var(--accent-ink); }
 .mainnav-item { position: relative; }
-.mainnav-top { display: flex; align-items: center; }
-.caret { border: 0; background: transparent; color: var(--ink-faint); cursor: pointer; padding: .3rem; display: inline-flex; align-items: center; }
-.caret svg { transition: transform .15s ease; }
-.submenu { display: flex; flex-direction: column; }
+.caret-icon { color: var(--ink-faint); transition: transform .15s ease; flex: none; }
+.mainnav-item[data-open="true"] > .mainnav-trigger { color: var(--ink); background: var(--surface-2); }
+.mainnav-item[data-open="true"] .caret-icon { transform: rotate(180deg); }
+.submenu { display: none; flex-direction: column; }
+.mainnav-item[data-open="true"] > .submenu { display: flex; }
 
-/* Desktop: tendina al passaggio del mouse / focus */
+/* Desktop: la tendina si apre al click sul bottone */
 @media (min-width: 1151px) {
-  .caret { pointer-events: none; margin-left: -.3rem; }
   .submenu {
-    position: absolute; top: calc(100% + 8px); left: 0; min-width: 220px;
-    background: var(--surface); border: 1px solid var(--line); border-radius: 12px; box-shadow: var(--shadow);
-    padding: 6px; gap: 2px; z-index: 60;
-    opacity: 0; visibility: hidden; transform: translateY(-6px); transition: opacity .14s ease, transform .14s ease;
+    position: absolute; top: 100%; left: 0; min-width: 230px; z-index: 1001;
+    /* padding-top fa da "ponte" continuo tra bottone e tendina */
+    padding: 12px 6px 6px; gap: 2px;
   }
-  .mainnav-item.has-sub:hover .submenu, .mainnav-item.has-sub:focus-within .submenu { opacity: 1; visibility: visible; transform: translateY(0); }
-  .mainnav-item.has-sub:hover .caret svg, .mainnav-item.has-sub:focus-within .caret svg { transform: rotate(180deg); }
+  .submenu::before {
+    content: ''; position: absolute; inset: 6px 0 0 0; z-index: -1;
+    background: var(--surface); border: 1px solid var(--line); border-radius: 12px; box-shadow: var(--shadow);
+  }
+  .mainnav-item[data-open="true"] > .submenu { animation: submenuIn .14s ease; }
+  @keyframes submenuIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
   .submenu a { padding: .55rem .7rem; border-radius: 8px; font-size: .9rem; color: var(--ink-soft); white-space: nowrap; }
   .submenu a:hover, .submenu a[aria-current="page"] { background: var(--surface-2); color: var(--ink); }
 }
 
-/* Mobile: pannello a scomparsa + accordion */
+/* Mobile: pannello a scomparsa + accordion (stesso click) */
 .nav-toggle { display: none; }
 @media (max-width: 1150px) {
   .mainnav {
     position: absolute; top: 100%; left: 0; right: 0; flex-direction: column; align-items: stretch;
     background: var(--ground); border-bottom: 1px solid var(--line); padding: 10px clamp(18px,4vw,32px) 18px;
-    gap: 2px; display: none; max-height: calc(100vh - 96px); overflow-y: auto;
+    gap: 2px; display: none; max-height: calc(100vh - 96px); overflow-y: auto; z-index: 1001;
   }
   .mainnav[data-open="true"] { display: flex; }
-  .mainnav-link { padding: .75rem .5rem; }
-  .mainnav-top { justify-content: space-between; }
-  .mainnav-top .mainnav-link { flex: 1; }
-  .caret { padding: .75rem .6rem; }
-  .submenu { display: none; padding: 0 0 6px .9rem; }
-  .mainnav-item[data-open="true"] .submenu { display: flex; }
-  .mainnav-item[data-open="true"] .caret svg { transform: rotate(180deg); }
-  .submenu a { padding: .55rem .5rem; font-size: .9rem; color: var(--ink-soft); }
+  .mainnav-link { padding: .8rem .5rem; width: 100%; justify-content: space-between; font-size: .95rem; }
+  .submenu { padding: 0 0 8px .9rem; gap: 2px; }
+  .submenu a { padding: .6rem .5rem; font-size: .92rem; color: var(--ink-soft); }
   .submenu a:hover, .submenu a[aria-current="page"] { color: var(--ink); }
   .nav-toggle {
     display: inline-flex; align-items: center; justify-content: center; width: 42px; height: 42px;
     border: 1px solid var(--line); background: var(--surface); border-radius: 10px; cursor: pointer; color: var(--ink); flex: none;
   }
 }
-/* Su schermi molto stretti nascondo il logo Credem nell'header (resta nel footer) */
-@media (max-width: 560px) { .brand-sep, .credem { display: none; } }
+/* Su schermi stretti riduco le dimensioni: i due loghi restano sempre visibili
+   (il logo congiunto Lega/Credem è un obbligo, e il traffico è in gran parte mobile). */
+@media (max-width: 640px) {
+  .site-header .bar { min-height: 78px; }
+  .brand-cluster { gap: 10px; }
+  .brand { font-size: 1rem; gap: .45rem; }
+  .brand .mark-img { height: 52px; max-width: 120px; }
+  .brand .mark { width: 36px; height: 36px; }
+  .brand-sep { height: 40px; }
+  .credem img { height: 56px; max-width: 130px; }
+  .mainnav { max-height: calc(100vh - 78px); }
+}
+@media (max-width: 420px) {
+  .site-header .bar { min-height: 70px; }
+  .brand { font-size: .88rem; }
+  .brand .mark-img { height: 44px; }
+  .brand-sep { height: 34px; }
+  .credem img { height: 48px; max-width: 100px; }
+  .mainnav { max-height: calc(100vh - 70px); }
+}
 
 /* --- footer --- */
 .site-footer { background: var(--black); color: #EDE7E7; margin-top: 56px; }
@@ -174,20 +201,18 @@ p { margin: 0; color: var(--ink-soft); }
 /* Logo società nel footer, in evidenza */
 .site-footer .brand { font-size: 1.25rem; color: #fff; }
 .site-footer .brand .mark-img { height: 78px; max-width: 190px; }
-/* Fascia loghi Lega/Credem + Mikasa in fondo */
-.foot-partners {
-  display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 40px;
-  padding: 30px 0; border-top: 1px solid rgba(255,255,255,.12);
-}
-.foot-partners img { height: 70px; width: auto; max-width: 280px; object-fit: contain; display: block; }
-.foot-partners a { display: inline-flex; opacity: .95; }
-.foot-partners a:hover { opacity: 1; }
+/* Loghi Lega/Credem + Mikasa sotto il marchio della società */
+.brand-partners { display: flex; align-items: center; flex-wrap: wrap; gap: 22px; margin-top: 18px; }
+.brand-partners img { height: 66px; width: auto; max-width: 190px; object-fit: contain; display: block; }
+.brand-partners a { display: inline-flex; opacity: .95; }
+.brand-partners a:hover { opacity: 1; }
 @media (max-width: 560px) {
-  .foot-partners { gap: 26px; padding: 24px 0; }
-  .foot-partners img { height: 54px; max-width: 200px; }
   .site-footer .brand .mark-img { height: 64px; }
+  .brand-partners { gap: 18px; }
+  .brand-partners img { height: 56px; max-width: 150px; }
 }
 .foot-bottom { border-top: 1px solid rgba(255,255,255,.12); padding: 18px 0; font-size: .82rem; opacity: .7; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+.foot-bottom a { text-decoration: underline; text-underline-offset: 2px; }
 
 /* --- empty state --- */
 .empty {

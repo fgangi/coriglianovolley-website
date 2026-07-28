@@ -133,13 +133,13 @@ const RUOLI_LABEL: Record<string, string> = { palleggiatore: 'Palleggiatore', op
       <div class="container">
         <div class="section-head between">
           <div><span class="eyebrow">La squadra</span><h2>La rosa</h2></div>
-          <a class="btn" href="/squadra/roster">Vedi tutta la squadra</a>
+          <a class="btn" href="/squadra#roster">Vedi tutta la squadra</a>
         </div>
         <div class="roster-preview">
           {rosterPreview.map((p) => {
             const foto = img(p.foto, 320, 380);
             return (
-              <a class="rp-card" href="/squadra/roster">
+              <a class="rp-card" href="/squadra#roster">
                 <div class="rp-ph">
                   {foto ? <img src={foto} alt={`${p.nome} ${p.cognome}`} loading="lazy" /> : <div class="rp-empty" aria-hidden="true"></div>}
                   {p.numero != null && <span class="rp-num">{p.numero}</span>}
@@ -159,7 +159,7 @@ const RUOLI_LABEL: Record<string, string> = { palleggiatore: 'Palleggiatore', op
       <div class="container">
         <div class="section-head between">
           <div><span class="eyebrow">Dietro le quinte</span><h2>Lo staff</h2></div>
-          <a class="btn" href="/squadra/staff">Tutto lo staff</a>
+          <a class="btn" href="/squadra#staff">Tutto lo staff</a>
         </div>
         <div class="grid cols-4">
           {staffPreview.map((m) => {
@@ -207,7 +207,10 @@ const RUOLI_LABEL: Record<string, string> = { palleggiatore: 'Palleggiatore', op
 
 <style>
   .hero { background: linear-gradient(180deg, var(--surface) 0%, var(--ground) 100%); border-bottom: 1px solid var(--line); }
-  .hero-inner { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: clamp(24px, 5vw, 60px); align-items: center; padding: clamp(48px, 9vw, 110px) 0; }
+  /* Solo padding verticale: la scorciatoia "padding: X 0" azzererebbe
+     il padding orizzontale di .container, mandando l'hero a filo schermo. */
+  .hero-inner { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: clamp(24px, 5vw, 60px); align-items: center;
+    padding-top: clamp(48px, 9vw, 110px); padding-bottom: clamp(48px, 9vw, 110px); }
   @media (max-width: 860px) { .hero-inner { grid-template-columns: minmax(0, 1fr); } }
   .hero-copy .pill { margin-bottom: 18px; }
   .hero-copy h1 { margin: 0 0 14px; }

@@ -1,0 +1,42 @@
+---
+import { img } from '../lib/sanity';
+interface Props { staff: any[]; }
+const { staff } = Astro.props;
+
+const AREE: Record<string, string> = { tecnico: 'Staff tecnico', dirigenza: 'Dirigenza', medico: 'Staff medico' };
+const ordine = ['tecnico', 'dirigenza', 'medico'];
+const gruppi = ordine
+  .map((a) => ({ label: AREE[a], membri: staff.filter((m) => (m.area ?? 'tecnico') === a) }))
+  .filter((g) => g.membri.length > 0);
+---
+{staff.length === 0 ? (
+  <div class="empty"><strong>Staff non ancora inserito</strong>I membri aggiunti nel pannello appariranno qui.</div>
+) : (
+  gruppi.map((g) => (
+    <div class="area-group">
+      <h3 class="area-title">{g.label}</h3>
+      <div class="grid cols-4">
+        {g.membri.map((m) => {
+          const foto = img(m.foto, 400, 400);
+          return (
+            <div class="card member">
+              <div class="ph">{foto ? <img src={foto} alt={m.nome} loading="lazy" /> : <div class="ph-empty" aria-hidden="true"></div>}</div>
+              <div class="minfo"><h4>{m.nome}</h4><span class="tag">{m.ruolo}</span></div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  ))
+)}
+<style>
+  .area-group + .area-group { margin-top: clamp(30px, 5vw, 52px); }
+  .area-title { font-size: 1rem; text-transform: uppercase; letter-spacing: .12em; color: var(--ink-faint); font-weight: 700;
+    padding-bottom: 10px; border-bottom: 1px solid var(--line); margin-bottom: 22px; }
+  .ph { aspect-ratio: 1 / 1; background: var(--surface-2); overflow: hidden; }
+  .ph img { width: 100%; height: 100%; object-fit: cover; }
+  .ph-empty { width: 100%; height: 100%; background: linear-gradient(180deg, var(--surface-2), var(--surface)); }
+  .minfo { padding: 14px 16px 18px; }
+  .minfo h4 { margin: 0; font-size: 1.05rem; font-weight: 720; letter-spacing: -.01em; }
+  .minfo .tag { display: block; margin-top: 2px; }
+</style>

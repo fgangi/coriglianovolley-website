@@ -1,5 +1,5 @@
 ---
-import { img } from '../lib/sanity';
+import { img, mapEmbedSrc } from '../lib/sanity';
 interface Props { settings: any; }
 const { settings } = Astro.props;
 const s = settings ?? {};
@@ -8,9 +8,8 @@ const social = s.social ?? {};
 const anno = new Date().getFullYear();
 const nome = s.nomeSquadra ?? 'Corigliano Volley';
 const iniziali = nome.split(' ').map((w: string) => w[0]).join('').slice(0, 2).toUpperCase();
-// Posizione mappa: preferisce le coordinate/nome impostati nel pannello, altrimenti l'indirizzo
-const mapQuery = s.mappaPosizione || s.indirizzo || null;
-const mapSrc = mapQuery ? `https://www.google.com/maps?q=${encodeURIComponent(mapQuery)}&z=16&output=embed` : null;
+// Mappa: accetta codice iframe, URL di embed, coordinate o indirizzo (vedi mapEmbedSrc)
+const mapSrc = mapEmbedSrc(s.mappaPosizione || s.indirizzo);
 // Loghi obbligatori Lega, replicati in fondo alla pagina
 const lega = s.loghiLega ?? {};
 const legaCredemLogo = img(lega.legaCredemLogo, 600);
@@ -27,6 +26,10 @@ const labels: Record<string, string> = { instagram: 'Instagram', facebook: 'Face
 const socialLinks = ['instagram', 'facebook', 'youtube', 'x', 'tiktok']
   .map((k) => ({ k, url: social[k] }))
   .filter((it) => !!it.url);
+// Elenco telefoni (con supporto al vecchio campo singolo)
+const telefoni: { etichetta?: string; numero: string }[] =
+  (s.telefoni?.length ? s.telefoni : s.telefono ? [{ numero: s.telefono }] : []) ?? [];
+const telHref = (n: string) => 'tel:' + n.replace(/[^\d+]/g, '');
 ---
 <footer class="site-footer">
   <div class="container">
@@ -37,7 +40,23 @@ const socialLinks = ['instagram', 'facebook', 'youtube', 'x', 'tiktok']
           {logoUrl ? <img class="mark-img" src={logoUrl} alt={`Logo ${nome}`} /> : <span class="mark">{iniziali}</span>}
           <span class="brand-name">{nome}</span>
         </a>
-        <p class="foot-desc">{s.stagione ? `Stagione ${s.stagione} · ` : ''}Serie A3 maschile.</p>
+        <p class="foot-desc">{s.stagione ? `Stagione ${s.stagione} · ` : ''}Serie A3.</p>
+
+        {(legaCredemLogo || mikasaLogo) && (
+          <div class="brand-partners">
+            {legaCredemLogo && (
+              lega.legaCredemUrl
+                ? <a href={lega.legaCredemUrl} target="_blank" rel="noopener" aria-label="Lega Pallavolo Serie A · Credem Banca"><img src={legaCredemLogo} alt="Lega Pallavolo Serie A · Credem Banca" /></a>
+                : <img src={legaCredemLogo} alt="Lega Pallavolo Serie A · Credem Banca" />
+            )}
+            {mikasaLogo && (
+              lega.mikasaUrl
+                ? <a href={lega.mikasaUrl} target="_blank" rel="noopener" aria-label="Mikasa"><img src={mikasaLogo} alt="Mikasa" /></a>
+                : <img src={mikasaLogo} alt="Mikasa" />
+            )}
+          </div>
+        )}
+
         {socialLinks.length > 0 && (
           <div class="social-icons">
             {socialLinks.map((it) => (
@@ -69,34 +88,21 @@ const socialLinks = ['instagram', 'facebook', 'youtube', 'x', 'tiktok']
         <div class="fnav">
           {s.indirizzo && <span style="color:#C9C2C2; white-space:pre-line;">{s.indirizzo}</span>}
           {s.email && <a href={`mailto:${s.email}`}>{s.email}</a>}
-          {s.telefono && <a href={`tel:${s.telefono}`}>{s.telefono}</a>}
+          {telefoni.map((t) => (
+            <a href={telHref(t.numero)}>{t.etichetta ? `${t.etichetta}: ${t.numero}` : t.numero}</a>
+          ))}
         </div>
         {mapSrc && (
           <div class="foot-map">
-            <iframe src={mapSrc} loading="lazy" title={`Mappa ${s.indirizzo}`} referrerpolicy="no-referrer-when-downgrade"></iframe>
+            <iframe src={mapSrc} loading="lazy" title={`Mappa ${s.indirizzo ?? 'sede'}`} allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>
           </div>
         )}
       </div>
     </div>
 
-    {(legaCredemLogo || mikasaLogo) && (
-      <div class="foot-partners">
-        {legaCredemLogo && (
-          lega.legaCredemUrl
-            ? <a href={lega.legaCredemUrl} target="_blank" rel="noopener" aria-label="Lega Pallavolo Serie A · Credem Banca"><img src={legaCredemLogo} alt="Lega Pallavolo Serie A · Credem Banca" /></a>
-            : <img src={legaCredemLogo} alt="Lega Pallavolo Serie A · Credem Banca" />
-        )}
-        {mikasaLogo && (
-          lega.mikasaUrl
-            ? <a href={lega.mikasaUrl} target="_blank" rel="noopener" aria-label="Mikasa"><img src={mikasaLogo} alt="Mikasa" /></a>
-            : <img src={mikasaLogo} alt="Mikasa" />
-        )}
-      </div>
-    )}
-
     <div class="foot-bottom">
       <span>© {anno} {nome}</span>
-      <span>Sito realizzato con Astro + Sanity</span>
+      <span>Sviluppato da <a href="https://github.com/fgangi" target="_blank" rel="noopener">Francesco Gangi</a></span>
     </div>
   </div>
 </footer>
