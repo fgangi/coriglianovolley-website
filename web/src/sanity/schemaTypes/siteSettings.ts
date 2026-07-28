@@ -55,6 +55,12 @@ export const siteSettings = defineType({
       type: 'url',
     }),
     defineField({
+      name: 'direttaUrl',
+      title: 'Canale diretta / YouTube',
+      type: 'url',
+      description: 'Link al canale YouTube o alla diretta della squadra. Usato per il pulsante "Guarda la diretta".',
+    }),
+    defineField({
       name: 'email',
       title: 'Email di contatto',
       type: 'string',
@@ -69,6 +75,13 @@ export const siteSettings = defineType({
       title: 'Indirizzo / palazzetto',
       type: 'text',
       rows: 2,
+    }),
+    defineField({
+      name: 'mappaPosizione',
+      title: 'Posizione sulla mappa',
+      type: 'string',
+      description:
+        'Coordinate "latitudine,longitudine" (es. 39.6483734,16.5111021) o nome del luogo. Serve a puntare la mappa nel punto esatto. Se vuoto, viene usato l\'indirizzo qui sopra.',
     }),
     defineField({
       name: 'social',

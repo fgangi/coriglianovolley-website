@@ -1,39 +1,89 @@
 ---
-interface Props { nomeSquadra: string; bigliettiUrl?: string; logoUrl?: string | null; }
-const { nomeSquadra, bigliettiUrl, logoUrl } = Astro.props;
+interface Props {
+  nomeSquadra: string;
+  bigliettiUrl?: string;
+  logoUrl?: string | null;
+  legaCredemLogo?: string | null;
+  legaCredemUrl?: string;
+}
+const { nomeSquadra, bigliettiUrl, logoUrl, legaCredemLogo, legaCredemUrl } = Astro.props;
 const path = Astro.url.pathname.replace(/\/$/, '') || '/';
-const links = [
+
+type Item = { href: string; label: string; children?: { href: string; label: string }[] };
+const nav: Item[] = [
   { href: '/', label: 'Home' },
-  { href: '/squadra', label: 'Squadra' },
-  { href: '/partite', label: 'Partite' },
+  {
+    href: '/squadra', label: 'Squadra',
+    children: [
+      { href: '/squadra/roster', label: 'Roster' },
+      { href: '/squadra/staff', label: 'Staff' },
+      { href: '/squadra/chi-siamo', label: 'Chi siamo' },
+    ],
+  },
+  {
+    href: '/partite', label: 'Partite',
+    children: [
+      { href: '/partite', label: 'Calendario & risultati' },
+      { href: '/partite#classifica', label: 'Classifica' },
+      { href: '/partite#diretta', label: 'Diretta' },
+    ],
+  },
   { href: '/news', label: 'News' },
-  { href: '/settore-giovanile', label: 'Giovanile' },
+  { href: '/settore-giovanile', label: 'Settore giovanile' },
   { href: '/gallery', label: 'Gallery' },
   { href: '/sponsor', label: 'Sponsor' },
   { href: '/contatti', label: 'Contatti' },
 ];
-const isActive = (href: string) => (href === '/' ? path === '/' : path === href || path.startsWith(href + '/'));
+
+const isActive = (href: string) => {
+  const clean = href.split('#')[0];
+  if (clean === '/') return path === '/';
+  return path === clean || path.startsWith(clean + '/');
+};
 const iniziali = nomeSquadra.split(' ').map((w) => w[0]).join('').slice(0, 2).toUpperCase();
 ---
 <header class="site-header">
   <div class="container bar">
-    <a class="brand" href="/">
-      {logoUrl
-        ? <img class="mark-img" src={logoUrl} alt={`Logo ${nomeSquadra}`} />
-        : <span class="mark">{iniziali}</span>}
-      <span>{nomeSquadra}</span>
-    </a>
-    <style>
-      .brand .mark-img { height: 40px; width: auto; max-width: 130px; object-fit: contain; display: block; }
-    </style>
+    <div class="brand-cluster">
+      <a class="brand" href="/">
+        {logoUrl
+          ? <img class="mark-img" src={logoUrl} alt={`Logo ${nomeSquadra}`} />
+          : <span class="mark">{iniziali}</span>}
+        <span class="brand-name">{nomeSquadra}</span>
+      </a>
+      {legaCredemLogo && (
+        <>
+          <span class="brand-sep" aria-hidden="true"></span>
+          {legaCredemUrl
+            ? <a class="credem" href={legaCredemUrl} target="_blank" rel="noopener" aria-label="Lega Pallavolo Serie A · Credem Banca"><img src={legaCredemLogo} alt="Lega Pallavolo Serie A · Credem Banca" /></a>
+            : <span class="credem"><img src={legaCredemLogo} alt="Lega Pallavolo Serie A · Credem Banca" /></span>}
+        </>
+      )}
+    </div>
+
     <button class="nav-toggle" aria-label="Apri menu" aria-expanded="false" data-nav-toggle>
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
     </button>
-    <nav class="nav" data-nav>
-      {links.map((l) => (
-        <a href={l.href} aria-current={isActive(l.href) ? 'page' : undefined}>{l.label}</a>
+
+    <nav class="mainnav" data-nav aria-label="Navigazione principale">
+      {nav.map((item) => item.children ? (
+        <div class="mainnav-item has-sub" data-sub>
+          <div class="mainnav-top">
+            <a class="mainnav-link" href={item.href} aria-current={isActive(item.href) ? 'page' : undefined}>{item.label}</a>
+            <button class="caret" type="button" aria-label={`Sottomenu ${item.label}`} aria-expanded="false" data-caret>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+          </div>
+          <div class="submenu">
+            {item.children.map((c) => (
+              <a href={c.href} aria-current={path === c.href.split('#')[0] && c.href.includes('#') ? undefined : (path === c.href ? 'page' : undefined)}>{c.label}</a>
+            ))}
+          </div>
+        </div>
+      ) : (
+        <a class="mainnav-link" href={item.href} aria-current={isActive(item.href) ? 'page' : undefined}>{item.label}</a>
       ))}
-      {bigliettiUrl && <a class="cta" href={bigliettiUrl} target="_blank" rel="noopener">Biglietti</a>}
+      {bigliettiUrl && <a class="mainnav-link cta" href={bigliettiUrl} target="_blank" rel="noopener">Biglietti</a>}
     </nav>
   </div>
 </header>
@@ -44,5 +94,16 @@ const iniziali = nomeSquadra.split(' ').map((w) => w[0]).join('').slice(0, 2).to
     const open = nav?.getAttribute('data-open') === 'true';
     nav?.setAttribute('data-open', String(!open));
     toggle.setAttribute('aria-expanded', String(!open));
+  });
+  // Accordion dei sottomenu (attivo su mobile; su desktop il caret è pointer-events:none)
+  document.querySelectorAll('[data-caret]').forEach((btn) => {
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      const item = btn.closest('.mainnav-item');
+      if (!item) return;
+      const open = item.getAttribute('data-open') === 'true';
+      item.setAttribute('data-open', String(!open));
+      btn.setAttribute('aria-expanded', String(!open));
+    });
   });
 </script>

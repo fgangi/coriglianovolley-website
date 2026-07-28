@@ -2,19 +2,26 @@
 import Layout from '../../layouts/Layout.astro';
 import PageHero from '../../components/PageHero.astro';
 import PartitaRow from '../../components/PartitaRow.astro';
-import { sfetch, img, formatData } from '../../lib/sanity';
-import { calendarioQuery, classificaQuery } from '../../lib/queries';
+import { sfetch, img, formatData, youtubeEmbed } from '../../lib/sanity';
+import { calendarioQuery, classificaQuery, settingsQuery } from '../../lib/queries';
 
-const [partite, classifica] = await Promise.all([
+const [partite, classifica, settings] = await Promise.all([
   sfetch<any[]>(calendarioQuery, {}, []),
   sfetch<any>(classificaQuery, {}, null),
+  sfetch<any>(settingsQuery, {}, null),
 ]);
 const prossime = partite.filter((m) => !m.giocata);
 const giocate = partite.filter((m) => m.giocata).reverse();
 const clImg = classifica?.modalita === 'immagine' ? img(classifica.immagine, 1000) : null;
+
+// Diretta: priorità alla prossima partita con link YouTube, altrimenti canale generale
+const matchDiretta = prossime.find((m) => m.direttaUrl) ?? null;
+const direttaLink = matchDiretta?.direttaUrl ?? settings?.direttaUrl ?? null;
+const direttaEmbed = youtubeEmbed(direttaLink);
+const direttaMatch = matchDiretta ?? prossime[0] ?? null;
 ---
 <Layout title="Partite & classifica">
-  <PageHero eyebrow="Campo" title="Partite &amp; classifica" lead="Calendario, risultati e classifica aggiornata del girone." />
+  <PageHero eyebrow="Campo" title="Partite & classifica" lead="Calendario, risultati e classifica aggiornata del girone." />
 
   <section class="section">
     <div class="container">
@@ -24,6 +31,42 @@ const clImg = classifica?.modalita === 'immagine' ? img(classifica.immagine, 100
         <div class="grid cols-2">{prossime.map((m) => <PartitaRow m={m} />)}</div>
       ) : (
         <div class="empty"><strong>Nessuna partita in calendario</strong>Le partite inserite nel pannello appariranno qui.</div>
+      )}
+    </div>
+  </section>
+
+  <!-- DIRETTA -->
+  <section class="section" id="diretta" style="scroll-margin-top: 90px;">
+    <div class="container">
+      <div class="section-head"><span class="eyebrow">Live</span><h2>Diretta</h2></div>
+      {direttaEmbed ? (
+        <div class="diretta-grid">
+          <div class="player">
+            <iframe src={direttaEmbed} title="Diretta streaming" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+          </div>
+          {direttaMatch && (
+            <aside class="diretta-info card">
+              <span class="tag">{direttaMatch.competizione ?? 'Serie A3'}{direttaMatch.giornata ? ` · ${direttaMatch.giornata}` : ''}</span>
+              <div class="di-teams">
+                <strong>{direttaMatch.dove === 'casa' ? (settings?.nomeSquadra ?? 'Corigliano') : direttaMatch.avversario}</strong>
+                <span class="di-vs">vs</span>
+                <strong>{direttaMatch.dove === 'casa' ? direttaMatch.avversario : (settings?.nomeSquadra ?? 'Corigliano')}</strong>
+              </div>
+              <span class="tag">{formatData(direttaMatch.data, true)}</span>
+              <a class="btn" href="/squadra/roster">Vedi la rosa →</a>
+            </aside>
+          )}
+        </div>
+      ) : direttaLink ? (
+        <div class="diretta-cta card">
+          <div>
+            <strong>Diretta streaming</strong>
+            <p class="muted" style="margin-top:4px;">La partita sarà trasmessa in diretta sul canale ufficiale.</p>
+          </div>
+          <a class="btn primary" href={direttaLink} target="_blank" rel="noopener">Guarda la diretta →</a>
+        </div>
+      ) : (
+        <div class="empty"><strong>Nessuna diretta programmata</strong>Quando una partita sarà trasmessa in streaming, il player comparirà qui.</div>
       )}
     </div>
   </section>
@@ -40,7 +83,7 @@ const clImg = classifica?.modalita === 'immagine' ? img(classifica.immagine, 100
     </div>
   </section>
 
-  <section class="section">
+  <section class="section" id="classifica" style="scroll-margin-top: 90px;">
     <div class="container">
       <!-- CLASSIFICA -->
       <div class="section-head between">
@@ -91,4 +134,15 @@ const clImg = classifica?.modalita === 'immagine' ? img(classifica.immagine, 100
   tbody tr:last-child td { border-bottom: none; }
   tr.ours { background: var(--accent-tint); }
   tr.ours td { color: var(--accent-strong); font-weight: 650; }
+
+  /* Diretta */
+  .diretta-grid { display: grid; grid-template-columns: minmax(0, 2.2fr) minmax(0, 1fr); gap: 18px; align-items: start; }
+  @media (max-width: 820px) { .diretta-grid { grid-template-columns: minmax(0, 1fr); } }
+  .player { position: relative; aspect-ratio: 16 / 9; background: #000; border-radius: var(--radius); overflow: hidden; border: 1px solid var(--line); }
+  .player iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+  .diretta-info { padding: 20px 22px; display: flex; flex-direction: column; gap: 10px; align-items: flex-start; }
+  .di-teams { display: flex; flex-direction: column; gap: 2px; font-size: 1.15rem; }
+  .di-teams .di-vs { font-size: .75rem; color: var(--ink-faint); text-transform: uppercase; letter-spacing: .1em; font-weight: 700; }
+  .diretta-cta { padding: 22px 24px; display: flex; align-items: center; justify-content: space-between; gap: 18px; flex-wrap: wrap; }
+  .diretta-cta strong { font-size: 1.1rem; }
 </style>

@@ -2,7 +2,7 @@
 const groq = String.raw;
 
 export const settingsQuery = groq`*[_type == "siteSettings"][0]{
-  nomeSquadra, stagione, logo, bigliettiUrl, newsletterUrl, email, telefono, indirizzo, social,
+  nomeSquadra, stagione, logo, bigliettiUrl, newsletterUrl, direttaUrl, email, telefono, indirizzo, mappaPosizione, social,
   loghiLega,
   prossimaPartita->{data, avversario, dove, competizione, luogo, giornata}
 }`;
@@ -22,7 +22,7 @@ export const newsBySlugQuery = groq`*[_type == "news" && slug.current == $slug][
 export const newsSlugsQuery = groq`*[_type == "news" && defined(slug.current)]{ "slug": slug.current }`;
 
 export const prossimePartiteQuery = groq`*[_type == "partita" && giocata != true] | order(data asc)[0...$limit]{
-  _id, data, avversario, dove, competizione, giornata, luogo
+  _id, data, avversario, dove, competizione, giornata, luogo, direttaUrl
 }`;
 
 export const risultatiQuery = groq`*[_type == "partita" && giocata == true] | order(data desc)[0...$limit]{
@@ -30,7 +30,7 @@ export const risultatiQuery = groq`*[_type == "partita" && giocata == true] | or
 }`;
 
 export const calendarioQuery = groq`*[_type == "partita"] | order(data asc){
-  _id, data, avversario, dove, competizione, giornata, luogo, giocata, setCasa, setTrasferta, parziali, reportUrl
+  _id, data, avversario, dove, competizione, giornata, luogo, giocata, setCasa, setTrasferta, parziali, reportUrl, direttaUrl
 }`;
 
 export const classificaQuery = groq`*[_type == "classifica"] | order(aggiornataAl desc)[0]{

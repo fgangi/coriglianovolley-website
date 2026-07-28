@@ -63,6 +63,12 @@ export const partita = defineType({
       description: 'Es. 25-20, 23-25, 25-19, 25-22',
     }),
     defineField({ name: 'reportUrl', title: 'Link report ufficiale (Legavolley)', type: 'url' }),
+    defineField({
+      name: 'direttaUrl',
+      title: 'Link diretta (YouTube)',
+      type: 'url',
+      description: 'Link alla diretta streaming di questa partita (YouTube). Se presente, compare il player nella sezione Diretta.',
+    }),
   ],
   orderings: [
     { title: 'Data (prossime prima)', name: 'dataAsc', by: [{ field: 'data', direction: 'asc' }] },

@@ -11,6 +11,8 @@ const { title, description } = Astro.props;
 const settings = await sfetch<any>(settingsQuery, {}, null);
 const nomeSquadra = settings?.nomeSquadra ?? 'Corigliano Volley';
 const logoUrl = img(settings?.logo, 200);
+const legaCredemLogo = img(settings?.loghiLega?.legaCredemLogo, 400);
+const legaCredemUrl = settings?.loghiLega?.legaCredemUrl;
 const pageTitle = title ? `${title} · ${nomeSquadra}` : `${nomeSquadra} · Serie A3`;
 const desc = description ?? `Sito ufficiale ${nomeSquadra}, Serie A3 maschile: news, calendario, risultati, roster e settore giovanile.`;
 ---
@@ -28,7 +30,7 @@ const desc = description ?? `Sito ufficiale ${nomeSquadra}, Serie A3 maschile: n
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   </head>
   <body>
-    <Header nomeSquadra={nomeSquadra} bigliettiUrl={settings?.bigliettiUrl} logoUrl={logoUrl} />
+    <Header nomeSquadra={nomeSquadra} bigliettiUrl={settings?.bigliettiUrl} logoUrl={logoUrl} legaCredemLogo={legaCredemLogo} legaCredemUrl={legaCredemUrl} />
     <main>
       <slot />
     </main>

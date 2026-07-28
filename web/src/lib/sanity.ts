@@ -51,6 +51,16 @@ export function richText(blocks: any): string {
   }
 }
 
+/**
+ * Converte un URL YouTube (watch, youtu.be, live, embed) nell'URL di embed del player.
+ * Restituisce null se non riesce a estrarre un ID video (es. link a un canale).
+ */
+export function youtubeEmbed(url?: string): string | null {
+  if (!url) return null;
+  const m = url.match(/(?:youtube\.com\/(?:watch\?v=|live\/|embed\/|v\/)|youtu\.be\/)([\w-]{11})/);
+  return m ? `https://www.youtube.com/embed/${m[1]}` : null;
+}
+
 /** Data in formato italiano leggibile. */
 export function formatData(iso?: string, withTime = false): string {
   if (!iso) return '';
