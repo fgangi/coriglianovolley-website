@@ -38,7 +38,7 @@ export const classificaQuery = groq`*[_type == "classifica"] | order(aggiornataA
 }`;
 
 export const rosterQuery = groq`*[_type == "giocatore"] | order(ordine asc, numero asc){
-  _id, nome, cognome, numero, ruolo, foto, altezza, nazionalita, bio
+  _id, nome, cognome, numero, ruolo, foto, annoNascita, altezza, nazionalita, bio
 }`;
 
 export const staffQuery = groq`*[_type == "staff"] | order(ordine asc, nome asc){

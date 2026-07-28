@@ -30,8 +30,25 @@ export const giocatore = defineType({
       validation: (r) => r.required(),
     }),
     defineField({ name: 'foto', title: 'Foto', type: 'image', options: { hotspot: true } }),
-    defineField({ name: 'altezza', title: 'Altezza (cm)', type: 'number' }),
-    defineField({ name: 'nazionalita', title: 'Nazionalità', type: 'string' }),
+    defineField({
+      name: 'annoNascita',
+      title: 'Anno di nascita',
+      type: 'number',
+      description: 'Solo l\'anno, come pubblicato dalla Lega (es. 2005).',
+      validation: (r) => r.min(1950).max(new Date().getFullYear()),
+    }),
+    defineField({
+      name: 'altezza',
+      title: 'Altezza (cm)',
+      type: 'number',
+      validation: (r) => r.min(100).max(250),
+    }),
+    defineField({
+      name: 'nazionalita',
+      title: 'Nazionalità',
+      type: 'string',
+      initialValue: 'Italia',
+    }),
     defineField({ name: 'bio', title: 'Nota biografica', type: 'text', rows: 4 }),
     defineField({
       name: 'ordine',
