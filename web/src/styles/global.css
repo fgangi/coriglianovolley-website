@@ -186,9 +186,12 @@ p { margin: 0; color: var(--ink-soft); }
 .site-footer { background: var(--black); color: #EDE7E7; margin-top: 56px; }
 .site-footer a { color: #EDE7E7; opacity: .82; transition: opacity .12s ease; }
 .site-footer a:hover { opacity: 1; }
-.site-footer .foot-grid { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, .9fr) minmax(0, 1.4fr); gap: 36px; padding: 52px 0 34px; }
+.site-footer .foot-grid { display: grid; grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr) minmax(0, 1.3fr); gap: 36px; padding: 52px 0 34px; }
 @media (max-width: 860px) { .site-footer .foot-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 28px; } }
 @media (max-width: 560px) { .site-footer .foot-grid { grid-template-columns: minmax(0, 1fr); gap: 26px; } }
+/* Colonne laterali allineate a sinistra; solo quella centrale (senza testo) è centrata */
+.site-footer .foot-grid > div { display: flex; flex-direction: column; align-items: flex-start; text-align: left; }
+.site-footer .foot-grid > .foot-brand { align-items: center; text-align: center; }
 .site-footer h4 { font-size: .78rem; letter-spacing: .14em; text-transform: uppercase; margin: 0 0 14px; opacity: .55; }
 .site-footer .fnav { display: flex; flex-direction: column; gap: 9px; font-size: .95rem; align-items: flex-start; }
 .foot-desc { color: #C9C2C2; max-width: 34ch; margin: 12px 0 0; font-size: .92rem; line-height: 1.5; }
@@ -196,14 +199,28 @@ p { margin: 0; color: var(--ink-soft); }
 .social-icons a { display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; border: 1px solid rgba(255,255,255,.18); border-radius: 10px; opacity: .92; }
 .social-icons a:hover { background: var(--accent); border-color: var(--accent); opacity: 1; }
 .social-icons svg { width: 18px; height: 18px; }
-.foot-map { margin-top: 16px; border-radius: 12px; overflow: hidden; border: 1px solid rgba(255,255,255,.14); line-height: 0; }
+.foot-map { width: 100%; border-radius: 12px; overflow: hidden; border: 1px solid rgba(255,255,255,.14); line-height: 0; }
 .foot-map iframe { width: 100%; height: 190px; border: 0; display: block; }
 /* Logo società nel footer, in evidenza */
 .site-footer .brand { font-size: 1.25rem; color: #fff; }
 .site-footer .brand .mark-img { height: 78px; max-width: 190px; }
-/* Loghi Lega/Credem + Mikasa sotto il marchio della società */
-.brand-partners { display: flex; align-items: center; flex-wrap: wrap; gap: 22px; margin-top: 18px; }
-.brand-partners img { height: 66px; width: auto; max-width: 190px; object-fit: contain; display: block; }
+/* Contatti: gruppi separati dalla spaziatura, senza etichette */
+.foot-contatti { display: flex; flex-direction: column; align-items: flex-start; gap: 18px; width: 100%; }
+.cgroup { display: flex; flex-direction: column; align-items: flex-start; gap: 5px; font-size: .95rem; }
+.cvalue { color: #C9C2C2; }
+.cnote { opacity: .6; font-size: .85em; }
+/* Sede: indirizzo appaiato alla mappa */
+.foot-sede { display: flex; flex-direction: column; align-items: flex-start; gap: 10px; margin-top: 22px; width: 100%; }
+
+/* Loghi istituzionali sotto il marchio della società */
+.brand-partners { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 26px; margin-top: 22px; }
+.brand-partners img { height: 92px; width: auto; max-width: 200px; object-fit: contain; display: block; }
+.brand-partners img.wide { height: 70px; max-width: 330px; }
+
+/* Blocco social centrato nella colonna */
+.foot-social { margin-top: 26px; display: flex; flex-direction: column; align-items: center; gap: 12px; }
+.social-invito { margin: 0; font-size: .92rem; color: #C9C2C2; text-align: center; }
+.foot-social .social-icons { margin-top: 0; justify-content: center; }
 .brand-partners a { display: inline-flex; opacity: .95; }
 .brand-partners a:hover { opacity: 1; }
 @media (max-width: 560px) {

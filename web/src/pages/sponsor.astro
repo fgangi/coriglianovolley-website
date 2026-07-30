@@ -8,8 +8,11 @@ const sponsor = await sfetch<any[]>(sponsorQuery, {}, []);
 const settings = await sfetch<any>(settingsQuery, {}, null);
 const mikasaLogo = img(settings?.loghiLega?.mikasaLogo, 320);
 const mikasaUrl = settings?.loghiLega?.mikasaUrl;
-const LIV: Record<string, string> = { main: 'Main sponsor', gold: 'Gold', silver: 'Silver', partner: 'Partner' };
-const ordine = ['main', 'gold', 'silver', 'partner'];
+const LIV: Record<string, string> = {
+  main: 'Main sponsor', gold: 'Gold sponsor', silver: 'Silver sponsor',
+  bronze: 'Bronze sponsor', partner: 'Partner', media: 'Media partner',
+};
+const ordine = ['main', 'gold', 'silver', 'bronze', 'partner', 'media'];
 const gruppi = ordine
   .map((l) => ({ livello: l, label: LIV[l], items: sponsor.filter((s) => s.livello === l) }))
   .filter((g) => g.items.length > 0);
@@ -40,7 +43,7 @@ const gruppi = ordine
       {mikasaLogo && (
         <div class="liv-group">
           <h2 class="liv-title">Pallone ufficiale</h2>
-          <div class="sponsor-grid" data-livello="main">
+          <div class="sponsor-grid">
             {mikasaUrl ? (
               <a href={mikasaUrl} target="_blank" rel="noopener" class="sp"><img src={mikasaLogo} alt="Mikasa" loading="lazy" /></a>
             ) : (

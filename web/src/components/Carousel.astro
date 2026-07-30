@@ -1,0 +1,75 @@
+---
+/**
+ * Carosello orizzontale: scorre con le frecce, con il dito (swipe) o
+ * con la rotellina. Le schede vengono passate come contenuto (slot).
+ */
+interface Props {
+  /** Descrizione per i lettori di schermo (es. "Giocatori della rosa") */
+  etichetta: string;
+}
+const { etichetta } = Astro.props;
+---
+<div class="carousel" data-carousel>
+  <button class="car-btn prev" type="button" data-prev aria-label={`${etichetta}: scorri indietro`}>
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+  </button>
+
+  <div class="car-track" data-track tabindex="0" role="group" aria-label={etichetta}>
+    <slot />
+  </div>
+
+  <button class="car-btn next" type="button" data-next aria-label={`${etichetta}: scorri avanti`}>
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+  </button>
+</div>
+
+<style>
+  .carousel { position: relative; }
+  .car-track {
+    display: flex; gap: 14px; overflow-x: auto; scroll-behavior: smooth;
+    scroll-snap-type: x mandatory; padding: 4px 2px 10px;
+    scrollbar-width: none; -ms-overflow-style: none;
+  }
+  .car-track::-webkit-scrollbar { display: none; }
+  .car-track > :global(*) { flex: 0 0 auto; width: 200px; scroll-snap-align: start; }
+  @media (max-width: 640px) { .car-track > :global(*) { width: 158px; } }
+
+  .car-btn {
+    position: absolute; top: 42%; transform: translateY(-50%); z-index: 5;
+    width: 42px; height: 42px; border-radius: 50%; cursor: pointer;
+    display: grid; place-items: center;
+    background: var(--ground); color: var(--ink);
+    border: 1px solid var(--line); box-shadow: var(--shadow);
+    transition: background .12s ease, opacity .15s ease, transform .12s ease;
+  }
+  .car-btn:hover { background: var(--accent); color: var(--accent-ink); border-color: transparent; }
+  .car-btn.prev { left: -14px; }
+  .car-btn.next { right: -14px; }
+  .car-btn[hidden] { display: none; }
+  @media (max-width: 900px) { .car-btn.prev { left: -6px; } .car-btn.next { right: -6px; } }
+  @media (prefers-reduced-motion: reduce) { .car-track { scroll-behavior: auto; } }
+</style>
+
+<script>
+  document.querySelectorAll('[data-carousel]').forEach((car) => {
+    const track = car.querySelector('[data-track]') as HTMLElement | null;
+    const prev = car.querySelector('[data-prev]') as HTMLButtonElement | null;
+    const next = car.querySelector('[data-next]') as HTMLButtonElement | null;
+    if (!track || !prev || !next) return;
+
+    /** Nasconde le frecce quando non c'è altro da scorrere in quella direzione. */
+    function aggiornaFrecce() {
+      const max = track.scrollWidth - track.clientWidth - 2;
+      const scorribile = max > 2;
+      prev.hidden = !scorribile || track.scrollLeft <= 2;
+      next.hidden = !scorribile || track.scrollLeft >= max;
+    }
+
+    const passo = () => Math.max(track.clientWidth * 0.8, 200);
+    prev.addEventListener('click', () => track.scrollBy({ left: -passo() }));
+    next.addEventListener('click', () => track.scrollBy({ left: passo() }));
+    track.addEventListener('scroll', aggiornaFrecce, { passive: true });
+    window.addEventListener('resize', aggiornaFrecce);
+    aggiornaFrecce();
+  });
+</script>

@@ -13,6 +13,7 @@ const mapSrc = mapEmbedSrc(s.mappaPosizione || s.indirizzo);
 // Loghi obbligatori Lega, replicati in fondo alla pagina
 const lega = s.loghiLega ?? {};
 const legaCredemLogo = img(lega.legaCredemLogo, 600);
+const legaLogo = img(lega.legaLogo, 700);
 const mikasaLogo = img(lega.mikasaLogo, 400);
 
 const icons: Record<string, string> = {
@@ -34,67 +35,87 @@ const telHref = (n: string) => 'tel:' + n.replace(/[^\d+]/g, '');
 <footer class="site-footer">
   <div class="container">
     <div class="foot-grid">
-      <!-- Brand + social -->
-      <div>
-        <a class="brand" href="/" style="color:#fff;">
-          {logoUrl ? <img class="mark-img" src={logoUrl} alt={`Logo ${nome}`} /> : <span class="mark">{iniziali}</span>}
-          <span class="brand-name">{nome}</span>
-        </a>
-        <p class="foot-desc">{s.stagione ? `Stagione ${s.stagione} · ` : ''}Serie A3.</p>
-
-        {(legaCredemLogo || mikasaLogo) && (
-          <div class="brand-partners">
-            {legaCredemLogo && (
-              lega.legaCredemUrl
-                ? <a href={lega.legaCredemUrl} target="_blank" rel="noopener" aria-label="Lega Pallavolo Serie A · Credem Banca"><img src={legaCredemLogo} alt="Lega Pallavolo Serie A · Credem Banca" /></a>
-                : <img src={legaCredemLogo} alt="Lega Pallavolo Serie A · Credem Banca" />
-            )}
-            {mikasaLogo && (
-              lega.mikasaUrl
-                ? <a href={lega.mikasaUrl} target="_blank" rel="noopener" aria-label="Mikasa"><img src={mikasaLogo} alt="Mikasa" /></a>
-                : <img src={mikasaLogo} alt="Mikasa" />
-            )}
-          </div>
-        )}
-
-        {socialLinks.length > 0 && (
-          <div class="social-icons">
-            {socialLinks.map((it) => (
-              <a href={it.url} target="_blank" rel="noopener" aria-label={labels[it.k]}>
-                <Fragment set:html={icons[it.k]} />
-              </a>
-            ))}
-          </div>
-        )}
-      </div>
-
-      <!-- Naviga -->
+      <!-- 1. Navigazione (stesse voci del menu in alto) -->
       <div>
         <h4>Naviga</h4>
         <div class="fnav">
+          <a href="/">Home</a>
           <a href="/squadra">Squadra</a>
           <a href="/partite">Partite &amp; classifica</a>
           <a href="/news">News</a>
           <a href="/settore-giovanile">Settore giovanile</a>
           <a href="/gallery">Gallery</a>
           <a href="/sponsor">Sponsor</a>
+          <a href="/contatti">Contatti</a>
           {s.bigliettiUrl && <a href={s.bigliettiUrl} target="_blank" rel="noopener">Biglietti</a>}
         </div>
       </div>
 
-      <!-- Dove siamo + contatti + mappa -->
+      <!-- 2. Squadra: nome, logo e loghi istituzionali -->
+      <div class="foot-brand">
+        <a class="brand" href="/" style="color:#fff;">
+          {logoUrl ? <img class="mark-img" src={logoUrl} alt={`Logo ${nome}`} /> : <span class="mark">{iniziali}</span>}
+          <span class="brand-name">{nome}</span>
+        </a>
+        {(legaLogo || legaCredemLogo) && (
+          <div class="brand-partners">
+            {legaLogo && (
+              lega.legaUrl
+                ? <a href={lega.legaUrl} target="_blank" rel="noopener" aria-label="Lega Pallavolo Serie A"><img class="wide" src={legaLogo} alt="Lega Pallavolo Serie A" /></a>
+                : <img class="wide" src={legaLogo} alt="Lega Pallavolo Serie A" />
+            )}
+            {legaCredemLogo && (
+              lega.legaCredemUrl
+                ? <a href={lega.legaCredemUrl} target="_blank" rel="noopener" aria-label="Serie A Credem Banca"><img src={legaCredemLogo} alt="Serie A Credem Banca" /></a>
+                : <img src={legaCredemLogo} alt="Serie A Credem Banca" />
+            )}
+          </div>
+        )}
+
+        {socialLinks.length > 0 && (
+          <div class="foot-social">
+            <p class="social-invito">Seguici sui nostri canali social</p>
+            <div class="social-icons">
+              {socialLinks.map((it) => (
+                <a href={it.url} target="_blank" rel="noopener" aria-label={labels[it.k]}>
+                  <Fragment set:html={icons[it.k]} />
+                </a>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+
+      <!-- 3. Contatti, raggruppati per tipo -->
       <div>
-        <h4>Dove siamo</h4>
-        <div class="fnav">
-          {s.indirizzo && <span style="color:#C9C2C2; white-space:pre-line;">{s.indirizzo}</span>}
-          {s.email && <a href={`mailto:${s.email}`}>{s.email}</a>}
-          {telefoni.map((t) => (
-            <a href={telHref(t.numero)}>{t.etichetta ? `${t.etichetta}: ${t.numero}` : t.numero}</a>
-          ))}
+        <h4>Contatti</h4>
+        <div class="foot-contatti">
+          {telefoni.length > 0 && (
+            <div class="cgroup">
+              {telefoni.map((t) => (
+                <a href={telHref(t.numero)}>
+                  {t.numero}{t.etichetta ? <span class="cnote"> ({t.etichetta})</span> : null}
+                </a>
+              ))}
+            </div>
+          )}
+          {(s.email || s.pec) && (
+            <div class="cgroup">
+              {s.email && <a href={`mailto:${s.email}`}>{s.email}</a>}
+              {s.pec && <a href={`mailto:${s.pec}`}>{s.pec} <span class="cnote">(PEC)</span></a>}
+            </div>
+          )}
         </div>
-        {mapSrc && (
-          <div class="foot-map">
-            <iframe src={mapSrc} loading="lazy" title={`Mappa ${s.indirizzo ?? 'sede'}`} allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>
+
+        {/* L'indirizzo sta accanto alla mappa, che illustra */}
+        {(s.indirizzo || mapSrc) && (
+          <div class="foot-sede">
+            {s.indirizzo && <span class="cvalue" style="white-space:pre-line;">{s.indirizzo}</span>}
+            {mapSrc && (
+              <div class="foot-map">
+                <iframe src={mapSrc} loading="lazy" title={`Mappa ${s.indirizzo ?? 'sede'}`} allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>
+              </div>
+            )}
           </div>
         )}
       </div>

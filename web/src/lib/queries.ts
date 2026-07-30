@@ -2,7 +2,7 @@
 const groq = String.raw;
 
 export const settingsQuery = groq`*[_type == "siteSettings"][0]{
-  nomeSquadra, stagione, logo, fotoSquadra, storia, bigliettiUrl, newsletterUrl, direttaUrl, email, telefono, telefoni, indirizzo, mappaPosizione, social,
+  nomeSquadra, stagione, logo, fotoSquadra, storia, bigliettiUrl, newsletterUrl, direttaUrl, email, pec, telefono, telefoni, indirizzo, mappaPosizione, social,
   loghiLega,
   prossimaPartita->{data, avversario, dove, competizione, luogo, giornata}
 }`;
@@ -45,8 +45,8 @@ export const staffQuery = groq`*[_type == "staff"] | order(ordine asc, nome asc)
   _id, nome, ruolo, area, foto
 }`;
 
-export const sponsorQuery = groq`*[_type == "sponsor"] | order(livello asc){
-  _id, nome, logo, url, livello
+export const sponsorQuery = groq`*[_type == "sponsor"] | order(ordine asc, nome asc){
+  _id, nome, logo, url, livello, ordine
 }`;
 
 export const albumListQuery = groq`*[_type == "galleryAlbum"] | order(data desc){

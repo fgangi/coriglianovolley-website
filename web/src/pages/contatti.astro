@@ -24,6 +24,7 @@ const telHref = (n: string) => 'tel:' + n.replace(/[^\d+]/g, '');
           <h3>Recapiti</h3>
           <dl>
             {s?.email && (<><dt>Email</dt><dd><a href={`mailto:${s.email}`}>{s.email}</a></dd></>)}
+            {s?.pec && (<><dt>PEC</dt><dd><a href={`mailto:${s.pec}`}>{s.pec}</a></dd></>)}
             {telefoni.map((t) => (
               <>
                 <dt>{t.etichetta || 'Telefono'}</dt>
@@ -32,7 +33,7 @@ const telHref = (n: string) => 'tel:' + n.replace(/[^\d+]/g, '');
             ))}
             {s?.indirizzo && (<><dt>Sede / palazzetto</dt><dd style="white-space:pre-line;">{s.indirizzo}</dd></>)}
           </dl>
-          {!s?.email && telefoni.length === 0 && !s?.indirizzo && (
+          {!s?.email && !s?.pec && telefoni.length === 0 && !s?.indirizzo && (
             <p class="muted">I recapiti verranno inseriti nel pannello, alla voce “Impostazioni sito”.</p>
           )}
           {socialLinks.length > 0 && (

@@ -28,6 +28,8 @@ export const siteSettings = defineType({
       fields: [
         { name: 'legaCredemLogo', title: 'Logo congiunto Lega / Credem Banca', type: 'image', options: { hotspot: true } },
         { name: 'legaCredemUrl', title: 'Link sito Main Sponsor (Credem Banca)', type: 'url' },
+        { name: 'legaLogo', title: 'Logo Lega Pallavolo Serie A (orizzontale)', type: 'image', options: { hotspot: true } },
+        { name: 'legaUrl', title: 'Link sito Lega Pallavolo Serie A', type: 'url' },
         { name: 'mikasaLogo', title: 'Logo Mikasa', type: 'image', options: { hotspot: true } },
         { name: 'mikasaUrl', title: 'Link sito Mikasa', type: 'url' },
       ],
@@ -77,6 +79,12 @@ export const siteSettings = defineType({
       name: 'email',
       title: 'Email di contatto',
       type: 'string',
+    }),
+    defineField({
+      name: 'pec',
+      title: 'PEC',
+      type: 'string',
+      description: 'Posta elettronica certificata (es. societa@pec.it).',
     }),
     defineField({
       name: 'telefoni',

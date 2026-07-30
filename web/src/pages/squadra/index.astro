@@ -36,8 +36,15 @@ const stagione = settings?.stagione;
 
   <section class="section" id="staff" style="scroll-margin-top: 110px;">
     <div class="container">
-      <div class="section-head"><span class="eyebrow">Dietro le quinte</span><h2>Staff</h2></div>
-      <StaffGrid staff={staff} />
+      <div class="section-head"><span class="eyebrow">Dietro le quinte</span><h2>Staff tecnico e medico</h2></div>
+      <StaffGrid staff={staff} aree={['tecnico', 'medico']} vuoto="Staff non ancora inserito" />
+    </div>
+  </section>
+
+  <section class="section" id="dirigenza" style="scroll-margin-top: 110px;">
+    <div class="container">
+      <div class="section-head"><span class="eyebrow">La società</span><h2>Dirigenza</h2></div>
+      <StaffGrid staff={staff} aree={['dirigenza']} vuoto="Dirigenza non ancora inserita" />
     </div>
   </section>
 

@@ -16,14 +16,22 @@ export const sponsor = defineType({
       options: {
         list: [
           { title: 'Main sponsor', value: 'main' },
-          { title: 'Gold', value: 'gold' },
-          { title: 'Silver', value: 'silver' },
+          { title: 'Gold sponsor', value: 'gold' },
+          { title: 'Silver sponsor', value: 'silver' },
+          { title: 'Bronze sponsor', value: 'bronze' },
           { title: 'Partner', value: 'partner' },
+          { title: 'Media partner', value: 'media' },
         ],
         layout: 'radio',
       },
       initialValue: 'partner',
       validation: (r) => r.required(),
+    }),
+    defineField({
+      name: 'ordine',
+      title: 'Ordine di visualizzazione',
+      type: 'number',
+      description: 'Più basso = mostrato prima, all\'interno del proprio livello.',
     }),
   ],
   preview: {

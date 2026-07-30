@@ -1,20 +1,27 @@
 ---
 import { img } from '../lib/sanity';
-interface Props { staff: any[]; }
-const { staff } = Astro.props;
+interface Props {
+  staff: any[];
+  /** Aree da mostrare (in ordine). Se omesso, le mostra tutte. */
+  aree?: string[];
+  /** Testo dello stato vuoto. */
+  vuoto?: string;
+}
+const { staff, aree, vuoto } = Astro.props;
 
 const AREE: Record<string, string> = { tecnico: 'Staff tecnico', dirigenza: 'Dirigenza', medico: 'Staff medico' };
-const ordine = ['tecnico', 'dirigenza', 'medico'];
+const ordine = aree ?? ['tecnico', 'medico', 'dirigenza'];
 const gruppi = ordine
   .map((a) => ({ label: AREE[a], membri: staff.filter((m) => (m.area ?? 'tecnico') === a) }))
   .filter((g) => g.membri.length > 0);
 ---
-{staff.length === 0 ? (
-  <div class="empty"><strong>Staff non ancora inserito</strong>I membri aggiunti nel pannello appariranno qui.</div>
+{gruppi.length === 0 ? (
+  <div class="empty"><strong>{vuoto ?? 'Staff non ancora inserito'}</strong>I membri aggiunti nel pannello appariranno qui.</div>
 ) : (
   gruppi.map((g) => (
     <div class="area-group">
-      <h3 class="area-title">{g.label}</h3>
+      {/* Con un solo gruppo il titolo ripeterebbe quello della sezione */}
+      {gruppi.length > 1 && <h3 class="area-title">{g.label}</h3>}
       <div class="grid cols-4">
         {g.membri.map((m) => {
           const foto = img(m.foto, 400, 400);
