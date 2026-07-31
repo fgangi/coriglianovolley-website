@@ -22,6 +22,7 @@ export const sponsor = defineType({
           { title: 'Partner', value: 'partner' },
           { title: 'Media partner', value: 'media' },
           { title: 'Ticketing partner', value: 'ticketing' },
+          { title: 'Sponsor tecnico', value: 'tecnico' },
         ],
         layout: 'radio',
       },

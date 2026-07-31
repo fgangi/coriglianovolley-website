@@ -9,8 +9,11 @@ interface Props {
 }
 const { staff, aree, vuoto } = Astro.props;
 
-const AREE: Record<string, string> = { tecnico: 'Staff tecnico', dirigenza: 'Dirigenza', medico: 'Staff medico' };
-const ordine = aree ?? ['tecnico', 'medico', 'dirigenza'];
+const AREE: Record<string, string> = {
+  tecnico: 'Staff tecnico', medico: 'Staff medico',
+  presidenza: 'Presidenza', dirigenza: 'Dirigenza',
+};
+const ordine = aree ?? ['tecnico', 'medico', 'presidenza', 'dirigenza'];
 const gruppi = ordine
   .map((a) => ({ label: AREE[a], membri: staff.filter((m) => (m.area ?? 'tecnico') === a) }))
   .filter((g) => g.membri.length > 0);

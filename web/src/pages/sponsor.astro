@@ -8,15 +8,17 @@ const sponsor = await sfetch<any[]>(sponsorQuery, {}, []);
 const settings = await sfetch<any>(settingsQuery, {}, null);
 const mikasaLogo = img(settings?.loghiLega?.mikasaLogo, 320);
 const mikasaUrl = settings?.loghiLega?.mikasaUrl;
-// Sezioni della pagina: una sezione può raccogliere più livelli
-// (media e ticketing sono mostrati insieme).
+// Sezioni della pagina, nell'ordine in cui compaiono.
+// Una sezione può raccogliere più livelli, se servisse.
 const SEZIONI: { label: string; livelli: string[] }[] = [
   { label: 'Main sponsor', livelli: ['main'] },
   { label: 'Gold sponsor', livelli: ['gold'] },
   { label: 'Silver sponsor', livelli: ['silver'] },
   { label: 'Bronze sponsor', livelli: ['bronze'] },
   { label: 'Partner', livelli: ['partner'] },
-  { label: 'Media & Ticketing partner', livelli: ['media', 'ticketing'] },
+  { label: 'Media partner', livelli: ['media'] },
+  { label: 'Ticketing partner', livelli: ['ticketing'] },
+  { label: 'Sponsor tecnico', livelli: ['tecnico'] },
 ];
 const gruppi = SEZIONI
   .map((s) => ({ label: s.label, items: sponsor.filter((x) => s.livelli.includes(x.livello)) }))

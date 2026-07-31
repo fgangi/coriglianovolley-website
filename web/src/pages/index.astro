@@ -29,7 +29,7 @@ const nome = settings?.nomeSquadra ?? 'Corigliano Volley';
 const lega = settings?.loghiLega ?? {};
 const mikasaLogo = img(lega.mikasaLogo, 320);
 // Sponsor in home ordinati per importanza (la query li ordina alfabeticamente)
-const RANK_SPONSOR: Record<string, number> = { main: 0, gold: 1, silver: 2, bronze: 3, partner: 4, media: 5, ticketing: 6 };
+const RANK_SPONSOR: Record<string, number> = { main: 0, gold: 1, silver: 2, bronze: 3, partner: 4, media: 5, ticketing: 6, tecnico: 7 };
 const sponsorOrdinati = [...sponsor].sort(
   (a, b) => (RANK_SPONSOR[a.livello] ?? 9) - (RANK_SPONSOR[b.livello] ?? 9)
 );

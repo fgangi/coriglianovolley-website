@@ -15,8 +15,9 @@ export const staff = defineType({
       options: {
         list: [
           { title: 'Staff tecnico', value: 'tecnico' },
-          { title: 'Dirigenza', value: 'dirigenza' },
           { title: 'Staff medico', value: 'medico' },
+          { title: 'Presidenza', value: 'presidenza' },
+          { title: 'Dirigenza', value: 'dirigenza' },
         ],
         layout: 'radio',
       },
