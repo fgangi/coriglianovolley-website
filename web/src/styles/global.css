@@ -48,8 +48,12 @@ p { margin: 0; color: var(--ink-soft); }
   font-size: .74rem; font-weight: 700; letter-spacing: .15em; text-transform: uppercase;
   color: var(--accent); margin: 0 0 .6rem;
 }
-.section-head { display: flex; flex-direction: column; gap: .5rem; margin-bottom: clamp(24px, 4vw, 40px); }
+/* Occhiello e titolo distanziati sempre di 10px, come nelle intestazioni di pagina:
+   l'occhiello azzera il proprio margine e la spaziatura la dà solo il contenitore. */
+.section-head { display: flex; flex-direction: column; gap: 10px; margin-bottom: clamp(24px, 4vw, 40px); }
+.section-head .eyebrow { margin: 0; }
 .section-head.between { flex-direction: row; align-items: flex-end; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+.section-head.between > div { display: flex; flex-direction: column; gap: 10px; }
 
 /* --- buttons --- */
 .btn {
@@ -139,7 +143,16 @@ p { margin: 0; color: var(--ink-soft); }
     content: ''; position: absolute; inset: 6px 0 0 0; z-index: -1;
     background: var(--surface); border: 1px solid var(--line); border-radius: 12px; box-shadow: var(--shadow);
   }
-  .mainnav-item[data-open="true"] > .submenu { animation: submenuIn .14s ease; }
+  /* Su desktop la tendina si apre anche al passaggio del mouse: il "ponte"
+     (padding-top del .submenu) evita varchi in cui l'hover si perderebbe. */
+  .mainnav-item.has-sub:hover > .submenu,
+  .mainnav-item.has-sub:focus-within > .submenu { display: flex; }
+  .mainnav-item.has-sub:hover > .mainnav-trigger,
+  .mainnav-item.has-sub:focus-within > .mainnav-trigger { color: var(--ink); background: var(--surface-2); }
+  .mainnav-item.has-sub:hover .caret-icon,
+  .mainnav-item.has-sub:focus-within .caret-icon { transform: rotate(180deg); }
+  .mainnav-item[data-open="true"] > .submenu,
+  .mainnav-item.has-sub:hover > .submenu { animation: submenuIn .14s ease; }
   @keyframes submenuIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
   .submenu a { padding: .55rem .7rem; border-radius: 8px; font-size: .9rem; color: var(--ink-soft); white-space: nowrap; }
   .submenu a:hover, .submenu a[aria-current="page"] { background: var(--surface-2); color: var(--ink); }
@@ -253,11 +266,11 @@ p { margin: 0; color: var(--ink-soft); }
 /* --- animazioni di transizione fra pagine ---
    Lo stile si sceglie con l'attributo data-anim sull'elemento <html>. */
 
-/* dissolvenza (predefinita) */
-@keyframes pagIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+/* dissolvenza pura: solo cambio scena, nessuno spostamento della pagina */
+@keyframes pagIn { from { opacity: 0; } to { opacity: 1; } }
 @keyframes pagOut { from { opacity: 1; } to { opacity: 0; } }
-:root[data-anim="dissolvenza"]::view-transition-old(root) { animation: pagOut .26s ease both; }
-:root[data-anim="dissolvenza"]::view-transition-new(root) { animation: pagIn .42s cubic-bezier(.22,.7,.3,1) both; }
+:root[data-anim="dissolvenza"]::view-transition-old(root) { animation: pagOut .14s ease-out both; }
+:root[data-anim="dissolvenza"]::view-transition-new(root) { animation: pagIn .22s ease-in both; }
 
 /* scorrimento verticale: la pagina nuova sale dal basso, la vecchia esce in alto */
 @keyframes slideIn { from { transform: translateY(46px); opacity: 0; } to { transform: none; opacity: 1; } }
@@ -266,9 +279,10 @@ p { margin: 0; color: var(--ink-soft); }
 :root[data-anim="slide"]::view-transition-new(root) { animation: slideIn .52s cubic-bezier(.2,.7,.3,1) both; }
 
 /* zoom morbido */
-@keyframes zoomIn { from { transform: scale(.955); opacity: 0; } to { transform: none; opacity: 1; } }
-:root[data-anim="zoom"]::view-transition-old(root) { animation: pagOut .2s ease both; }
-:root[data-anim="zoom"]::view-transition-new(root) { animation: zoomIn .4s cubic-bezier(.22,.8,.3,1) both; }
+@keyframes zoomIn { from { transform: scale(.965); opacity: 0; } to { transform: none; opacity: 1; } }
+/* Curva con partenza decisa e frenata corta: più scattante a parità di durata */
+:root[data-anim="zoom"]::view-transition-old(root) { animation: pagOut .12s ease both; }
+:root[data-anim="zoom"]::view-transition-new(root) { animation: zoomIn .26s cubic-bezier(.16,.9,.28,1) both; }
 
 /* Feedback alla pressione anche su schede e voci di menu */
 .mainnav-link:active, .submenu a:active, .card:active, .rp-card:active, .sp:active { transform: scale(.985); }

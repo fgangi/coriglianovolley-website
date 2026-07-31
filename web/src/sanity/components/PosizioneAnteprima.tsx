@@ -10,10 +10,9 @@ import { createImageUrlBuilder } from '@sanity/image-url';
  * Il valore è { x, y } in percentuale e sul sito diventa `object-position`.
  */
 
-const FORMATI = [
-  { nome: 'Scheda news', ratio: 16 / 10 },
-  { nome: 'Articolo in evidenza', ratio: 1000 / 640 },
-];
+// Un solo formato: le schede news e il riquadro "in evidenza" hanno
+// entrambi proporzioni 16:10, quindi l'inquadratura vale identica per tutti.
+const FORMATI = [{ nome: 'Come apparirà nelle anteprime', ratio: 16 / 10 }];
 
 type Pos = { x?: number; y?: number };
 
@@ -50,8 +49,8 @@ export function PosizioneAnteprima(props: ObjectInputProps) {
   return (
     <div style={{ display: 'grid', gap: 14 }}>
       <p style={nota}>
-        Trascina l'immagine dentro i riquadri per scegliere la porzione visibile. I riquadri hanno le
-        stesse proporzioni delle schede del sito.
+        Trascina l'immagine per scegliere la porzione visibile. Il riquadro ha le stesse proporzioni
+        delle anteprime sul sito, in home e nell'elenco news.
       </p>
 
       <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap' }}>
@@ -126,7 +125,8 @@ function Riquadro({
         onPointerUp={su}
         onPointerCancel={su}
         style={{
-          width: 240,
+          width: 360,
+          maxWidth: '100%',
           aspectRatio: String(ratio),
           overflow: 'hidden',
           borderRadius: 6,

@@ -169,8 +169,8 @@ const RUOLI_LABEL: Record<string, string> = { palleggiatore: 'Palleggiatore', op
     <section class="section">
       <div class="container">
         <div class="section-head between">
-          <div><span class="eyebrow">La squadra</span><h2>La rosa</h2></div>
-          <a class="btn" href="/squadra#roster">Vedi tutta la squadra</a>
+          <div><span class="eyebrow">La squadra</span><h2>Il roster</h2></div>
+          <a class="btn" href="/squadra#roster">Tutta la squadra</a>
         </div>
         <Carousel etichetta="Giocatori della rosa" allinea="stretch">
           {rosterPreview.map((p) => {
@@ -308,8 +308,8 @@ const RUOLI_LABEL: Record<string, string> = { palleggiatore: 'Palleggiatore', op
   /* Pallone ufficiale (Mikasa) */
   /* Gruppi di sponsor per categoria */
   .spon-gruppo + .spon-gruppo { margin-top: clamp(24px, 3.5vw, 38px); }
-  .spon-titolo { font-size: .8rem; text-transform: uppercase; letter-spacing: .12em; color: var(--ink-faint);
-    font-weight: 700; margin: 0 0 14px; padding-bottom: 8px; border-bottom: 1px solid var(--line); }
+  .spon-titolo { font-size: .95rem; text-transform: uppercase; letter-spacing: .12em; color: var(--ink-faint); font-weight: 700;
+    margin: 0 0 20px; padding-bottom: 10px; border-bottom: 1px solid var(--line); }
   /* Ultima riga: media, ticketing, tecnico e pallone tutti insieme */
   .spon-finali { display: flex; flex-wrap: wrap; gap: 18px; padding-top: 4px; }
   .spon-finale { display: flex; flex-direction: column; gap: 7px; }
@@ -323,15 +323,22 @@ const RUOLI_LABEL: Record<string, string> = { palleggiatore: 'Palleggiatore', op
   .featured { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); align-items: stretch;
     transition: transform .14s ease, border-color .14s ease; }
   .featured:hover { transform: translateY(-3px); border-color: var(--ink-faint); }
-  .f-media { position: relative; background: var(--surface-2); min-height: 260px; overflow: hidden; }
+  /* aspect-ratio dà al riquadro le stesse proporzioni delle schede news;
+     align-self: stretch gli fa comunque riempire tutta l'altezza della scheda,
+     così non resta mai una striscia vuota sotto l'immagine. */
+  .f-media { position: relative; background: var(--surface-2); overflow: hidden;
+    aspect-ratio: 16 / 10; align-self: stretch; }
   .f-media img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
   .f-media .thumb-ph { width: 100%; height: 100%;
     background: repeating-linear-gradient(135deg, var(--surface-2), var(--surface-2) 12px, var(--surface) 12px, var(--surface) 24px); }
   .f-body { padding: clamp(22px, 3.5vw, 40px); display: flex; flex-direction: column; gap: 10px; align-items: flex-start; justify-content: center; }
-  .f-body h3 { font-size: clamp(1.3rem, 2.6vw, 1.9rem); font-weight: 800; letter-spacing: -.015em; }
-  .f-body p { font-size: 1rem; }
+  /* Titolo ed estratto limitati: il testo resta più basso dell'immagine */
+  .f-body h3 { font-size: clamp(1.3rem, 2.6vw, 1.9rem); font-weight: 800; letter-spacing: -.015em;
+    display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
+  .f-body p { font-size: 1rem;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
   .f-body .more { margin-top: 6px; font-weight: 700; color: var(--accent); }
-  @media (max-width: 760px) { .featured { grid-template-columns: 1fr; } .f-media { aspect-ratio: 16 / 9; min-height: 0; } }
+  @media (max-width: 900px) { .featured { grid-template-columns: 1fr; } }
 
   /* Schede giocatore nel carosello */
   .rp-card { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; transition: transform .14s ease, border-color .14s ease; }

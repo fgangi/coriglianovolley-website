@@ -127,8 +127,8 @@ function initHeader() {
     if (open) closeSubmenus();
   });
 
-  // Le voci con tendina si aprono al click (niente hover: evita chiusure
-  // accidentali passando dal bottone al menu, e click che finiscono sotto).
+  // Su desktop la tendina si apre già al passaggio del mouse (via CSS);
+  // il click resta per touch e tastiera.
   items.forEach((item) => {
     const trigger = item.querySelector('[data-trigger]');
     trigger?.addEventListener('click', (e) => {
@@ -138,6 +138,12 @@ function initHeader() {
       closeSubmenus(item);
       item.setAttribute('data-open', String(!open));
       trigger.setAttribute('aria-expanded', String(!open));
+    });
+    // Allontanando il mouse la tendina aperta col click non resta bloccata
+    item.addEventListener('mouseleave', () => {
+      if (item.getAttribute('data-open') !== 'true') return;
+      item.setAttribute('data-open', 'false');
+      trigger?.setAttribute('aria-expanded', 'false');
     });
   });
 
