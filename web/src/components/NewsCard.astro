@@ -1,12 +1,14 @@
 ---
-import { img, formatData } from '../lib/sanity';
+import { img, formatData, posizione } from '../lib/sanity';
 interface Props { item: any; }
 const { item } = Astro.props;
-const cover = img(item.copertina, 640, 400);
+// Immagine intera: il ritaglio lo fa il CSS, seguendo l'inquadratura scelta nel pannello
+const cover = img(item.copertina, 700);
+const pos = posizione(item.posizioneAnteprima);
 ---
 <a class="card news-card" href={`/news/${item.slug}`}>
   <div class="thumb">
-    {cover ? <img src={cover} alt={item.titolo} loading="lazy" /> : <div class="thumb-ph" aria-hidden="true"></div>}
+    {cover ? <img src={cover} alt={item.titolo} loading="lazy" style={`object-position:${pos}`} /> : <div class="thumb-ph" aria-hidden="true"></div>}
     {item.settore === 'giovanile' && <span class="pill on-thumb">Giovanile</span>}
   </div>
   <div class="body">
@@ -24,8 +26,9 @@ const cover = img(item.copertina, 640, 400);
   .thumb-ph { width: 100%; height: 100%;
     background: repeating-linear-gradient(135deg, var(--surface-2), var(--surface-2) 12px, var(--surface) 12px, var(--surface) 24px); }
   .pill.on-thumb { position: absolute; top: 10px; left: 10px; background: var(--accent); color: var(--accent-ink); }
-  .body { padding: 16px 18px 18px; display: flex; flex-direction: column; gap: 6px; }
+  /* flex:1 + margin-top:auto allineano il "Leggi" in fondo a tutte le schede */
+  .body { padding: 16px 18px 18px; display: flex; flex-direction: column; gap: 6px; flex: 1; }
   .body h3 { margin: 2px 0; }
   .body p { font-size: .92rem; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-  .more { margin-top: 6px; font-size: .88rem; font-weight: 650; color: var(--accent); }
+  .more { margin-top: auto; padding-top: 10px; font-size: .88rem; font-weight: 650; color: var(--accent); }
 </style>

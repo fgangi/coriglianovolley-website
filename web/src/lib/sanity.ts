@@ -11,10 +11,26 @@ export function urlFor(source: any) {
 }
 
 /** Immagine pronta all'uso (o null se assente). */
-export function img(source: any, w = 800, h?: number): string | null {
+export function img(source: any, w = 800, h?: number, inquadratura?: string): string | null {
   if (!source?.asset) return null;
   let b = urlFor(source).width(w).auto('format').fit('max');
-  if (h) b = b.height(h).fit('crop');
+  if (h) {
+    b = b.height(h).fit('crop');
+    if (inquadratura && inquadratura !== 'auto') {
+      // Scelta esplicita dell'editor nel pannello (alto / centro / basso).
+      b = b.crop(inquadratura as any);
+    } else if (source.hotspot) {
+      // L'editor ha scelto il punto focale nel pannello: lo rispettiamo.
+      b = b.crop('focalpoint');
+    } else {
+      // Le dimensioni originali sono nel riferimento: image-<id>-<w>x<h>-<ext>
+      const m = String(source.asset?._ref ?? '').match(/-(\d+)x(\d+)-/);
+      const verticale = m ? Number(m[2]) > Number(m[1]) : false;
+      // Su foto verticali il taglio parte dall'alto (dove di solito stanno i volti);
+      // sulle altre 'entropy' individua da sola la parte interessante.
+      b = b.crop(verticale ? 'top' : 'entropy');
+    }
+  }
   return b.url();
 }
 
@@ -75,6 +91,16 @@ export function mapEmbedSrc(value?: string): string | null {
   const url = raw.replace(/&amp;/g, '&');
   if (/^https?:\/\//i.test(url)) return url;
   return `https://www.google.com/maps?q=${encodeURIComponent(url)}&z=16&output=embed`;
+}
+
+/**
+ * Converte l'inquadratura scelta nel pannello in `object-position` CSS:
+ * il ritaglio avviene nel browser, esattamente come mostrato nell'anteprima.
+ */
+export function posizione(p?: { x?: number; y?: number } | null): string {
+  const x = typeof p?.x === 'number' ? p.x : 50;
+  const y = typeof p?.y === 'number' ? p.y : 50;
+  return `${x}% ${y}%`;
 }
 
 /** Data in formato italiano leggibile. */

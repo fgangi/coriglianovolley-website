@@ -8,11 +8,11 @@ export const settingsQuery = groq`*[_type == "siteSettings"][0]{
 }`;
 
 export const newsListQuery = groq`*[_type == "news" && settore == $settore] | order(data desc)[0...$limit]{
-  _id, titolo, "slug": slug.current, data, settore, estratto, copertina, inEvidenza
+  _id, titolo, "slug": slug.current, data, settore, estratto, copertina, posizioneAnteprima, inEvidenza
 }`;
 
 export const newsInEvidenzaQuery = groq`*[_type == "news" && inEvidenza == true] | order(data desc)[0...3]{
-  _id, titolo, "slug": slug.current, data, settore, estratto, copertina
+  _id, titolo, "slug": slug.current, data, settore, estratto, copertina, posizioneAnteprima
 }`;
 
 export const newsBySlugQuery = groq`*[_type == "news" && slug.current == $slug][0]{

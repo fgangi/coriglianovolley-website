@@ -41,17 +41,11 @@ const stagione = settings?.stagione;
     </div>
   </section>
 
-  <section class="section" id="presidenza" style="scroll-margin-top: 110px;">
+  <!-- Presidenza e dirigenza sotto un unico titolo, con i due sottotitoli -->
+  <section class="section" id="societa" style="scroll-margin-top: 110px;">
     <div class="container">
-      <div class="section-head"><span class="eyebrow">La società</span><h2>Presidenza</h2></div>
-      <StaffGrid staff={staff} aree={['presidenza']} vuoto="Presidenza non ancora inserita" />
-    </div>
-  </section>
-
-  <section class="section" id="dirigenza" style="scroll-margin-top: 110px;">
-    <div class="container">
-      <div class="section-head"><span class="eyebrow">La società</span><h2>Dirigenza</h2></div>
-      <StaffGrid staff={staff} aree={['dirigenza']} vuoto="Dirigenza non ancora inserita" />
+      <div class="section-head"><span class="eyebrow">La società</span><h2>Organigramma</h2></div>
+      <StaffGrid staff={staff} aree={['presidenza', 'dirigenza']} vuoto="Organigramma non ancora inserito" />
     </div>
   </section>
 

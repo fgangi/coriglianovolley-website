@@ -30,6 +30,8 @@ export const siteSettings = defineType({
         { name: 'legaCredemUrl', title: 'Link sito Main Sponsor (Credem Banca)', type: 'url' },
         { name: 'legaLogo', title: 'Logo Lega Pallavolo Serie A (orizzontale)', type: 'image', options: { hotspot: true } },
         { name: 'legaUrl', title: 'Link sito Lega Pallavolo Serie A', type: 'url' },
+        { name: 'fipavLogo', title: 'Logo FIPAV', type: 'image', options: { hotspot: true } },
+        { name: 'fipavUrl', title: 'Link sito FIPAV', type: 'url' },
         { name: 'mikasaLogo', title: 'Logo Mikasa', type: 'image', options: { hotspot: true } },
         { name: 'mikasaUrl', title: 'Link sito Mikasa', type: 'url' },
       ],

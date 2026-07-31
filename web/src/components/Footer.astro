@@ -14,6 +14,7 @@ const mapSrc = mapEmbedSrc(s.mappaPosizione || s.indirizzo);
 const lega = s.loghiLega ?? {};
 const legaCredemLogo = img(lega.legaCredemLogo, 600);
 const legaLogo = img(lega.legaLogo, 700);
+const fipavLogo = img(lega.fipavLogo, 400);
 const mikasaLogo = img(lega.mikasaLogo, 400);
 
 const icons: Record<string, string> = {
@@ -57,7 +58,7 @@ const telHref = (n: string) => 'tel:' + n.replace(/[^\d+]/g, '');
           {logoUrl ? <img class="mark-img" src={logoUrl} alt={`Logo ${nome}`} /> : <span class="mark">{iniziali}</span>}
           <span class="brand-name">{nome}</span>
         </a>
-        {(legaLogo || legaCredemLogo) && (
+        {(legaLogo || legaCredemLogo || fipavLogo) && (
           <div class="brand-partners">
             {legaLogo && (
               lega.legaUrl
@@ -68,6 +69,11 @@ const telHref = (n: string) => 'tel:' + n.replace(/[^\d+]/g, '');
               lega.legaCredemUrl
                 ? <a href={lega.legaCredemUrl} target="_blank" rel="noopener" aria-label="Serie A Credem Banca"><img src={legaCredemLogo} alt="Serie A Credem Banca" /></a>
                 : <img src={legaCredemLogo} alt="Serie A Credem Banca" />
+            )}
+            {fipavLogo && (
+              lega.fipavUrl
+                ? <a href={lega.fipavUrl} target="_blank" rel="noopener" aria-label="FIPAV"><img src={fipavLogo} alt="FIPAV — Federazione Italiana Pallavolo" /></a>
+                : <img src={fipavLogo} alt="FIPAV — Federazione Italiana Pallavolo" />
             )}
           </div>
         )}

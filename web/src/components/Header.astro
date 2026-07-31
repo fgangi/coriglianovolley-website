@@ -13,13 +13,13 @@ type Item = { href: string; label: string; children?: { href: string; label: str
 const nav: Item[] = [
   { href: '/', label: 'Home' },
   {
+    // Le voci seguono l'ordine reale delle sezioni nella pagina
     href: '/squadra', label: 'Squadra',
     children: [
       { href: '/squadra', label: 'La squadra' },
       { href: '/squadra#roster', label: 'Roster' },
-      { href: '/squadra#staff', label: 'Staff' },
-      { href: '/squadra#presidenza', label: 'Presidenza' },
-      { href: '/squadra#dirigenza', label: 'Dirigenza' },
+      { href: '/squadra#staff', label: 'Staff tecnico e medico' },
+      { href: '/squadra#societa', label: 'Organigramma' },
       { href: '/squadra/chi-siamo', label: 'Chi siamo' },
     ],
   },
@@ -27,8 +27,8 @@ const nav: Item[] = [
     href: '/partite', label: 'Partite',
     children: [
       { href: '/partite', label: 'Calendario & risultati' },
-      { href: '/partite#classifica', label: 'Classifica' },
       { href: '/partite#diretta', label: 'Diretta' },
+      { href: '/partite#classifica', label: 'Classifica' },
     ],
   },
   { href: '/news', label: 'News' },
@@ -96,9 +96,14 @@ const iniziali = nomeSquadra.split(' ').map((w) => w[0]).join('').slice(0, 2).to
   </div>
 </header>
 <script>
-  const navToggle = document.querySelector('[data-nav-toggle]');
+// Con le transizioni tra pagine lo script può rieseguirsi: il flag "bound"
+// evita di agganciare due volte gli stessi eventi.
+function initHeader() {
+  const navToggle = document.querySelector('[data-nav-toggle]') as HTMLElement | null;
   const nav = document.querySelector('[data-nav]');
   const items = Array.from(document.querySelectorAll('[data-sub]'));
+  if (!navToggle || !nav || navToggle.dataset.bound === '1') return;
+  navToggle.dataset.bound = '1';
 
   /** Chiude tutte le tendine, tranne quella indicata. */
   function closeSubmenus(except) {
@@ -152,4 +157,14 @@ const iniziali = nomeSquadra.split(' ').map((w) => w[0]).join('').slice(0, 2).to
     closeMobileNav();
     (aperto?.querySelector('[data-trigger]'))?.focus();
   });
+}
+
+initHeader();
+// Rieseguito dopo ogni transizione di pagina
+document.addEventListener('astro:page-load', initHeader);
+// Cambiando pagina il menu mobile va richiuso
+document.addEventListener('astro:before-swap', () => {
+  document.querySelector('[data-nav]')?.setAttribute('data-open', 'false');
+  document.querySelectorAll('[data-sub]').forEach((i) => i.setAttribute('data-open', 'false'));
+});
 </script>

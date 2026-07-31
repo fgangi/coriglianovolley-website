@@ -1,4 +1,5 @@
 import { defineType, defineField } from 'sanity';
+import { InEvidenzaUnica } from '../components/InEvidenzaUnica';
 
 /** Notizia / articolo. */
 export const news = defineType({
@@ -37,6 +38,13 @@ export const news = defineType({
     }),
     defineField({ name: 'copertina', title: 'Immagine di copertina', type: 'image', options: { hotspot: true } }),
     defineField({
+      name: 'posizioneAnteprima',
+      title: 'Inquadratura dell\'anteprima',
+      type: 'posizioneAnteprima',
+      description:
+        'Trascina l\'immagine nei riquadri per scegliere cosa si vede nelle anteprime. Nella pagina dell\'articolo la foto resta sempre intera.',
+    }),
+    defineField({
       name: 'estratto',
       title: 'Estratto',
       type: 'text',
@@ -48,7 +56,10 @@ export const news = defineType({
       name: 'inEvidenza',
       title: 'In evidenza in home',
       type: 'boolean',
+      description:
+        'Solo una notizia per volta: attivandola qui, viene tolta automaticamente dalle altre.',
       initialValue: false,
+      components: { input: InEvidenzaUnica },
     }),
   ],
   orderings: [

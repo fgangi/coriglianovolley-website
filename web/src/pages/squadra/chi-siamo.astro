@@ -58,19 +58,11 @@ const nome = settings?.nomeSquadra ?? 'Corigliano Volley';
     </div>
   </section>
 
-  <!-- PRESIDENZA -->
+  <!-- PRESIDENZA E DIRIGENZA -->
   <section class="section">
     <div class="container">
-      <div class="section-head"><span class="eyebrow">La società</span><h2>Presidenza</h2></div>
-      <StaffGrid staff={staff} aree={['presidenza']} vuoto="Presidenza non ancora inserita" />
-    </div>
-  </section>
-
-  <!-- DIRIGENZA -->
-  <section class="section">
-    <div class="container">
-      <div class="section-head"><span class="eyebrow">La società</span><h2>Dirigenza</h2></div>
-      <StaffGrid staff={staff} aree={['dirigenza']} vuoto="Dirigenza non ancora inserita" />
+      <div class="section-head"><span class="eyebrow">La società</span><h2>Organigramma</h2></div>
+      <StaffGrid staff={staff} aree={['presidenza', 'dirigenza']} vuoto="Organigramma non ancora inserito" />
     </div>
   </section>
 </Layout>

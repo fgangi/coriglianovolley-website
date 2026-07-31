@@ -3,7 +3,7 @@ import Layout from '../layouts/Layout.astro';
 import NewsCard from '../components/NewsCard.astro';
 import PartitaRow from '../components/PartitaRow.astro';
 import Carousel from '../components/Carousel.astro';
-import { sfetch, img, formatData } from '../lib/sanity';
+import { sfetch, img, formatData, posizione } from '../lib/sanity';
 import {
   settingsQuery, risultatiQuery, prossimePartiteQuery,
   newsInEvidenzaQuery, newsListQuery, sponsorQuery, rosterQuery, staffQuery,
@@ -14,13 +14,15 @@ const [risultati, prossime, evidenza, ultime, sponsor, roster, staff] = await Pr
   sfetch<any[]>(risultatiQuery, { limit: 3 }, []),
   sfetch<any[]>(prossimePartiteQuery, { limit: 3 }, []),
   sfetch<any[]>(newsInEvidenzaQuery, {}, []),
-  sfetch<any[]>(newsListQuery, { settore: 'prima-squadra', limit: 3 }, []),
+  // 4 perché una potrebbe essere quella già mostrata in evidenza (viene esclusa sotto)
+  sfetch<any[]>(newsListQuery, { settore: 'prima-squadra', limit: 4 }, []),
   sfetch<any[]>(sponsorQuery, {}, []),
   sfetch<any[]>(rosterQuery, {}, []),
   sfetch<any[]>(staffQuery, {}, []),
 ]);
 const featured = evidenza[0] ?? null;
-const featuredCover = featured ? img(featured.copertina, 1000, 640) : null;
+const featuredCover = featured ? img(featured.copertina, 1100) : null;
+const featuredPos = posizione(featured?.posizioneAnteprima);
 // L'elenco "Ultime news" esclude la notizia già mostrata in evidenza.
 const latest = ultime.filter((n) => n._id !== featured?._id).slice(0, 3);
 const prossima = settings?.prossimaPartita ?? prossime[0] ?? null;
@@ -28,17 +30,42 @@ const nome = settings?.nomeSquadra ?? 'Corigliano Volley';
 // Logo Mikasa (pallone ufficiale) — il logo Lega/Credem è ora nell'header
 const lega = settings?.loghiLega ?? {};
 const mikasaLogo = img(lega.mikasaLogo, 320);
-// Sponsor in home ordinati per importanza (la query li ordina alfabeticamente)
-const RANK_SPONSOR: Record<string, number> = { main: 0, gold: 1, silver: 2, bronze: 3, partner: 4, media: 5, ticketing: 6, tecnico: 7 };
-const sponsorOrdinati = [...sponsor].sort(
-  (a, b) => (RANK_SPONSOR[a.livello] ?? 9) - (RANK_SPONSOR[b.livello] ?? 9)
-);
+// Sponsor divisi per categoria, nello stesso ordine della pagina Sponsor
+// Le schede rimpiccioliscono a scalare: la dimensione comunica l'importanza.
+const SEZIONI_SPONSOR: { label: string; livello: string; w: string; wMob: string }[] = [
+  { label: 'Main sponsor', livello: 'main', w: '300px', wMob: '220px' },
+  { label: 'Gold sponsor', livello: 'gold', w: '260px', wMob: '195px' },
+  { label: 'Silver sponsor', livello: 'silver', w: '225px', wMob: '175px' },
+  { label: 'Bronze sponsor', livello: 'bronze', w: '195px', wMob: '155px' },
+  { label: 'Partner', livello: 'partner', w: '170px', wMob: '140px' },
+];
+const gruppiSponsor = SEZIONI_SPONSOR
+  .map((s) => ({ ...s, items: sponsor.filter((x) => x.livello === s.livello) }))
+  .filter((g) => g.items.length > 0);
+
+// Ultime categorie: una sola riga di schede piccole, ciascuna con la sua etichetta,
+// invece di quattro righe separate quasi vuote.
+const FINALI: { label: string; livello: string }[] = [
+  { label: 'Media partner', livello: 'media' },
+  { label: 'Ticketing partner', livello: 'ticketing' },
+  { label: 'Sponsor tecnico', livello: 'tecnico' },
+];
+const sponsorFinali: { label: string; nome: string; logo: string | null; url?: string }[] = [
+  ...FINALI.flatMap((f) =>
+    sponsor
+      .filter((x) => x.livello === f.livello)
+      .map((x) => ({ label: f.label, nome: x.nome, logo: img(x.logo, 220), url: x.url }))
+  ),
+  ...(mikasaLogo
+    ? [{ label: 'Pallone ufficiale', nome: 'Mikasa', logo: mikasaLogo, url: lega.mikasaUrl }]
+    : []),
+];
 // Anteprime che rimandano alle sezioni dedicate
 const prossimeList = prossime.slice(0, 3);
 const direttaLink = prossime.find((m) => m.direttaUrl)?.direttaUrl ?? settings?.direttaUrl ?? null;
 const rosterPreview = roster;
 // Nei caroselli in home scorre tutto: roster completo e staff ordinato per area
-const RANK_AREA: Record<string, number> = { tecnico: 0, medico: 1, dirigenza: 2 };
+const RANK_AREA: Record<string, number> = { tecnico: 0, medico: 1, presidenza: 2, dirigenza: 3 };
 const staffPreview = [...staff].sort(
   (a, b) => (RANK_AREA[a.area ?? 'tecnico'] ?? 9) - (RANK_AREA[b.area ?? 'tecnico'] ?? 9)
 );
@@ -71,34 +98,6 @@ const RUOLI_LABEL: Record<string, string> = { palleggiatore: 'Palleggiatore', op
     </div>
   </section>
 
-  <!-- PROSSIME PARTITE -->
-  {prossimeList.length > 0 && (
-    <section class="section">
-      <div class="container">
-        <div class="section-head between">
-          <div><span class="eyebrow">In arrivo</span><h2>Prossime partite</h2></div>
-          <a class="btn" href="/partite">Calendario completo</a>
-        </div>
-        <div class="grid cols-3">{prossimeList.map((m) => <PartitaRow m={m} />)}</div>
-      </div>
-    </section>
-  )}
-
-  <!-- RISULTATI -->
-  <section class="section">
-    <div class="container">
-      <div class="section-head between">
-        <div><span class="eyebrow">Campo</span><h2>Ultimi risultati</h2></div>
-        <a class="btn" href="/partite">Tutte le partite</a>
-      </div>
-      {risultati.length ? (
-        <div class="grid cols-3">{risultati.map((m) => <PartitaRow m={m} />)}</div>
-      ) : (
-        <div class="empty"><strong>Ancora nessun risultato</strong>I risultati appariranno qui dopo le prime giornate.</div>
-      )}
-    </div>
-  </section>
-
   <!-- IN EVIDENZA -->
   {featured && (
     <section class="section">
@@ -106,7 +105,7 @@ const RUOLI_LABEL: Record<string, string> = { palleggiatore: 'Palleggiatore', op
         <div class="section-head"><span class="eyebrow">In evidenza</span><h2>Da non perdere</h2></div>
         <a class="featured card" href={`/news/${featured.slug}`}>
           <div class="f-media">
-            {featuredCover ? <img src={featuredCover} alt={featured.titolo} /> : <div class="thumb-ph" aria-hidden="true"></div>}
+            {featuredCover ? <img src={featuredCover} alt={featured.titolo} style={`object-position:${featuredPos}`} /> : <div class="thumb-ph" aria-hidden="true"></div>}
           </div>
           <div class="f-body">
             <span class="pill">In evidenza</span>
@@ -137,6 +136,34 @@ const RUOLI_LABEL: Record<string, string> = { palleggiatore: 'Palleggiatore', op
     </div>
   </section>
 
+  <!-- PROSSIME PARTITE -->
+  {prossimeList.length > 0 && (
+    <section class="section">
+      <div class="container">
+        <div class="section-head between">
+          <div><span class="eyebrow">In arrivo</span><h2>Prossime partite</h2></div>
+          <a class="btn" href="/partite">Calendario completo</a>
+        </div>
+        <div class="grid cols-3">{prossimeList.map((m) => <PartitaRow m={m} />)}</div>
+      </div>
+    </section>
+  )}
+
+  <!-- RISULTATI -->
+  <section class="section">
+    <div class="container">
+      <div class="section-head between">
+        <div><span class="eyebrow">Campo</span><h2>Ultimi risultati</h2></div>
+        <a class="btn" href="/partite">Tutte le partite</a>
+      </div>
+      {risultati.length ? (
+        <div class="grid cols-3">{risultati.map((m) => <PartitaRow m={m} />)}</div>
+      ) : (
+        <div class="empty"><strong>Ancora nessun risultato</strong>I risultati appariranno qui dopo le prime giornate.</div>
+      )}
+    </div>
+  </section>
+
   <!-- ROSTER (anteprima) -->
   {rosterPreview.length > 0 && (
     <section class="section">
@@ -145,7 +172,7 @@ const RUOLI_LABEL: Record<string, string> = { palleggiatore: 'Palleggiatore', op
           <div><span class="eyebrow">La squadra</span><h2>La rosa</h2></div>
           <a class="btn" href="/squadra#roster">Vedi tutta la squadra</a>
         </div>
-        <Carousel etichetta="Giocatori della rosa">
+        <Carousel etichetta="Giocatori della rosa" allinea="stretch">
           {rosterPreview.map((p) => {
             const foto = img(p.foto, 320, 380);
             return (
@@ -171,7 +198,7 @@ const RUOLI_LABEL: Record<string, string> = { palleggiatore: 'Palleggiatore', op
           <div><span class="eyebrow">Dietro le quinte</span><h2>Lo staff</h2></div>
           <a class="btn" href="/squadra#staff">Tutto lo staff</a>
         </div>
-        <Carousel etichetta="Staff e dirigenza">
+        <Carousel etichetta="Staff e dirigenza" allinea="stretch">
           {staffPreview.map((m) => {
             const foto = img(m.foto, 300, 300);
             return (
@@ -191,30 +218,44 @@ const RUOLI_LABEL: Record<string, string> = { palleggiatore: 'Palleggiatore', op
     <section class="section">
       <div class="container">
         <div class="section-head"><span class="eyebrow">Insieme a noi</span><h2>I nostri partner</h2></div>
-        {sponsor.length > 0 && (
-          <Carousel etichetta="Sponsor e partner" larghezza="250px" larghezzaMobile="190px">
-            {sponsorOrdinati.map((sp) => {
-              const logo = img(sp.logo, 240);
+        {gruppiSponsor.map((g) => (
+          <div class="spon-gruppo">
+            <h3 class="spon-titolo">{g.label}</h3>
+            <Carousel etichetta={g.label} larghezza={g.w} larghezzaMobile={g.wMob}>
+              {g.items.map((sp) => {
+                const logo = img(sp.logo, 240);
+                const inner = (
+                  <>
+                    {logo ? <img src={logo} alt={sp.nome} loading="lazy" /> : <span>{sp.nome}</span>}
+                    {logo && <span class="sp-nome" aria-hidden="true">{sp.nome}</span>}
+                  </>
+                );
+                return sp.url
+                  ? <a href={sp.url} target="_blank" rel="noopener" class="sp" title={sp.nome}>{inner}</a>
+                  : <div class="sp" title={sp.nome}>{inner}</div>;
+              })}
+            </Carousel>
+          </div>
+        ))}
+
+        {sponsorFinali.length > 0 && (
+          <div class="spon-gruppo spon-finali">
+            {sponsorFinali.map((f) => {
               const inner = (
                 <>
-                  {logo ? <img src={logo} alt={sp.nome} loading="lazy" /> : <span>{sp.nome}</span>}
-                  {logo && <span class="sp-nome" aria-hidden="true">{sp.nome}</span>}
+                  {f.logo ? <img src={f.logo} alt={f.nome} loading="lazy" /> : <span>{f.nome}</span>}
+                  {f.logo && <span class="sp-nome" aria-hidden="true">{f.nome}</span>}
                 </>
               );
-              return sp.url
-                ? <a href={sp.url} target="_blank" rel="noopener" class="sp" title={sp.nome}>{inner}</a>
-                : <div class="sp" title={sp.nome}>{inner}</div>;
+              return (
+                <div class="spon-finale">
+                  <span class="spon-etichetta">{f.label}</span>
+                  {f.url
+                    ? <a href={f.url} target="_blank" rel="noopener" class="sp" title={f.nome}>{inner}</a>
+                    : <div class="sp" title={f.nome}>{inner}</div>}
+                </div>
+              );
             })}
-          </Carousel>
-        )}
-        {mikasaLogo && (
-          <div class="official-ball">
-            <span class="tag">Pallone ufficiale</span>
-            {lega.mikasaUrl ? (
-              <a href={lega.mikasaUrl} target="_blank" rel="noopener" class="sp"><img src={mikasaLogo} alt="Mikasa" loading="lazy" /></a>
-            ) : (
-              <div class="sp"><img src={mikasaLogo} alt="Mikasa" loading="lazy" /></div>
-            )}
           </div>
         )}
       </div>
@@ -265,8 +306,18 @@ const RUOLI_LABEL: Record<string, string> = { palleggiatore: 'Palleggiatore', op
   @media (prefers-reduced-motion: reduce) { .sp-nome { transition: none; } }
 
   /* Pallone ufficiale (Mikasa) */
-  .official-ball { display: flex; flex-direction: column; align-items: flex-start; gap: 10px; margin-top: 22px; }
-  .official-ball .sp { width: 250px; }
+  /* Gruppi di sponsor per categoria */
+  .spon-gruppo + .spon-gruppo { margin-top: clamp(24px, 3.5vw, 38px); }
+  .spon-titolo { font-size: .8rem; text-transform: uppercase; letter-spacing: .12em; color: var(--ink-faint);
+    font-weight: 700; margin: 0 0 14px; padding-bottom: 8px; border-bottom: 1px solid var(--line); }
+  /* Ultima riga: media, ticketing, tecnico e pallone tutti insieme */
+  .spon-finali { display: flex; flex-wrap: wrap; gap: 18px; padding-top: 4px; }
+  .spon-finale { display: flex; flex-direction: column; gap: 7px; }
+  .spon-etichetta { font-size: .68rem; text-transform: uppercase; letter-spacing: .1em;
+    color: var(--ink-faint); font-weight: 700; }
+  /* Stessa larghezza dei "Partner", per evitare disallineamenti */
+  .spon-finali .sp { width: 170px; }
+  @media (max-width: 640px) { .spon-finali { gap: 14px; } .spon-finali .sp { width: 140px; } }
 
   /* In evidenza */
   .featured { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); align-items: stretch;

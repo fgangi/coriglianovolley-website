@@ -58,9 +58,15 @@ const gruppi = SEZIONI
           <h2 class="liv-title">Pallone ufficiale</h2>
           <div class="sponsor-grid">
             {mikasaUrl ? (
-              <a href={mikasaUrl} target="_blank" rel="noopener" class="sp"><img src={mikasaLogo} alt="Mikasa" loading="lazy" /></a>
+              <a href={mikasaUrl} target="_blank" rel="noopener" class="sp" title="Mikasa">
+                <img src={mikasaLogo} alt="Mikasa" loading="lazy" />
+                <span class="sp-nome" aria-hidden="true">Mikasa</span>
+              </a>
             ) : (
-              <div class="sp"><img src={mikasaLogo} alt="Mikasa" loading="lazy" /></div>
+              <div class="sp" title="Mikasa">
+                <img src={mikasaLogo} alt="Mikasa" loading="lazy" />
+                <span class="sp-nome" aria-hidden="true">Mikasa</span>
+              </div>
             )}
           </div>
         </div>

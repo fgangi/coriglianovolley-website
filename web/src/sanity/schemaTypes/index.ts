@@ -1,4 +1,5 @@
 import { blockContent } from './blockContent';
+import { posizioneAnteprima } from './posizioneAnteprima';
 import { siteSettings } from './siteSettings';
 import { giocatore } from './giocatore';
 import { staff } from './staff';
@@ -22,4 +23,5 @@ export const schemaTypes = [
   squadraGiovanile,
   // Oggetti riutilizzabili
   blockContent,
+  posizioneAnteprima,
 ];

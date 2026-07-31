@@ -10,9 +10,19 @@ interface Props {
   larghezza?: string;
   /** Larghezza delle schede su schermi stretti (default 158px) */
   larghezzaMobile?: string;
+  /**
+   * 'stretch' rende tutte le schede alte uguali (utile per roster e staff);
+   * 'flex-start' lascia l'altezza naturale (necessario dove c'è aspect-ratio).
+   */
+  allinea?: 'stretch' | 'flex-start';
 }
-const { etichetta, larghezza = '200px', larghezzaMobile = '158px' } = Astro.props;
-const vars = `--car-w: ${larghezza}; --car-w-mob: ${larghezzaMobile};`;
+const {
+  etichetta,
+  larghezza = '200px',
+  larghezzaMobile = '158px',
+  allinea = 'flex-start',
+} = Astro.props;
+const vars = `--car-w: ${larghezza}; --car-w-mob: ${larghezzaMobile}; --car-align: ${allinea};`;
 ---
 <div class="carousel" data-carousel style={vars}>
   <button class="car-btn prev" type="button" data-prev aria-label={`${etichetta}: scorri indietro`}>
@@ -31,9 +41,9 @@ const vars = `--car-w: ${larghezza}; --car-w-mob: ${larghezzaMobile};`;
 <style>
   .carousel { position: relative; }
   .car-track {
-    /* flex-start: senza questo le schede vengono stirate all'altezza
-       della più alta, sovrascrivendo le proporzioni (aspect-ratio). */
-    display: flex; align-items: flex-start; gap: 14px; overflow-x: auto; scroll-behavior: smooth;
+    /* flex-start di default: lo stiramento sovrascriverebbe le proporzioni
+       (aspect-ratio) delle schede sponsor. 'stretch' dove servono alte uguali. */
+    display: flex; align-items: var(--car-align, flex-start); gap: 14px; overflow-x: auto; scroll-behavior: smooth;
     scroll-snap-type: x mandatory; padding: 4px 2px 10px;
     scrollbar-width: none; -ms-overflow-style: none;
   }
@@ -58,11 +68,15 @@ const vars = `--car-w: ${larghezza}; --car-w-mob: ${larghezzaMobile};`;
 </style>
 
 <script>
+function initCarousels() {
   document.querySelectorAll('[data-carousel]').forEach((car) => {
     const track = car.querySelector('[data-track]') as HTMLElement | null;
     const prev = car.querySelector('[data-prev]') as HTMLButtonElement | null;
     const next = car.querySelector('[data-next]') as HTMLButtonElement | null;
     if (!track || !prev || !next) return;
+    // Evita di agganciare due volte gli eventi dopo una transizione di pagina
+    if ((car as HTMLElement).dataset.bound === '1') return;
+    (car as HTMLElement).dataset.bound = '1';
 
     /** Nasconde le frecce quando non c'è altro da scorrere in quella direzione. */
     function aggiornaFrecce() {
@@ -79,4 +93,8 @@ const vars = `--car-w: ${larghezza}; --car-w-mob: ${larghezzaMobile};`;
     window.addEventListener('resize', aggiornaFrecce);
     aggiornaFrecce();
   });
+}
+
+initCarousels();
+document.addEventListener('astro:page-load', initCarousels);
 </script>
