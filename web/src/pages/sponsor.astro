@@ -8,13 +8,18 @@ const sponsor = await sfetch<any[]>(sponsorQuery, {}, []);
 const settings = await sfetch<any>(settingsQuery, {}, null);
 const mikasaLogo = img(settings?.loghiLega?.mikasaLogo, 320);
 const mikasaUrl = settings?.loghiLega?.mikasaUrl;
-const LIV: Record<string, string> = {
-  main: 'Main sponsor', gold: 'Gold sponsor', silver: 'Silver sponsor',
-  bronze: 'Bronze sponsor', partner: 'Partner', media: 'Media partner',
-};
-const ordine = ['main', 'gold', 'silver', 'bronze', 'partner', 'media'];
-const gruppi = ordine
-  .map((l) => ({ livello: l, label: LIV[l], items: sponsor.filter((s) => s.livello === l) }))
+// Sezioni della pagina: una sezione può raccogliere più livelli
+// (media e ticketing sono mostrati insieme).
+const SEZIONI: { label: string; livelli: string[] }[] = [
+  { label: 'Main sponsor', livelli: ['main'] },
+  { label: 'Gold sponsor', livelli: ['gold'] },
+  { label: 'Silver sponsor', livelli: ['silver'] },
+  { label: 'Bronze sponsor', livelli: ['bronze'] },
+  { label: 'Partner', livelli: ['partner'] },
+  { label: 'Media & Ticketing partner', livelli: ['media', 'ticketing'] },
+];
+const gruppi = SEZIONI
+  .map((s) => ({ label: s.label, items: sponsor.filter((x) => s.livelli.includes(x.livello)) }))
   .filter((g) => g.items.length > 0);
 ---
 <Layout title="Sponsor">
@@ -27,13 +32,19 @@ const gruppi = ordine
         gruppi.map((g) => (
           <div class="liv-group">
             <h2 class="liv-title">{g.label}</h2>
-            <div class="sponsor-grid" data-livello={g.livello}>
+            <div class="sponsor-grid">
               {g.items.map((sp) => {
                 const logo = img(sp.logo, 300);
-                const inner = logo ? <img src={logo} alt={sp.nome} loading="lazy" /> : <span>{sp.nome}</span>;
+                const inner = (
+                  <>
+                    {logo ? <img src={logo} alt={sp.nome} loading="lazy" /> : <span>{sp.nome}</span>}
+                    {/* Nome mostrato al passaggio del mouse (il logo da solo non sempre è chiaro) */}
+                    {logo && <span class="sp-nome" aria-hidden="true">{sp.nome}</span>}
+                  </>
+                );
                 return sp.url
-                  ? <a href={sp.url} target="_blank" rel="noopener" class="sp">{inner}</a>
-                  : <div class="sp">{inner}</div>;
+                  ? <a href={sp.url} target="_blank" rel="noopener" class="sp" title={sp.nome}>{inner}</a>
+                  : <div class="sp" title={sp.nome}>{inner}</div>;
               })}
             </div>
           </div>
@@ -59,12 +70,28 @@ const gruppi = ordine
   .liv-group + .liv-group { margin-top: clamp(28px, 4vw, 44px); }
   .liv-title { font-size: .95rem; text-transform: uppercase; letter-spacing: .12em; color: var(--ink-faint); font-weight: 700;
     padding-bottom: 10px; border-bottom: 1px solid var(--line); margin-bottom: 20px; }
-  .sponsor-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
-  .sponsor-grid[data-livello="main"] { grid-template-columns: repeat(2, 1fr); }
-  @media (max-width: 760px) { .sponsor-grid, .sponsor-grid[data-livello="main"] { grid-template-columns: repeat(2, 1fr); } }
-  .sp { height: 110px; display: grid; place-items: center; padding: 20px; background: var(--surface);
-    border: 1px solid var(--line); border-radius: var(--radius); transition: transform .12s ease; }
-  .sp:hover { transform: translateY(-2px); }
-  .sp img { max-height: 64px; width: auto; object-fit: contain; }
-  .sp span { font-weight: 700; color: var(--ink-soft); }
+  /* Quattro per riga: via di mezzo fra leggibilità dei loghi e spazio occupato */
+  .sponsor-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 18px; }
+  @media (max-width: 1000px) { .sponsor-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+  @media (max-width: 760px) { .sponsor-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; } }
+  @media (max-width: 420px) { .sponsor-grid { grid-template-columns: minmax(0, 1fr); } }
+  /* Sfondo bianco: i loghi PNG hanno quasi sempre fondo bianco o trasparente */
+  .sp { position: relative; aspect-ratio: 4 / 3; display: grid; place-items: center; padding: 24px; background: #fff;
+    border: 1px solid var(--line); border-radius: var(--radius); text-align: center; overflow: hidden;
+    transition: transform .14s ease, border-color .14s ease, box-shadow .14s ease; }
+  .sp:hover { transform: translateY(-3px); border-color: var(--ink-faint); box-shadow: var(--shadow); }
+  /* min-height:0 impedisce all'immagine di allargare la scheda oltre le proporzioni */
+  .sp > * { min-width: 0; min-height: 0; max-width: 100%; max-height: 100%; }
+  .sp img { width: auto; height: auto; object-fit: contain; }
+  .sp span { font-weight: 700; color: var(--ink-soft); font-size: 1.05rem; line-height: 1.3; }
+  /* Etichetta col nome, appare in basso al passaggio del mouse */
+  .sp-nome {
+    position: absolute; left: 0; right: 0; bottom: 0; max-width: none !important;
+    padding: 10px 12px; background: rgba(20, 16, 17, .85);
+    color: #fff !important; font-size: .85rem !important; font-weight: 650; line-height: 1.25;
+    opacity: 0; transform: translateY(100%); pointer-events: none;
+    transition: opacity .16s ease, transform .16s ease;
+  }
+  .sp:hover .sp-nome, .sp:focus-visible .sp-nome { opacity: 1; transform: translateY(0); }
+  @media (prefers-reduced-motion: reduce) { .sp-nome { transition: none; } }
 </style>

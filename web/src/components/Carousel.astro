@@ -6,10 +6,15 @@
 interface Props {
   /** Descrizione per i lettori di schermo (es. "Giocatori della rosa") */
   etichetta: string;
+  /** Larghezza delle schede su schermi larghi (default 200px) */
+  larghezza?: string;
+  /** Larghezza delle schede su schermi stretti (default 158px) */
+  larghezzaMobile?: string;
 }
-const { etichetta } = Astro.props;
+const { etichetta, larghezza = '200px', larghezzaMobile = '158px' } = Astro.props;
+const vars = `--car-w: ${larghezza}; --car-w-mob: ${larghezzaMobile};`;
 ---
-<div class="carousel" data-carousel>
+<div class="carousel" data-carousel style={vars}>
   <button class="car-btn prev" type="button" data-prev aria-label={`${etichetta}: scorri indietro`}>
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
   </button>
@@ -26,13 +31,15 @@ const { etichetta } = Astro.props;
 <style>
   .carousel { position: relative; }
   .car-track {
-    display: flex; gap: 14px; overflow-x: auto; scroll-behavior: smooth;
+    /* flex-start: senza questo le schede vengono stirate all'altezza
+       della più alta, sovrascrivendo le proporzioni (aspect-ratio). */
+    display: flex; align-items: flex-start; gap: 14px; overflow-x: auto; scroll-behavior: smooth;
     scroll-snap-type: x mandatory; padding: 4px 2px 10px;
     scrollbar-width: none; -ms-overflow-style: none;
   }
   .car-track::-webkit-scrollbar { display: none; }
-  .car-track > :global(*) { flex: 0 0 auto; width: 200px; scroll-snap-align: start; }
-  @media (max-width: 640px) { .car-track > :global(*) { width: 158px; } }
+  .car-track > :global(*) { flex: 0 0 auto; width: var(--car-w, 200px); scroll-snap-align: start; }
+  @media (max-width: 640px) { .car-track > :global(*) { width: var(--car-w-mob, 158px); } }
 
   .car-btn {
     position: absolute; top: 42%; transform: translateY(-50%); z-index: 5;

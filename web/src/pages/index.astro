@@ -29,7 +29,7 @@ const nome = settings?.nomeSquadra ?? 'Corigliano Volley';
 const lega = settings?.loghiLega ?? {};
 const mikasaLogo = img(lega.mikasaLogo, 320);
 // Sponsor in home ordinati per importanza (la query li ordina alfabeticamente)
-const RANK_SPONSOR: Record<string, number> = { main: 0, gold: 1, silver: 2, bronze: 3, partner: 4, media: 5 };
+const RANK_SPONSOR: Record<string, number> = { main: 0, gold: 1, silver: 2, bronze: 3, partner: 4, media: 5, ticketing: 6 };
 const sponsorOrdinati = [...sponsor].sort(
   (a, b) => (RANK_SPONSOR[a.livello] ?? 9) - (RANK_SPONSOR[b.livello] ?? 9)
 );
@@ -192,11 +192,18 @@ const RUOLI_LABEL: Record<string, string> = { palleggiatore: 'Palleggiatore', op
       <div class="container">
         <div class="section-head"><span class="eyebrow">Insieme a noi</span><h2>I nostri partner</h2></div>
         {sponsor.length > 0 && (
-          <Carousel etichetta="Sponsor e partner">
+          <Carousel etichetta="Sponsor e partner" larghezza="250px" larghezzaMobile="190px">
             {sponsorOrdinati.map((sp) => {
               const logo = img(sp.logo, 240);
-              const inner = logo ? <img src={logo} alt={sp.nome} loading="lazy" /> : <span>{sp.nome}</span>;
-              return sp.url ? <a href={sp.url} target="_blank" rel="noopener" class="sp">{inner}</a> : <div class="sp">{inner}</div>;
+              const inner = (
+                <>
+                  {logo ? <img src={logo} alt={sp.nome} loading="lazy" /> : <span>{sp.nome}</span>}
+                  {logo && <span class="sp-nome" aria-hidden="true">{sp.nome}</span>}
+                </>
+              );
+              return sp.url
+                ? <a href={sp.url} target="_blank" rel="noopener" class="sp" title={sp.nome}>{inner}</a>
+                : <div class="sp" title={sp.nome}>{inner}</div>;
             })}
           </Carousel>
         )}
@@ -237,17 +244,29 @@ const RUOLI_LABEL: Record<string, string> = { palleggiatore: 'Palleggiatore', op
   .nm-vs { color: var(--ink-faint); font-size: .8rem; text-transform: uppercase; letter-spacing: .1em; margin: 6px 0; font-weight: 700; }
   .nm-when { margin-top: 16px; font-weight: 600; color: var(--ink); }
   .nm-where { color: var(--ink-faint); font-size: .9rem; margin-top: 4px; }
-  /* Schede sponsor: la larghezza la decide il carosello */
-  .sp { height: 96px; display: grid; place-items: center; padding: 16px 20px; text-align: center;
-    background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
-    transition: transform .12s ease, border-color .12s ease; }
-  .sp:hover { transform: translateY(-2px); border-color: var(--ink-faint); }
-  .sp img { max-height: 60px; width: auto; object-fit: contain; }
-  .sp span { font-weight: 700; color: var(--ink-soft); font-size: .9rem; line-height: 1.25; }
+  /* Schede sponsor: larghezza dal carosello, fondo bianco come i loghi PNG */
+  .sp { position: relative; aspect-ratio: 4 / 3; display: grid; place-items: center; padding: 22px; text-align: center;
+    background: #fff; border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden;
+    transition: transform .12s ease, border-color .12s ease, box-shadow .14s ease; }
+  .sp:hover { transform: translateY(-2px); border-color: var(--ink-faint); box-shadow: var(--shadow); }
+  /* min-height:0 impedisce all'immagine di allargare la scheda oltre le proporzioni */
+  .sp > * { min-width: 0; min-height: 0; max-width: 100%; max-height: 100%; }
+  .sp img { width: auto; height: auto; object-fit: contain; }
+  .sp span { font-weight: 700; color: var(--ink-soft); font-size: .92rem; line-height: 1.3; }
+  /* Nome dello sponsor al passaggio del mouse */
+  .sp-nome {
+    position: absolute; left: 0; right: 0; bottom: 0; max-width: none !important;
+    padding: 9px 11px; background: rgba(20, 16, 17, .85);
+    color: #fff !important; font-size: .82rem !important; font-weight: 650; line-height: 1.25;
+    opacity: 0; transform: translateY(100%); pointer-events: none;
+    transition: opacity .16s ease, transform .16s ease;
+  }
+  .sp:hover .sp-nome, .sp:focus-visible .sp-nome { opacity: 1; transform: translateY(0); }
+  @media (prefers-reduced-motion: reduce) { .sp-nome { transition: none; } }
 
   /* Pallone ufficiale (Mikasa) */
   .official-ball { display: flex; flex-direction: column; align-items: flex-start; gap: 10px; margin-top: 22px; }
-  .official-ball .sp { width: 200px; }
+  .official-ball .sp { width: 250px; }
 
   /* In evidenza */
   .featured { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); align-items: stretch;
