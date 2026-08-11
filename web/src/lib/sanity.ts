@@ -103,12 +103,34 @@ export function posizione(p?: { x?: number; y?: number } | null): string {
   return `${x}% ${y}%`;
 }
 
+/**
+ * Fuso della squadra. Le pagine sono generate su server esteri (UTC): senza
+ * indicarlo, gli orari delle partite verrebbero mostrati sfasati di un'ora.
+ */
+export const FUSO = 'Europe/Rome';
+
 /** Data in formato italiano leggibile. */
 export function formatData(iso?: string, withTime = false): string {
   if (!iso) return '';
   const d = new Date(iso);
   const opt: Intl.DateTimeFormatOptions = withTime
-    ? { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' }
-    : { day: '2-digit', month: 'long', year: 'numeric' };
+    ? { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: FUSO }
+    : { day: '2-digit', month: 'long', year: 'numeric', timeZone: FUSO };
   return d.toLocaleDateString('it-IT', opt);
+}
+
+/** Pezzi della data per la tessera calendario: giorno, mese, ora, mese esteso. */
+export function pezziData(iso?: string) {
+  if (!iso) return null;
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return null;
+  const f = (opt: Intl.DateTimeFormatOptions) =>
+    d.toLocaleString('it-IT', { ...opt, timeZone: FUSO });
+  return {
+    giorno: f({ day: '2-digit' }),
+    mese: f({ month: 'short' }).replace('.', '').toUpperCase(),
+    ora: f({ hour: '2-digit', minute: '2-digit' }),
+    meseAnno: f({ month: 'long', year: 'numeric' }).toUpperCase(),
+    chiaveMese: f({ year: 'numeric', month: '2-digit' }),
+  };
 }

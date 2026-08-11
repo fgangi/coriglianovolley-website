@@ -2,7 +2,7 @@
 import Layout from '../../layouts/Layout.astro';
 import PageHero from '../../components/PageHero.astro';
 import PartitaRow from '../../components/PartitaRow.astro';
-import { sfetch, img, formatData, youtubeEmbed } from '../../lib/sanity';
+import { sfetch, img, formatData, youtubeEmbed, pezziData } from '../../lib/sanity';
 import { calendarioQuery, classificaQuery, settingsQuery } from '../../lib/queries';
 
 const [partite, classifica, settings] = await Promise.all([
@@ -19,6 +19,21 @@ const matchDiretta = prossime.find((m) => m.direttaUrl) ?? null;
 const direttaLink = matchDiretta?.direttaUrl ?? settings?.direttaUrl ?? null;
 const direttaEmbed = youtubeEmbed(direttaLink);
 const direttaMatch = matchDiretta ?? prossime[0] ?? null;
+
+/** Raggruppa le partite per mese, mantenendo l'ordine ricevuto. */
+function perMese(elenco: any[]) {
+  const gruppi: { titolo: string; partite: any[] }[] = [];
+  for (const p of elenco) {
+    const d = pezziData(p.data);
+    const titolo = d?.meseAnno ?? 'Da definire';
+    const ultimo = gruppi[gruppi.length - 1];
+    if (ultimo && ultimo.titolo === titolo) ultimo.partite.push(p);
+    else gruppi.push({ titolo, partite: [p] });
+  }
+  return gruppi;
+}
+const prossimePerMese = perMese(prossime);
+const giocatePerMese = perMese(giocate);
 ---
 <Layout title="Partite & classifica">
   <PageHero eyebrow="Campo" title="Partite & classifica" lead="Calendario, risultati e classifica aggiornata del girone." />
@@ -28,7 +43,12 @@ const direttaMatch = matchDiretta ?? prossime[0] ?? null;
       <!-- PROSSIME -->
       <div class="section-head"><span class="eyebrow">In arrivo</span><h2>Prossime partite</h2></div>
       {prossime.length ? (
-        <div class="grid cols-2">{prossime.map((m) => <PartitaRow m={m} />)}</div>
+        prossimePerMese.map((g) => (
+          <div class="mese-gruppo">
+            <h3 class="mese-titolo">{g.titolo}</h3>
+            <div class="grid cols-2">{g.partite.map((m) => <PartitaRow m={m} />)}</div>
+          </div>
+        ))
       ) : (
         <div class="empty"><strong>Nessuna partita in calendario</strong>Le partite inserite nel pannello appariranno qui.</div>
       )}
@@ -76,7 +96,12 @@ const direttaMatch = matchDiretta ?? prossime[0] ?? null;
       <!-- RISULTATI -->
       <div class="section-head"><span class="eyebrow">Archivio</span><h2>Risultati</h2></div>
       {giocate.length ? (
-        <div class="grid cols-2">{giocate.map((m) => <PartitaRow m={m} />)}</div>
+        giocatePerMese.map((g) => (
+          <div class="mese-gruppo">
+            <h3 class="mese-titolo">{g.titolo}</h3>
+            <div class="grid cols-2">{g.partite.map((m) => <PartitaRow m={m} />)}</div>
+          </div>
+        ))
       ) : (
         <div class="empty"><strong>Ancora nessun risultato</strong>I risultati appariranno qui dopo le prime giornate.</div>
       )}
@@ -126,6 +151,9 @@ const direttaMatch = matchDiretta ?? prossime[0] ?? null;
   </section>
 </Layout>
 <style>
+  .mese-gruppo + .mese-gruppo { margin-top: clamp(24px, 3.5vw, 38px); }
+  .mese-titolo { font-size: .95rem; text-transform: uppercase; letter-spacing: .12em; color: var(--ink-faint); font-weight: 700;
+    margin: 0 0 20px; padding-bottom: 10px; border-bottom: 1px solid var(--line); }
   .cl-img { margin: 0; border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; background: var(--surface); }
   .table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); }
   table { border-collapse: collapse; width: 100%; min-width: 480px; }

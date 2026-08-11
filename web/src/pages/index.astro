@@ -3,7 +3,8 @@ import Layout from '../layouts/Layout.astro';
 import NewsCard from '../components/NewsCard.astro';
 import PartitaRow from '../components/PartitaRow.astro';
 import Carousel from '../components/Carousel.astro';
-import { sfetch, img, formatData, posizione } from '../lib/sanity';
+import NewsInEvidenza from '../components/NewsInEvidenza.astro';
+import { sfetch, img, formatData } from '../lib/sanity';
 import {
   settingsQuery, risultatiQuery, prossimePartiteQuery,
   newsInEvidenzaQuery, newsListQuery, sponsorQuery, rosterQuery, staffQuery,
@@ -21,8 +22,6 @@ const [risultati, prossime, evidenza, ultime, sponsor, roster, staff] = await Pr
   sfetch<any[]>(staffQuery, {}, []),
 ]);
 const featured = evidenza[0] ?? null;
-const featuredCover = featured ? img(featured.copertina, 1100) : null;
-const featuredPos = posizione(featured?.posizioneAnteprima);
 // L'elenco "Ultime news" esclude la notizia già mostrata in evidenza.
 const latest = ultime.filter((n) => n._id !== featured?._id).slice(0, 3);
 const prossima = settings?.prossimaPartita ?? prossime[0] ?? null;
@@ -72,52 +71,32 @@ const staffPreview = [...staff].sort(
 const RUOLI_LABEL: Record<string, string> = { palleggiatore: 'Palleggiatore', opposto: 'Opposto', schiacciatore: 'Schiacciatore', centrale: 'Centrale', libero: 'Libero' };
 ---
 <Layout>
-  <!-- HERO -->
-  <section class="hero">
-    <div class="container hero-inner">
-      <div class="hero-copy">
-        <span class="pill">Serie A3 Maschile{settings?.stagione ? ` · ${settings.stagione}` : ''}</span>
-        <h1>{nome}</h1>
-        <p class="lead">La casa ufficiale della nostra squadra: risultati, calendario, roster, news e settore giovanile. Forza ragazzi.</p>
-        <div class="hero-cta">
-          <a class="btn primary" href="/partite">Calendario &amp; risultati</a>
-          {direttaLink && <a class="btn live" href="/partite#diretta"><span class="live-dot" aria-hidden="true"></span>Guarda la diretta</a>}
-          <a class="btn ghost" href="/squadra">Conosci la squadra</a>
-        </div>
+  <!-- APERTURA: la notizia in evidenza, con la prossima partita di fianco -->
+  <section class="section apertura-sezione">
+    <div class="container">
+      <div class="section-head"><span class="eyebrow">In evidenza</span><h2>Da non perdere</h2></div>
+      <div class={prossima ? 'apertura con-partita' : 'apertura'}>
+        {featured
+          ? <NewsInEvidenza item={featured} />
+          : <div class="empty"><strong>Nessuna notizia pubblicata</strong>La notizia in evidenza apparirà qui.</div>}
+
+        {prossima && (
+          <aside class="next-match card">
+            <span class="eyebrow">Prossima partita</span>
+            <div class="nm-team">{prossima.dove === 'casa' ? nome : prossima.avversario}</div>
+            <div class="nm-vs">vs</div>
+            <div class="nm-team">{prossima.dove === 'casa' ? prossima.avversario : nome}</div>
+            <div class="nm-when">{formatData(prossima.data, true)}</div>
+            {prossima.luogo && <div class="nm-where">{prossima.dove === 'casa' ? '🏠' : '✈️'} {prossima.luogo}</div>}
+            <div class="nm-cta">
+              {direttaLink && <a class="btn live" href="/partite#diretta"><span class="live-dot" aria-hidden="true"></span>Guarda la diretta</a>}
+              <a class="btn" href="/partite">Calendario</a>
+            </div>
+          </aside>
+        )}
       </div>
-      {prossima && (
-        <aside class="next-match card">
-          <span class="eyebrow">Prossima partita</span>
-          <div class="nm-team">{prossima.dove === 'casa' ? nome : prossima.avversario}</div>
-          <div class="nm-vs">vs</div>
-          <div class="nm-team">{prossima.dove === 'casa' ? prossima.avversario : nome}</div>
-          <div class="nm-when">{formatData(prossima.data, true)}</div>
-          {prossima.luogo && <div class="nm-where">{prossima.dove === 'casa' ? '🏠' : '✈️'} {prossima.luogo}</div>}
-        </aside>
-      )}
     </div>
   </section>
-
-  <!-- IN EVIDENZA -->
-  {featured && (
-    <section class="section">
-      <div class="container">
-        <div class="section-head"><span class="eyebrow">In evidenza</span><h2>Da non perdere</h2></div>
-        <a class="featured card" href={`/news/${featured.slug}`}>
-          <div class="f-media">
-            {featuredCover ? <img src={featuredCover} alt={featured.titolo} style={`object-position:${featuredPos}`} /> : <div class="thumb-ph" aria-hidden="true"></div>}
-          </div>
-          <div class="f-body">
-            <span class="pill">In evidenza</span>
-            <span class="tag">{formatData(featured.data)}</span>
-            <h3>{featured.titolo}</h3>
-            {featured.estratto && <p>{featured.estratto}</p>}
-            <span class="more">Leggi l'articolo →</span>
-          </div>
-        </a>
-      </div>
-    </section>
-  )}
 
   <!-- ULTIME NEWS -->
   <section class="section">
@@ -264,22 +243,22 @@ const RUOLI_LABEL: Record<string, string> = { palleggiatore: 'Palleggiatore', op
 </Layout>
 
 <style>
-  .hero { background: linear-gradient(180deg, var(--surface) 0%, var(--ground) 100%); border-bottom: 1px solid var(--line); }
-  /* Solo padding verticale: la scorciatoia "padding: X 0" azzererebbe
-     il padding orizzontale di .container, mandando l'hero a filo schermo. */
-  .hero-inner { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: clamp(24px, 5vw, 60px); align-items: center;
-    padding-top: clamp(48px, 9vw, 110px); padding-bottom: clamp(48px, 9vw, 110px); }
-  @media (max-width: 860px) { .hero-inner { grid-template-columns: minmax(0, 1fr); } }
-  .hero-copy .pill { margin-bottom: 18px; }
-  .hero-copy h1 { margin: 0 0 14px; }
-  .hero-copy .lead { max-width: 46ch; }
-  .hero-cta { display: flex; gap: 12px; margin-top: 26px; flex-wrap: wrap; }
+  /* Apertura: notizia in evidenza a sinistra, prossima partita a destra */
+  .apertura-sezione { padding-top: clamp(28px, 4vw, 48px); }
+  /* Due colonne solo se c'è la prossima partita: altrimenti la notizia
+     occuperebbe 2/3 lasciando un vuoto a destra. */
+  .apertura { display: grid; grid-template-columns: minmax(0, 1fr); gap: 20px; align-items: start; }
+  .apertura.con-partita { grid-template-columns: minmax(0, 2.3fr) minmax(0, 1fr); }
+  @media (max-width: 1000px) { .apertura.con-partita { grid-template-columns: minmax(0, 1fr); } }
+  .nm-cta { display: flex; flex-direction: column; gap: 10px; margin-top: 18px; width: 100%; }
+  .nm-cta .btn { justify-content: center; }
   .btn.live { background: var(--ink); color: #fff; border-color: transparent; }
   .btn.live:hover { background: #000; }
   .live-dot { width: .55rem; height: .55rem; border-radius: 50%; background: #ff3b3b; box-shadow: 0 0 0 0 rgba(255,59,59,.6); animation: livepulse 1.6s ease-out infinite; }
   @keyframes livepulse { 0% { box-shadow: 0 0 0 0 rgba(255,59,59,.6); } 70% { box-shadow: 0 0 0 7px rgba(255,59,59,0); } 100% { box-shadow: 0 0 0 0 rgba(255,59,59,0); } }
   @media (prefers-reduced-motion: reduce) { .live-dot { animation: none; } }
-  .next-match { padding: 26px 24px; text-align: center; box-shadow: var(--shadow); }
+  .next-match { padding: 26px 24px; text-align: center; box-shadow: var(--shadow);
+    display: flex; flex-direction: column; align-items: center; }
   .next-match .eyebrow { display: block; margin-bottom: 14px; }
   .nm-team { font-size: 1.3rem; font-weight: 820; letter-spacing: -.01em; }
   .nm-vs { color: var(--ink-faint); font-size: .8rem; text-transform: uppercase; letter-spacing: .1em; margin: 6px 0; font-weight: 700; }
@@ -319,26 +298,6 @@ const RUOLI_LABEL: Record<string, string> = { palleggiatore: 'Palleggiatore', op
   .spon-finali .sp { width: 170px; }
   @media (max-width: 640px) { .spon-finali { gap: 14px; } .spon-finali .sp { width: 140px; } }
 
-  /* In evidenza */
-  .featured { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); align-items: stretch;
-    transition: transform .14s ease, border-color .14s ease; }
-  .featured:hover { transform: translateY(-3px); border-color: var(--ink-faint); }
-  /* aspect-ratio dà al riquadro le stesse proporzioni delle schede news;
-     align-self: stretch gli fa comunque riempire tutta l'altezza della scheda,
-     così non resta mai una striscia vuota sotto l'immagine. */
-  .f-media { position: relative; background: var(--surface-2); overflow: hidden;
-    aspect-ratio: 16 / 10; align-self: stretch; }
-  .f-media img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
-  .f-media .thumb-ph { width: 100%; height: 100%;
-    background: repeating-linear-gradient(135deg, var(--surface-2), var(--surface-2) 12px, var(--surface) 12px, var(--surface) 24px); }
-  .f-body { padding: clamp(22px, 3.5vw, 40px); display: flex; flex-direction: column; gap: 10px; align-items: flex-start; justify-content: center; }
-  /* Titolo ed estratto limitati: il testo resta più basso dell'immagine */
-  .f-body h3 { font-size: clamp(1.3rem, 2.6vw, 1.9rem); font-weight: 800; letter-spacing: -.015em;
-    display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
-  .f-body p { font-size: 1rem;
-    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-  .f-body .more { margin-top: 6px; font-weight: 700; color: var(--accent); }
-  @media (max-width: 900px) { .featured { grid-template-columns: 1fr; } }
 
   /* Schede giocatore nel carosello */
   .rp-card { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; transition: transform .14s ease, border-color .14s ease; }

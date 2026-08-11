@@ -2,17 +2,39 @@
 import Layout from '../../layouts/Layout.astro';
 import PageHero from '../../components/PageHero.astro';
 import NewsCard from '../../components/NewsCard.astro';
+import NewsInEvidenza from '../../components/NewsInEvidenza.astro';
 import { sfetch } from '../../lib/sanity';
-import { newsListQuery } from '../../lib/queries';
+import { newsListQuery, newsInEvidenzaQuery } from '../../lib/queries';
 
-const news = await sfetch<any[]>(newsListQuery, { settore: 'prima-squadra', limit: 60 }, []);
+const [news, evidenza] = await Promise.all([
+  sfetch<any[]>(newsListQuery, { settore: 'prima-squadra', limit: 60 }, []),
+  sfetch<any[]>(newsInEvidenzaQuery, {}, []),
+]);
+// Stessa notizia messa in risalto in home; se non ce n'è, la più recente
+const featured = evidenza.find((n) => n.settore !== 'giovanile') ?? news[0] ?? null;
+const altre = news.filter((n) => n._id !== featured?._id);
 ---
 <Layout title="News">
   <PageHero eyebrow="Aggiornamenti" title="News" lead="Tutte le notizie della prima squadra." />
+
+  {featured && (
+    <section class="section">
+      <div class="container">
+        <div class="section-head"><span class="eyebrow">In evidenza</span><h2>Da non perdere</h2></div>
+        <NewsInEvidenza item={featured} />
+      </div>
+    </section>
+  )}
+
   <section class="section">
     <div class="container">
-      {news.length ? (
-        <div class="grid cols-3">{news.map((n) => <NewsCard item={n} />)}</div>
+      {featured && altre.length > 0 && (
+        <div class="section-head"><span class="eyebrow">Archivio</span><h2>Tutte le news</h2></div>
+      )}
+      {altre.length ? (
+        <div class="grid cols-3">{altre.map((n) => <NewsCard item={n} />)}</div>
+      ) : featured ? (
+        <div class="empty"><strong>Nessun'altra notizia</strong>Le prossime notizie pubblicate appariranno qui.</div>
       ) : (
         <div class="empty"><strong>Nessuna notizia pubblicata</strong>Le notizie inserite nel pannello appariranno qui, dalla più recente.</div>
       )}
