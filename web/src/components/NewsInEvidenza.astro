@@ -8,7 +8,7 @@ const { item } = Astro.props;
 const cover = img(item.copertina, 1100);
 const pos = posizione(item.posizioneAnteprima);
 ---
-<a class="featured card" href={`/news/${item.slug}`}>
+<a class="featured card" href={`/news/${item.slug}/`}>
   <div class="f-media">
     {cover
       ? <img src={cover} alt={item.titolo} style={`object-position:${pos}`} />

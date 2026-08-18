@@ -14,6 +14,9 @@ const { PUBLIC_SANITY_PROJECT_ID, PUBLIC_SANITY_DATASET } = loadEnv(
 // https://astro.build/config
 export default defineConfig({
   site: 'https://coriglianovolley.it',
+  // Le pagine sono servite con lo slash finale: allinea dev e produzione
+  // ed evita i redirect 308 che rompevano la cronologia del browser.
+  trailingSlash: 'always',
   // Espone il dev server sulla rete locale (test da mobile via IP del PC).
   server: { host: true },
   integrations: [

@@ -14,32 +14,33 @@ const nav: Item[] = [
   { href: '/', label: 'Home' },
   {
     // Le voci seguono l'ordine reale delle sezioni nella pagina
-    href: '/squadra', label: 'Squadra',
+    href: '/squadra/', label: 'Squadra',
     children: [
-      { href: '/squadra', label: 'La squadra' },
-      { href: '/squadra#roster', label: 'Roster' },
-      { href: '/squadra#staff', label: 'Staff tecnico e medico' },
-      { href: '/squadra#societa', label: 'Organigramma' },
-      { href: '/squadra/chi-siamo', label: 'Chi siamo' },
+      { href: '/squadra/', label: 'La squadra' },
+      { href: '/squadra/#roster', label: 'Roster' },
+      { href: '/squadra/#staff', label: 'Staff tecnico e medico' },
+      { href: '/squadra/#societa', label: 'Organigramma' },
+      { href: '/squadra/chi-siamo/', label: 'Chi siamo' },
     ],
   },
   {
-    href: '/partite', label: 'Partite',
+    href: '/partite/', label: 'Partite',
     children: [
-      { href: '/partite', label: 'Calendario & risultati' },
-      { href: '/partite#diretta', label: 'Diretta' },
-      { href: '/partite#classifica', label: 'Classifica' },
+      { href: '/partite/', label: 'Calendario & risultati' },
+      { href: '/partite/#diretta', label: 'Diretta' },
+      { href: '/partite/#classifica', label: 'Classifica' },
     ],
   },
-  { href: '/news', label: 'News' },
-  { href: '/settore-giovanile', label: 'Settore giovanile' },
-  { href: '/gallery', label: 'Gallery' },
-  { href: '/sponsor', label: 'Sponsor' },
-  { href: '/contatti', label: 'Contatti' },
+  { href: '/news/', label: 'News' },
+  { href: '/settore-giovanile/', label: 'Settore giovanile' },
+  { href: '/gallery/', label: 'Gallery' },
+  { href: '/sponsor/', label: 'Sponsor' },
+  { href: '/contatti/', label: 'Contatti' },
 ];
 
 const isActive = (href: string) => {
-  const clean = href.split('#')[0];
+  // I link hanno lo slash finale, il pathname lo abbiamo tolto: normalizzo entrambi
+  const clean = href.split('#')[0].replace(/\/$/, '') || '/';
   if (clean === '/') return path === '/';
   return path === clean || path.startsWith(clean + '/');
 };

@@ -32,6 +32,13 @@ const socialLinks = ['instagram', 'facebook', 'youtube', 'x', 'tiktok']
 const telefoni: { etichetta?: string; numero: string }[] =
   (s.telefoni?.length ? s.telefoni : s.telefono ? [{ numero: s.telefono }] : []) ?? [];
 const telHref = (n: string) => 'tel:' + n.replace(/[^\d+]/g, '');
+// Riga legale: denominazione + sede, poi codice FIPAV e partita IVA.
+// Tenuti separati perché la denominazione va in grassetto.
+const sede = s.indirizzo ? String(s.indirizzo).replace(/\s*\n\s*/g, ' ') : null;
+const identificativi = [
+  s.codiceFipav ? `Cod. FIPAV ${s.codiceFipav}` : null,
+  s.partitaIva ? `P. IVA ${s.partitaIva}` : null,
+].filter(Boolean).join(' – ');
 ---
 <footer class="site-footer">
   <div class="container">
@@ -41,13 +48,13 @@ const telHref = (n: string) => 'tel:' + n.replace(/[^\d+]/g, '');
         <h4>Naviga</h4>
         <div class="fnav">
           <a href="/">Home</a>
-          <a href="/squadra">Squadra</a>
-          <a href="/partite">Partite &amp; classifica</a>
-          <a href="/news">News</a>
-          <a href="/settore-giovanile">Settore giovanile</a>
-          <a href="/gallery">Gallery</a>
-          <a href="/sponsor">Sponsor</a>
-          <a href="/contatti">Contatti</a>
+          <a href="/squadra/">Squadra</a>
+          <a href="/partite/">Partite &amp; classifica</a>
+          <a href="/news/">News</a>
+          <a href="/settore-giovanile/">Settore giovanile</a>
+          <a href="/gallery/">Gallery</a>
+          <a href="/sponsor/">Sponsor</a>
+          <a href="/contatti/">Contatti</a>
           {s.bigliettiUrl && <a href={s.bigliettiUrl} target="_blank" rel="noopener">Biglietti</a>}
         </div>
       </div>
@@ -125,6 +132,17 @@ const telHref = (n: string) => 'tel:' + n.replace(/[^\d+]/g, '');
           </div>
         )}
       </div>
+    </div>
+
+    <div class="foot-legale">
+      {(s.denominazione || sede) && (
+        <span>
+          {s.denominazione && <strong>{s.denominazione}</strong>}
+          {s.denominazione && sede && <span class="sep"> – </span>}
+          {sede && <><span class="etichetta">Sede operativa:</span> {sede}</>}
+        </span>
+      )}
+      {identificativi && <span>{identificativi}</span>}
     </div>
 
     <div class="foot-bottom">

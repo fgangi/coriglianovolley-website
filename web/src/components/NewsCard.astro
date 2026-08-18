@@ -6,7 +6,7 @@ const { item } = Astro.props;
 const cover = img(item.copertina, 700);
 const pos = posizione(item.posizioneAnteprima);
 ---
-<a class="card news-card" href={`/news/${item.slug}`}>
+<a class="card news-card" href={`/news/${item.slug}/`}>
   <div class="thumb">
     {cover ? <img src={cover} alt={item.titolo} loading="lazy" style={`object-position:${pos}`} /> : <div class="thumb-ph" aria-hidden="true"></div>}
     {item.settore === 'giovanile' && <span class="pill on-thumb">Giovanile</span>}

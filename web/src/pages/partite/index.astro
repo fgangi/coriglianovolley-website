@@ -14,6 +14,18 @@ const prossime = partite.filter((m) => !m.giocata);
 const giocate = partite.filter((m) => m.giocata).reverse();
 const clImg = classifica?.modalita === 'immagine' ? img(classifica.immagine, 1000) : null;
 
+// Prima della 1ª giornata non esiste una classifica: numerare le squadre
+// suggerirebbe un ordine reale (e ci mostrerebbe ultimi senza aver giocato).
+// In quel caso: elenco alfabetico, posizione sostituita da un trattino.
+const righeCl: any[] = classifica?.righe ?? [];
+// Basta un valore diverso da zero in una qualsiasi riga: così la nota sparisce
+// anche se in redazione aggiornano solo i punti e dimenticano "Giocate".
+const nonIniziato = righeCl.length > 0 &&
+  righeCl.every((r: any) => !r.giocate && !r.vinte && !r.perse && !r.punti);
+const righeOrdinate = nonIniziato
+  ? [...righeCl].sort((a, b) => String(a.squadra ?? '').localeCompare(String(b.squadra ?? ''), 'it'))
+  : righeCl;
+
 // Diretta: priorità alla prossima partita con link YouTube, altrimenti canale generale
 const matchDiretta = prossime.find((m) => m.direttaUrl) ?? null;
 const direttaLink = matchDiretta?.direttaUrl ?? settings?.direttaUrl ?? null;
@@ -73,7 +85,7 @@ const giocatePerMese = perMese(giocate);
                 <strong>{direttaMatch.dove === 'casa' ? direttaMatch.avversario : (settings?.nomeSquadra ?? 'Corigliano')}</strong>
               </div>
               <span class="tag">{formatData(direttaMatch.data, true)}</span>
-              <a class="btn" href="/squadra#roster">Vedi la rosa →</a>
+              <a class="btn" href="/squadra/#roster">Vedi la rosa →</a>
             </aside>
           )}
         </div>
@@ -120,14 +132,18 @@ const giocatePerMese = perMese(giocate);
         <div class="empty"><strong>Classifica non ancora pubblicata</strong>Verrà aggiornata dalla redazione (immagine o tabella) con il link ufficiale della Lega.</div>
       ) : clImg ? (
         <figure class="cl-img"><img src={clImg} alt="Classifica Serie A3" /></figure>
-      ) : classifica.righe?.length ? (
+      ) : righeOrdinate.length ? (
+        <>
+          {nonIniziato && (
+            <p class="cl-nota">Il campionato non è ancora iniziato: le squadre del girone sono elencate in ordine alfabetico.</p>
+          )}
         <div class="table-wrap">
           <table>
             <thead><tr><th>#</th><th>Squadra</th><th>Punti</th><th>G</th><th>V</th><th>P</th></tr></thead>
             <tbody>
-              {classifica.righe.map((r: any, i: number) => (
+              {righeOrdinate.map((r: any, i: number) => (
                 <tr class={/corigliano/i.test(r.squadra ?? '') ? 'ours' : ''}>
-                  <td class="tabnums">{i + 1}</td>
+                  <td class="tabnums">{nonIniziato ? '—' : i + 1}</td>
                   <td>{r.squadra}</td>
                   <td class="tabnums"><strong>{r.punti ?? 0}</strong></td>
                   <td class="tabnums">{r.giocate ?? '—'}</td>
@@ -138,6 +154,7 @@ const giocatePerMese = perMese(giocate);
             </tbody>
           </table>
         </div>
+        </>
       ) : (
         <div class="empty"><strong>Classifica in aggiornamento</strong></div>
       )}
@@ -154,6 +171,7 @@ const giocatePerMese = perMese(giocate);
   .mese-gruppo + .mese-gruppo { margin-top: clamp(24px, 3.5vw, 38px); }
   .mese-titolo { font-size: .95rem; text-transform: uppercase; letter-spacing: .12em; color: var(--ink-faint); font-weight: 700;
     margin: 0 0 20px; padding-bottom: 10px; border-bottom: 1px solid var(--line); }
+  .cl-nota { font-size: .86rem; color: var(--ink-faint); margin: 0 0 14px; }
   .cl-img { margin: 0; border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; background: var(--surface); }
   .table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); }
   table { border-collapse: collapse; width: 100%; min-width: 480px; }

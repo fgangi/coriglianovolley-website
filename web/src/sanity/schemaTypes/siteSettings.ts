@@ -118,6 +118,22 @@ export const siteSettings = defineType({
       ],
     }),
     defineField({
+      name: 'denominazione',
+      title: 'Denominazione sociale',
+      type: 'string',
+      description: 'Ragione sociale completa, es. "Corigliano Volley S.S.D. a R.L.". Compare nei crediti in fondo al sito.',
+    }),
+    defineField({
+      name: 'codiceFipav',
+      title: 'Codice FIPAV',
+      type: 'string',
+    }),
+    defineField({
+      name: 'partitaIva',
+      title: 'Partita IVA',
+      type: 'string',
+    }),
+    defineField({
       name: 'indirizzo',
       title: 'Indirizzo / palazzetto',
       type: 'text',

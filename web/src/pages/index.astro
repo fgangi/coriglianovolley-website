@@ -37,6 +37,7 @@ const SEZIONI_SPONSOR: { label: string; livello: string; w: string; wMob: string
   { label: 'Silver sponsor', livello: 'silver', w: '225px', wMob: '175px' },
   { label: 'Bronze sponsor', livello: 'bronze', w: '195px', wMob: '155px' },
   { label: 'Partner', livello: 'partner', w: '170px', wMob: '140px' },
+  { label: 'Sponsor tecnico', livello: 'tecnico', w: '170px', wMob: '140px' },
 ];
 const gruppiSponsor = SEZIONI_SPONSOR
   .map((s) => ({ ...s, items: sponsor.filter((x) => x.livello === s.livello) }))
@@ -47,7 +48,6 @@ const gruppiSponsor = SEZIONI_SPONSOR
 const FINALI: { label: string; livello: string }[] = [
   { label: 'Media partner', livello: 'media' },
   { label: 'Ticketing partner', livello: 'ticketing' },
-  { label: 'Sponsor tecnico', livello: 'tecnico' },
 ];
 const sponsorFinali: { label: string; nome: string; logo: string | null; url?: string }[] = [
   ...FINALI.flatMap((f) =>
@@ -89,8 +89,8 @@ const RUOLI_LABEL: Record<string, string> = { palleggiatore: 'Palleggiatore', op
             <div class="nm-when">{formatData(prossima.data, true)}</div>
             {prossima.luogo && <div class="nm-where">{prossima.dove === 'casa' ? '🏠' : '✈️'} {prossima.luogo}</div>}
             <div class="nm-cta">
-              {direttaLink && <a class="btn live" href="/partite#diretta"><span class="live-dot" aria-hidden="true"></span>Guarda la diretta</a>}
-              <a class="btn" href="/partite">Calendario</a>
+              {direttaLink && <a class="btn live" href="/partite/#diretta"><span class="live-dot" aria-hidden="true"></span>Guarda la diretta</a>}
+              <a class="btn" href="/partite/">Calendario</a>
             </div>
           </aside>
         )}
@@ -103,7 +103,7 @@ const RUOLI_LABEL: Record<string, string> = { palleggiatore: 'Palleggiatore', op
     <div class="container">
       <div class="section-head between">
         <div><span class="eyebrow">Aggiornamenti</span><h2>Ultime news</h2></div>
-        <a class="btn" href="/news">Tutte le news</a>
+        <a class="btn" href="/news/">Tutte le news</a>
       </div>
       {latest.length ? (
         <div class="grid cols-3">{latest.map((n) => <NewsCard item={n} />)}</div>
@@ -121,7 +121,7 @@ const RUOLI_LABEL: Record<string, string> = { palleggiatore: 'Palleggiatore', op
       <div class="container">
         <div class="section-head between">
           <div><span class="eyebrow">In arrivo</span><h2>Prossime partite</h2></div>
-          <a class="btn" href="/partite">Calendario completo</a>
+          <a class="btn" href="/partite/">Calendario completo</a>
         </div>
         <div class="grid cols-3">{prossimeList.map((m) => <PartitaRow m={m} />)}</div>
       </div>
@@ -133,7 +133,7 @@ const RUOLI_LABEL: Record<string, string> = { palleggiatore: 'Palleggiatore', op
     <div class="container">
       <div class="section-head between">
         <div><span class="eyebrow">Campo</span><h2>Ultimi risultati</h2></div>
-        <a class="btn" href="/partite">Tutte le partite</a>
+        <a class="btn" href="/partite/">Tutte le partite</a>
       </div>
       {risultati.length ? (
         <div class="grid cols-3">{risultati.map((m) => <PartitaRow m={m} />)}</div>
@@ -149,13 +149,13 @@ const RUOLI_LABEL: Record<string, string> = { palleggiatore: 'Palleggiatore', op
       <div class="container">
         <div class="section-head between">
           <div><span class="eyebrow">La squadra</span><h2>Il roster</h2></div>
-          <a class="btn" href="/squadra#roster">Tutta la squadra</a>
+          <a class="btn" href="/squadra/#roster">Tutta la squadra</a>
         </div>
         <Carousel etichetta="Giocatori della rosa" allinea="stretch">
           {rosterPreview.map((p) => {
             const foto = img(p.foto, 320, 380);
             return (
-              <a class="rp-card" href="/squadra#roster">
+              <a class="rp-card" href="/squadra/#roster">
                 <div class="rp-ph">
                   {foto ? <img src={foto} alt={`${p.nome} ${p.cognome}`} loading="lazy" /> : <div class="rp-empty" aria-hidden="true"></div>}
                   {p.numero != null && <span class="rp-num">{p.numero}</span>}
@@ -175,7 +175,7 @@ const RUOLI_LABEL: Record<string, string> = { palleggiatore: 'Palleggiatore', op
       <div class="container">
         <div class="section-head between">
           <div><span class="eyebrow">Dietro le quinte</span><h2>Lo staff</h2></div>
-          <a class="btn" href="/squadra#staff">Tutto lo staff</a>
+          <a class="btn" href="/squadra/#staff">Tutto lo staff</a>
         </div>
         <Carousel etichetta="Staff e dirigenza" allinea="stretch">
           {staffPreview.map((m) => {
@@ -248,7 +248,9 @@ const RUOLI_LABEL: Record<string, string> = { palleggiatore: 'Palleggiatore', op
   /* Due colonne solo se c'è la prossima partita: altrimenti la notizia
      occuperebbe 2/3 lasciando un vuoto a destra. */
   .apertura { display: grid; grid-template-columns: minmax(0, 1fr); gap: 20px; align-items: start; }
-  .apertura.con-partita { grid-template-columns: minmax(0, 2.3fr) minmax(0, 1fr); }
+  /* stretch: le due schede chiudono alla stessa altezza. Senza, quella della
+     partita (più alta) lasciava la notizia "corta" e i bordi disallineati. */
+  .apertura.con-partita { grid-template-columns: minmax(0, 2.3fr) minmax(0, 1fr); align-items: stretch; }
   @media (max-width: 1000px) { .apertura.con-partita { grid-template-columns: minmax(0, 1fr); } }
   .nm-cta { display: flex; flex-direction: column; gap: 10px; margin-top: 18px; width: 100%; }
   .nm-cta .btn { justify-content: center; }
@@ -258,7 +260,7 @@ const RUOLI_LABEL: Record<string, string> = { palleggiatore: 'Palleggiatore', op
   @keyframes livepulse { 0% { box-shadow: 0 0 0 0 rgba(255,59,59,.6); } 70% { box-shadow: 0 0 0 7px rgba(255,59,59,0); } 100% { box-shadow: 0 0 0 0 rgba(255,59,59,0); } }
   @media (prefers-reduced-motion: reduce) { .live-dot { animation: none; } }
   .next-match { padding: 26px 24px; text-align: center; box-shadow: var(--shadow);
-    display: flex; flex-direction: column; align-items: center; }
+    display: flex; flex-direction: column; align-items: center; justify-content: center; }
   .next-match .eyebrow { display: block; margin-bottom: 14px; }
   .nm-team { font-size: 1.3rem; font-weight: 820; letter-spacing: -.01em; }
   .nm-vs { color: var(--ink-faint); font-size: .8rem; text-transform: uppercase; letter-spacing: .1em; margin: 6px 0; font-weight: 700; }

@@ -10,7 +10,7 @@ export async function getStaticPaths() {
 
 const { slug } = Astro.params;
 const post = await sfetch<any>(newsBySlugQuery, { slug }, null);
-if (!post) return Astro.redirect('/news');
+if (!post) return Astro.redirect('/news/');
 // Larghezza massima ma nessun ritaglio: la copertina mantiene le sue proporzioni.
 const cover = img(post.copertina, 1200);
 const html = richText(post.corpo);
@@ -18,7 +18,7 @@ const html = richText(post.corpo);
 <Layout title={post.titolo} description={post.estratto}>
   <article class="post">
     <div class="container narrow">
-      <a class="back" href="/news">← Tutte le news</a>
+      <a class="back" href="/news/">← Tutte le news</a>
       <div class="post-meta">
         <span class="pill">{post.settore === 'giovanile' ? 'Settore giovanile' : 'Prima squadra'}</span>
         <span class="tag">{formatData(post.data)}</span>

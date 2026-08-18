@@ -247,7 +247,14 @@ p { margin: 0; color: var(--ink-soft); }
   .brand-partners { gap: 18px; }
   .brand-partners img { height: 56px; max-width: 150px; }
 }
-.foot-bottom { border-top: 1px solid rgba(255,255,255,.12); padding: 18px 0; font-size: .82rem; opacity: .7; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+/* Riga con denominazione, sede e identificativi fiscali */
+.foot-legale { border-top: 1px solid rgba(255,255,255,.12); padding: 16px 0 4px;
+  display: flex; flex-direction: column; gap: 4px; font-size: .78rem; opacity: .55; line-height: 1.5; }
+/* Denominazione in evidenza; l'etichetta è maiuscola via CSS, così i lettori
+   di schermo continuano a leggerla come una parola e non lettera per lettera. */
+.foot-legale strong { font-weight: 750; }
+.foot-legale .etichetta { text-transform: uppercase; letter-spacing: .04em; }
+.foot-bottom { padding: 10px 0 18px; font-size: .82rem; opacity: .7; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
 .foot-bottom a { text-decoration: underline; text-underline-offset: 2px; }
 
 /* --- empty state --- */
