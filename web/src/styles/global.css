@@ -37,6 +37,8 @@ main { display: block; min-height: 60vh; }
 .section + .section { padding-top: 0; }
 
 /* --- typography --- */
+/* L'attributo hidden deve prevalere sui display: delle schede */
+[hidden] { display: none !important; }
 h1, h2, h3 { margin: 0; font-family: var(--font-display); letter-spacing: -.02em; text-wrap: balance; line-height: 1.08; }
 .brand, .eyebrow, .score, .num, .rp-num, .nm-team { font-family: var(--font-display); }
 h1 { font-size: clamp(2rem, 5.5vw, 3.4rem); font-weight: 800; }

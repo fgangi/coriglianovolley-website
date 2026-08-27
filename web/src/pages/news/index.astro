@@ -2,42 +2,108 @@
 import Layout from '../../layouts/Layout.astro';
 import PageHero from '../../components/PageHero.astro';
 import NewsCard from '../../components/NewsCard.astro';
-import NewsInEvidenza from '../../components/NewsInEvidenza.astro';
 import { sfetch } from '../../lib/sanity';
-import { newsListQuery, newsInEvidenzaQuery } from '../../lib/queries';
+import { newsUltimeQuery } from '../../lib/queries';
 
-const [news, evidenza] = await Promise.all([
-  sfetch<any[]>(newsListQuery, { settore: 'prima-squadra', limit: 60 }, []),
-  sfetch<any[]>(newsInEvidenzaQuery, {}, []),
-]);
-// Stessa notizia messa in risalto in home; se non ce n'è, la più recente
-const featured = evidenza.find((n) => n.settore !== 'giovanile') ?? news[0] ?? null;
-const altre = news.filter((n) => n._id !== featured?._id);
+// Elenco completo, senza articolo in evidenza: quello è il ruolo della home.
+// Qui la pagina è un archivio, tutte le notizie sullo stesso piano.
+const news = await sfetch<any[]>(newsUltimeQuery, { limit: 60 }, []);
+
+// Le sezioni compaiono come filtro solo se hanno davvero notizie: così non
+// esiste un filtro che porta a una pagina vuota.
+const SEZIONI = [
+  { id: 'prima-squadra', label: 'Prima squadra' },
+  { id: 'giovanile', label: 'Settore giovanile' },
+];
+const conteggi = new Map(SEZIONI.map((s) => [s.id, news.filter((n) => n.settore === s.id).length]));
+const filtri = [
+  { id: 'tutte', label: 'Tutte', n: news.length },
+  ...SEZIONI.filter((s) => (conteggi.get(s.id) ?? 0) > 0).map((s) => ({ ...s, n: conteggi.get(s.id)! })),
+];
+// Un filtro solo ("Tutte") non è un filtro: in quel caso la barra non serve.
+const mostraFiltri = filtri.length > 2;
 ---
 <Layout title="News">
-  <PageHero eyebrow="Aggiornamenti" title="News" lead="Tutte le notizie della prima squadra." />
+  <PageHero eyebrow="Aggiornamenti" title="News" lead="Tutte le notizie della società, prima squadra e settore giovanile." />
 
-  {featured && (
+  <div class="news-wrap" data-sezione="tutte">
     <section class="section">
       <div class="container">
-        <div class="section-head"><span class="eyebrow">In evidenza</span><h2>Da non perdere</h2></div>
-        <NewsInEvidenza item={featured} />
+        {mostraFiltri && (
+          <div class="filtri" role="group" aria-label="Filtra per sezione">
+            {filtri.map((f) => (
+              <button type="button" class="filtro" data-filtro={f.id} aria-pressed={f.id === 'tutte' ? 'true' : 'false'}>
+                {f.label}<span class="quanti">{f.n}</span>
+              </button>
+            ))}
+          </div>
+        )}
+
+        {news.length ? (
+          <div class="grid cols-3">{news.map((n) => <NewsCard item={n} />)}</div>
+        ) : (
+          <div class="empty"><strong>Nessuna notizia pubblicata</strong>Le notizie inserite nel pannello appariranno qui, dalla più recente.</div>
+        )}
+
+        <div class="empty" data-vuoto-filtro hidden>
+          <strong>Nessuna notizia in questa sezione</strong>Prova a scegliere “Tutte”.
+        </div>
       </div>
     </section>
-  )}
-
-  <section class="section">
-    <div class="container">
-      {featured && altre.length > 0 && (
-        <div class="section-head"><span class="eyebrow">Archivio</span><h2>Tutte le news</h2></div>
-      )}
-      {altre.length ? (
-        <div class="grid cols-3">{altre.map((n) => <NewsCard item={n} />)}</div>
-      ) : featured ? (
-        <div class="empty"><strong>Nessun'altra notizia</strong>Le prossime notizie pubblicate appariranno qui.</div>
-      ) : (
-        <div class="empty"><strong>Nessuna notizia pubblicata</strong>Le notizie inserite nel pannello appariranno qui, dalla più recente.</div>
-      )}
-    </div>
-  </section>
+  </div>
 </Layout>
+
+<style>
+  /* La barra è l'intestazione dell'elenco, non una sezione a sé: sta vicino
+     al titolo sopra e più vicina ancora alle schede che comanda. */
+  .news-wrap > .section { padding-top: clamp(26px, 3.4vw, 44px); }
+  .filtri { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: clamp(18px, 2.6vw, 30px); }
+  .filtro { display: inline-flex; align-items: center; gap: 8px;
+    padding: .5rem .95rem; border-radius: 999px; border: 1px solid var(--line);
+    background: var(--surface); color: var(--ink-soft); font-weight: 650; font-size: .92rem;
+    transition: border-color .12s ease, background .12s ease, color .12s ease; }
+  .filtro:hover { border-color: var(--ink-faint); color: var(--ink); }
+  .filtro[aria-pressed='true'] { background: var(--accent); border-color: transparent; color: var(--accent-ink); }
+  .quanti { font-size: .76rem; font-weight: 700; font-variant-numeric: tabular-nums;
+    background: var(--surface-2); color: var(--ink-faint); border-radius: 999px; padding: .1rem .42rem; }
+  .filtro[aria-pressed='true'] .quanti { background: rgba(255,255,255,.22); color: #fff; }
+</style>
+
+<script is:inline>
+  (() => {
+    const avvia = () => {
+      const wrap = document.querySelector('.news-wrap');
+      if (!wrap || wrap.dataset.pronto) return;
+      wrap.dataset.pronto = '1';
+
+      const bottoni = wrap.querySelectorAll('.filtro');
+      const vuoto = wrap.querySelector('[data-vuoto-filtro]');
+
+      const applica = (sez, aggiornaUrl) => {
+        wrap.dataset.sezione = sez;
+        wrap.querySelectorAll('[data-settore]').forEach((el) => {
+          el.hidden = sez !== 'tutte' && el.dataset.settore !== sez;
+        });
+        bottoni.forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.filtro === sez)));
+
+        const visibili = wrap.querySelectorAll('.news-card:not([hidden])').length;
+        if (vuoto) vuoto.hidden = visibili > 0;
+
+        if (aggiornaUrl) {
+          const u = new URL(location.href);
+          if (sez === 'tutte') u.searchParams.delete('sezione');
+          else u.searchParams.set('sezione', sez);
+          history.replaceState(null, '', u);
+        }
+      };
+
+      bottoni.forEach((b) => { b.onclick = () => applica(b.dataset.filtro, true); });
+
+      // Un link con ?sezione=giovanile apre già filtrato: gli indirizzi restano condivisibili
+      const iniziale = new URL(location.href).searchParams.get('sezione');
+      applica([...bottoni].some((b) => b.dataset.filtro === iniziale) ? iniziale : 'tutte', false);
+    };
+    avvia();
+    document.addEventListener('astro:page-load', avvia);
+  })();
+</script>

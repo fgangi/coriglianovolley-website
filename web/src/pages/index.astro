@@ -7,7 +7,7 @@ import NewsInEvidenza from '../components/NewsInEvidenza.astro';
 import { sfetch, img, formatData } from '../lib/sanity';
 import {
   settingsQuery, risultatiQuery, prossimePartiteQuery,
-  newsInEvidenzaQuery, newsListQuery, sponsorQuery, rosterQuery, staffQuery,
+  newsInEvidenzaQuery, newsUltimeQuery, sponsorQuery, rosterQuery, staffQuery,
 } from '../lib/queries';
 
 const settings = await sfetch<any>(settingsQuery, {}, null);
@@ -15,8 +15,9 @@ const [risultati, prossime, evidenza, ultime, sponsor, roster, staff] = await Pr
   sfetch<any[]>(risultatiQuery, { limit: 3 }, []),
   sfetch<any[]>(prossimePartiteQuery, { limit: 3 }, []),
   sfetch<any[]>(newsInEvidenzaQuery, {}, []),
-  // 4 perché una potrebbe essere quella già mostrata in evidenza (viene esclusa sotto)
-  sfetch<any[]>(newsListQuery, { settore: 'prima-squadra', limit: 4 }, []),
+  // Tutte le sezioni, giovanile compreso. 4 perché una potrebbe essere
+  // quella già mostrata in evidenza (viene esclusa sotto).
+  sfetch<any[]>(newsUltimeQuery, { limit: 4 }, []),
   sfetch<any[]>(sponsorQuery, {}, []),
   sfetch<any[]>(rosterQuery, {}, []),
   sfetch<any[]>(staffQuery, {}, []),
