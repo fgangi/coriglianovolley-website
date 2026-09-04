@@ -2,11 +2,13 @@
 interface Props {
   nomeSquadra: string;
   bigliettiUrl?: string;
+  abbonamentiUrl?: string;
+  iscrizioniAperte?: boolean;
   logoUrl?: string | null;
   legaCredemLogo?: string | null;
   legaCredemUrl?: string;
 }
-const { nomeSquadra, bigliettiUrl, logoUrl, legaCredemLogo, legaCredemUrl } = Astro.props;
+const { nomeSquadra, bigliettiUrl, abbonamentiUrl, iscrizioniAperte, logoUrl, legaCredemLogo, legaCredemUrl } = Astro.props;
 const path = Astro.url.pathname.replace(/\/$/, '') || '/';
 
 type Item = { href: string; label: string; children?: { href: string; label: string }[] };
@@ -32,11 +34,46 @@ const nav: Item[] = [
     ],
   },
   { href: '/news/', label: 'News' },
-  { href: '/settore-giovanile/', label: 'Settore giovanile' },
+  {
+    href: '/settore-giovanile/', label: 'Settore giovanile',
+    children: [
+      // A campagna chiusa la sezione iscrizioni non esiste: la voce sparisce
+      // invece di portare a un punto della pagina che non c'è più.
+      ...(iscrizioniAperte ? [{ href: '/settore-giovanile/#iscrizioni', label: 'Iscrizioni' }] : []),
+      { href: '/settore-giovanile/#news-vivaio', label: 'News' },
+    ],
+  },
   { href: '/gallery/', label: 'Gallery' },
   { href: '/sponsor/', label: 'Sponsor' },
   { href: '/contatti/', label: 'Contatti' },
 ];
+
+// In sviluppo il pulsante viene reso in tutte le sue varianti (nascoste):
+// la barra di anteprima ne mostra una alla volta, per vedere come apparirà
+// il sito quando la campagna abbonamenti sarà aperta o chiusa.
+const ESEMPIO = 'https://www.liveticket.it/';
+
+// Acquisto: la tendina esiste solo se ci sono davvero due destinazioni.
+// Fuori dalla campagna abbonamenti ne resta una e il pulsante torna diretto,
+// così non si apre mai una tendina con una voce sola.
+const acquisto = [
+  bigliettiUrl ? { href: bigliettiUrl, label: 'Biglietti' } : null,
+  abbonamentiUrl ? { href: abbonamentiUrl, label: 'Abbonamenti' } : null,
+].filter(Boolean) as { href: string; label: string }[];
+
+// Le varianti servono solo allo sviluppo: in produzione resta la sola reale.
+type Variante = { id: string; links: { href: string; label: string }[] };
+const varianti: Variante[] = import.meta.env.DEV
+  ? [
+      { id: 'reale', links: acquisto },
+      { id: 'entrambi', links: [
+        { href: bigliettiUrl || ESEMPIO, label: 'Biglietti' },
+        { href: abbonamentiUrl || ESEMPIO, label: 'Abbonamenti' },
+      ] },
+      { id: 'biglietti', links: [{ href: bigliettiUrl || ESEMPIO, label: 'Biglietti' }] },
+      { id: 'abbonamenti', links: [{ href: abbonamentiUrl || ESEMPIO, label: 'Abbonamenti' }] },
+    ]
+  : [{ id: 'reale', links: acquisto }];
 
 const isActive = (href: string) => {
   // I link hanno lo slash finale, il pathname lo abbiamo tolto: normalizzo entrambi
@@ -92,7 +129,26 @@ const iniziali = nomeSquadra.split(' ').map((w) => w[0]).join('').slice(0, 2).to
       ) : (
         <a class="mainnav-link" href={item.href} aria-current={isActive(item.href) ? 'page' : undefined}>{item.label}</a>
       ))}
-      {bigliettiUrl && <a class="mainnav-link cta" href={bigliettiUrl} target="_blank" rel="noopener">Biglietti</a>}
+      {varianti.map((v) => {
+        const extra = import.meta.env.DEV
+          ? { 'data-acq': v.id, hidden: v.id !== 'reale' }
+          : {};
+        if (v.links.length === 1) return (
+          <a class="mainnav-link cta" href={v.links[0].href} target="_blank" rel="noopener" {...extra}>{v.links[0].label}</a>
+        );
+        if (v.links.length > 1) return (
+          <div class="mainnav-item has-sub acquista" data-sub data-open="false" {...extra}>
+            <button class="mainnav-link cta mainnav-trigger" type="button" aria-expanded="false" aria-haspopup="true" data-trigger>
+              Acquista
+              <svg class="caret-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+            <div class="submenu">
+              {v.links.map((a) => <a href={a.href} target="_blank" rel="noopener">{a.label}</a>)}
+            </div>
+          </div>
+        );
+        return null;
+      })}
     </nav>
   </div>
 </header>

@@ -1,0 +1,116 @@
+---
+/**
+ * Barra di anteprima — SOLO IN SVILUPPO (esclusa dalla build di produzione).
+ *
+ * Mostra come apparirà il sito in situazioni che nel pannello non sono ancora
+ * vere: campagna abbonamenti aperta, iscrizioni chiuse. Non tocca i dati:
+ * le varianti sono già nella pagina, la barra ne mostra una alla volta.
+ */
+---
+<div class="anteprima" data-anteprima>
+  <button class="ap-tab" type="button" data-ap-toggle aria-expanded="false">
+    <span class="ap-punto" aria-hidden="true"></span>Anteprima stati
+  </button>
+
+  <div class="ap-corpo" hidden>
+    <div class="ap-riga" data-gruppo="acq">
+      <span class="ap-tit">Pulsante acquista</span>
+      <button type="button" data-v="reale" aria-pressed="true">Reale</button>
+      <button type="button" data-v="entrambi" aria-pressed="false">Biglietti + abbonamenti</button>
+      <button type="button" data-v="biglietti" aria-pressed="false">Solo biglietti</button>
+      <button type="button" data-v="abbonamenti" aria-pressed="false">Solo abbonamenti</button>
+      <button type="button" data-v="nessuno" aria-pressed="false">Nessuno</button>
+    </div>
+
+    <div class="ap-riga" data-gruppo="isc" data-solo="/settore-giovanile">
+      <span class="ap-tit">Iscrizioni giovanili</span>
+      <button type="button" data-v="reale" aria-pressed="true">Reale</button>
+      <button type="button" data-v="chiuse" aria-pressed="false">Chiuse</button>
+    </div>
+
+    <p class="ap-nota">Solo in sviluppo: i dati del pannello non vengono modificati.</p>
+  </div>
+</div>
+
+<style is:global>
+  .anteprima { position: fixed; right: 14px; bottom: 14px; z-index: 9999;
+    display: flex; flex-direction: column; align-items: flex-end; gap: 8px;
+    max-width: calc(100vw - 28px); }
+  .ap-tab { display: inline-flex; align-items: center; gap: 7px;
+    background: rgba(20,16,17,.94); color: #fff; border: 0; padding: .5rem .85rem;
+    border-radius: 999px; font-size: .76rem; font-weight: 650;
+    box-shadow: 0 8px 30px rgba(0,0,0,.3); }
+  .ap-punto { width: .5rem; height: .5rem; border-radius: 50%; background: #46d17f; }
+  .ap-corpo { background: rgba(20,16,17,.96); color: #fff; border-radius: 14px;
+    padding: 12px 14px; box-shadow: 0 10px 40px rgba(0,0,0,.35);
+    display: flex; flex-direction: column; gap: 12px; max-width: 100%; }
+  .ap-riga { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  .ap-tit { text-transform: uppercase; letter-spacing: .1em; font-size: .62rem;
+    opacity: .5; font-weight: 700; width: 100%; }
+  .ap-corpo button { color: #fff; background: transparent;
+    border: 1px solid rgba(255,255,255,.25); border-radius: 999px;
+    padding: .28rem .6rem; font-size: .76rem; font-weight: 600; white-space: nowrap; }
+  .ap-corpo button:hover { background: rgba(255,255,255,.12); }
+  .ap-corpo button[aria-pressed='true'] { background: #CE1B2C; border-color: transparent; }
+  .ap-nota { margin: 0; font-size: .68rem; opacity: .45; max-width: 320px; }
+</style>
+
+<script is:inline>
+  (() => {
+    const avvia = () => {
+      const box = document.querySelector('[data-anteprima]');
+      if (!box || box.dataset.pronto) return;
+      box.dataset.pronto = '1';
+
+      const tab = box.querySelector('[data-ap-toggle]');
+      const corpo = box.querySelector('.ap-corpo');
+
+      // Le righe che riguardano una sola pagina spariscono altrove
+      box.querySelectorAll('[data-solo]').forEach((r) => {
+        r.hidden = !location.pathname.startsWith(r.dataset.solo);
+      });
+
+      const mostraPannello = (v) => {
+        corpo.hidden = !v;
+        tab.setAttribute('aria-expanded', String(v));
+        localStorage.setItem('anteprimaAperta', v ? '1' : '0');
+      };
+
+      /** Pulsante acquista: mostra una sola delle varianti presenti nell'header. */
+      const applicaAcq = (v) => {
+        document.querySelectorAll('[data-acq]').forEach((el) => {
+          el.hidden = v === 'nessuno' ? true : el.dataset.acq !== v;
+        });
+      };
+
+      /** Iscrizioni: nasconde la sezione, come a campagna chiusa. */
+      const applicaIsc = (v) => {
+        const sez = document.querySelector('[data-sim="iscrizioni"]');
+        if (sez) sez.hidden = v === 'chiuse';
+      };
+
+      const applica = (gruppo, v) => {
+        localStorage.setItem('anteprima_' + gruppo, v);
+        box.querySelectorAll(`[data-gruppo="${gruppo}"] button`).forEach((b) => {
+          b.setAttribute('aria-pressed', String(b.dataset.v === v));
+        });
+        if (gruppo === 'acq') applicaAcq(v);
+        if (gruppo === 'isc') applicaIsc(v);
+      };
+
+      box.querySelectorAll('[data-gruppo]').forEach((riga) => {
+        const gruppo = riga.dataset.gruppo;
+        riga.querySelectorAll('button').forEach((b) => {
+          b.onclick = () => applica(gruppo, b.dataset.v);
+        });
+        // La scelta resta tra una pagina e l'altra: si sta confrontando
+        applica(gruppo, localStorage.getItem('anteprima_' + gruppo) || 'reale');
+      });
+
+      mostraPannello(localStorage.getItem('anteprimaAperta') === '1');
+      tab.onclick = () => mostraPannello(corpo.hidden);
+    };
+    avvia();
+    document.addEventListener('astro:page-load', avvia);
+  })();
+</script>

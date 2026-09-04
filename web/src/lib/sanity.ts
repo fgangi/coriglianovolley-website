@@ -19,9 +19,12 @@ export function img(source: any, w = 800, h?: number, inquadratura?: string): st
     if (inquadratura && inquadratura !== 'auto') {
       // Scelta esplicita dell'editor nel pannello (alto / centro / basso).
       b = b.crop(inquadratura as any);
-    } else if (source.hotspot) {
-      // L'editor ha scelto il punto focale nel pannello: lo rispettiamo.
-      b = b.crop('focalpoint');
+    } else if (source.hotspot || source.crop) {
+      // Nessuna chiamata a .crop(): ci pensa la libreria ad applicare il
+      // ritaglio e il punto focale scelti nel pannello (rect + fp-x/fp-y).
+      // Attenzione: impostare crop='focalpoint' li fa ignorare entrambi —
+      // in @sanity/image-url la presenza di `spec.crop` salta proprio il
+      // calcolo basato su hotspot, e l'immagine torna centrata.
     } else {
       // Le dimensioni originali sono nel riferimento: image-<id>-<w>x<h>-<ext>
       const m = String(source.asset?._ref ?? '').match(/-(\d+)x(\d+)-/);

@@ -129,8 +129,13 @@ p { margin: 0; color: var(--ink-soft); }
 .mainnav-link.cta:hover { background: var(--accent-strong); color: var(--accent-ink); }
 .mainnav-item { position: relative; }
 .caret-icon { color: var(--ink-faint); transition: transform .15s ease; flex: none; }
+/* Sul pulsante rosso il grigio della freccia sparisce: prende il colore del testo */
+.mainnav-item.acquista .caret-icon { color: var(--accent-ink); }
 .mainnav-item[data-open="true"] > .mainnav-trigger { color: var(--ink); background: var(--surface-2); }
 .mainnav-item[data-open="true"] .caret-icon { transform: rotate(180deg); }
+/* "Acquista" è un invito all'azione: resta rosso anche a tendina aperta,
+   altrimenti perderebbe risalto proprio mentre lo si sta usando. */
+.mainnav-item.acquista[data-open="true"] > .mainnav-trigger { background: var(--accent-strong); color: var(--accent-ink); }
 .submenu { display: none; flex-direction: column; }
 .mainnav-item[data-open="true"] > .submenu { display: flex; }
 
@@ -158,6 +163,10 @@ p { margin: 0; color: var(--ink-soft); }
   @keyframes submenuIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
   .submenu a { padding: .55rem .7rem; border-radius: 8px; font-size: .9rem; color: var(--ink-soft); white-space: nowrap; }
   .submenu a:hover, .submenu a[aria-current="page"] { background: var(--surface-2); color: var(--ink); }
+  .mainnav-item.acquista:hover > .mainnav-trigger,
+  .mainnav-item.acquista:focus-within > .mainnav-trigger { background: var(--accent-strong); color: var(--accent-ink); }
+  /* Ultima voce della barra: la tendina si allinea a destra per non uscire dallo schermo */
+  .mainnav-item.acquista > .submenu { left: auto; right: 0; }
 }
 
 /* Mobile: pannello a scomparsa + accordion (stesso click) */

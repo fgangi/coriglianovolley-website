@@ -8,6 +8,8 @@ import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import { sfetch, img } from '../lib/sanity';
 import { settingsQuery } from '../lib/queries';
+// Barra per simulare stati diversi: esiste solo durante lo sviluppo
+import AnteprimaStati from '../components/AnteprimaStati.astro';
 
 interface Props { title?: string; description?: string; }
 const { title, description } = Astro.props;
@@ -20,6 +22,8 @@ const nomeSquadra = settings?.nomeSquadra ?? 'Corigliano Volley';
 const logoUrl = img(settings?.logo, 200);
 const legaCredemLogo = img(settings?.loghiLega?.legaCredemLogo, 400);
 const legaCredemUrl = settings?.loghiLega?.legaCredemUrl;
+// Stessa condizione della pagina: la voce di menù segue la sezione reale
+const iscrizioniAperte = settings?.iscrizioni?.aperte !== false && !!settings?.iscrizioni?.moduloUrl;
 const pageTitle = title ? `${title} – ${nomeSquadra}` : `${nomeSquadra} – Serie A3`;
 const desc = description ?? `Sito ufficiale ${nomeSquadra}, Serie A3 maschile: news, calendario, risultati, roster e settore giovanile.`;
 ---
@@ -39,11 +43,12 @@ const desc = description ?? `Sito ufficiale ${nomeSquadra}, Serie A3 maschile: n
     <ClientRouter />
   </head>
   <body>
-    <Header nomeSquadra={nomeSquadra} bigliettiUrl={settings?.bigliettiUrl} logoUrl={logoUrl} legaCredemLogo={legaCredemLogo} legaCredemUrl={legaCredemUrl} />
+    <Header nomeSquadra={nomeSquadra} bigliettiUrl={settings?.bigliettiUrl} abbonamentiUrl={settings?.abbonamentiUrl} iscrizioniAperte={iscrizioniAperte} logoUrl={logoUrl} legaCredemLogo={legaCredemLogo} legaCredemUrl={legaCredemUrl} />
     <main>
       <slot />
     </main>
     <Footer settings={settings} />
+    {import.meta.env.DEV && <AnteprimaStati />}
 
   </body>
 </html>

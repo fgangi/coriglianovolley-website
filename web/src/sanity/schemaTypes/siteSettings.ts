@@ -63,8 +63,60 @@ export const siteSettings = defineType({
     }),
     defineField({
       name: 'bigliettiUrl',
-      title: 'Link biglietteria esterna',
+      title: 'Link biglietti (Liveticket)',
       type: 'url',
+      description:
+        'Vendita dei singoli biglietti. Se compilato compare il pulsante "Acquista" in alto a destra.',
+    }),
+    defineField({
+      name: 'abbonamentiUrl',
+      title: 'Link abbonamenti (Liveticket)',
+      type: 'url',
+      description:
+        'Da compilare quando parte la campagna abbonamenti, da svuotare quando finisce: il pulsante "Acquista" si adatta da solo.',
+    }),
+    defineField({
+      name: 'iscrizioni',
+      title: 'Iscrizioni settore giovanile',
+      type: 'object',
+      description:
+        'Modulo di iscrizione ai corsi giovanili. Compare nella pagina Settore giovanile.',
+      options: { collapsible: true, collapsed: false },
+      fields: [
+        {
+          name: 'aperte',
+          title: 'Iscrizioni aperte',
+          type: 'boolean',
+          description: 'Togli la spunta a campagna chiusa: la sezione sparisce dal sito.',
+          initialValue: true,
+        },
+        {
+          name: 'moduloUrl',
+          title: 'Link al modulo (Golee)',
+          type: 'url',
+          description: 'Indirizzo del modulo di iscrizione online.',
+        },
+        { name: 'titolo', title: 'Titolo', type: 'string' },
+        {
+          name: 'testo',
+          title: 'Testo introduttivo',
+          type: 'text',
+          rows: 3,
+        },
+        {
+          name: 'categorie',
+          title: 'Corsi e categorie',
+          type: 'array',
+          of: [{ type: 'string' }],
+          description: 'Es. "Under 13 Maschile". Compaiono come elenco sopra al pulsante.',
+        },
+        {
+          name: 'nota',
+          title: 'Nota finale (facoltativa)',
+          type: 'string',
+          description: 'Es. scadenza iscrizioni o riferimento per informazioni.',
+        },
+      ],
     }),
     defineField({
       name: 'newsletterUrl',

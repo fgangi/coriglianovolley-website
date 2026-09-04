@@ -69,6 +69,10 @@ const RANK_AREA: Record<string, number> = { tecnico: 0, medico: 1, presidenza: 2
 const staffPreview = [...staff].sort(
   (a, b) => (RANK_AREA[a.area ?? 'tecnico'] ?? 9) - (RANK_AREA[b.area ?? 'tecnico'] ?? 9)
 );
+/** Nelle schede ridotte mostriamo il primo incarico: chi ne ha due lo vede
+ *  comunque per intero nella pagina Squadra. Evita schede disallineate senza
+ *  ricorrere ai puntini di sospensione. */
+const primoRuolo = (r?: string) => (r ?? '').split('·')[0].trim();
 const RUOLI_LABEL: Record<string, string> = { palleggiatore: 'Palleggiatore', opposto: 'Opposto', schiacciatore: 'Schiacciatore', centrale: 'Centrale', libero: 'Libero' };
 ---
 <Layout>
@@ -184,7 +188,10 @@ const RUOLI_LABEL: Record<string, string> = { palleggiatore: 'Palleggiatore', op
             return (
               <div class="card member-mini">
                 <div class="mm-ph">{foto ? <img src={foto} alt={m.nome} loading="lazy" /> : <div class="rp-empty" aria-hidden="true"></div>}</div>
-                <div class="mm-info"><strong>{m.nome}</strong><span class="tag">{m.ruolo}</span></div>
+                <div class="mm-info">
+                  <strong>{m.nome}</strong>
+                  <span class="tag" title={m.ruolo}>{primoRuolo(m.ruolo)}</span>
+                </div>
               </div>
             );
           })}
@@ -316,6 +323,9 @@ const RUOLI_LABEL: Record<string, string> = { palleggiatore: 'Palleggiatore', op
   .member-mini { display: flex; flex-direction: column; }
   .mm-ph { aspect-ratio: 1 / 1; background: var(--surface-2); overflow: hidden; }
   .mm-ph img { width: 100%; height: 100%; object-fit: cover; }
-  .mm-info { padding: 12px 14px; display: flex; flex-direction: column; gap: 1px; }
-  .mm-info strong { font-weight: 720; }
+  /* Stesso trattamento delle schede giocatore: nome e ruolo su una riga sola,
+     così il ruolo parte alla stessa altezza in tutte le schede. */
+  .mm-info { padding: 10px 12px; display: flex; flex-direction: column; gap: 1px; }
+  .mm-info strong, .mm-info .tag { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .mm-info strong { font-weight: 750; letter-spacing: -.01em; }
 </style>
