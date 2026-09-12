@@ -22,3 +22,6 @@ dist/
 Thumbs.db
 *.swp
 .idea/
+
+# Materiali di design (PNG da Figma): non vanno nel repository
+/design/

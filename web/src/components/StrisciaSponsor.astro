@@ -1,0 +1,150 @@
+---
+/**
+ * Riga di loghi che scorre da sola, senza riquadri.
+ * La direzione si alterna riga per riga; al passaggio del mouse lo scorrimento
+ * si ferma e compaiono le frecce per muoversi a mano.
+ */
+interface Props {
+  etichetta: string;
+  /** 'avanti' scorre verso sinistra, 'indietro' verso destra */
+  direzione?: 'avanti' | 'indietro';
+  /** Altezza dei loghi: comunica il livello dello sponsor */
+  altezza?: string;
+  altezzaMobile?: string;
+  /** Riga che non scorre da sola: resta ferma anche se i loghi ci stanno */
+  fissa?: boolean;
+}
+const { etichetta, direzione = 'avanti', altezza = '70px', altezzaMobile = '54px', fissa = false } = Astro.props;
+---
+<div class="striscia" data-striscia data-direzione={direzione} data-fissa={fissa ? 'si' : undefined}
+  style={`--h:${altezza};--h-mob:${altezzaMobile}`}>
+  <div class="str-pista" data-pista role="list" aria-label={etichetta}>
+    <slot />
+  </div>
+  <button class="str-freccia sx" type="button" data-scorri="-1" aria-label={`${etichetta}: indietro`}>
+    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
+  </button>
+  <button class="str-freccia dx" type="button" data-scorri="1" aria-label={`${etichetta}: avanti`}>
+    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
+  </button>
+</div>
+
+<style>
+  .striscia { position: relative; }
+  .str-pista { display: flex; align-items: center; gap: clamp(28px, 4vw, 64px);
+    overflow-x: auto; scrollbar-width: none; -ms-overflow-style: none; padding: 6px 0; }
+  .str-pista::-webkit-scrollbar { display: none; }
+
+  /* I loghi stanno nudi sullo sfondo: nessun riquadro, come nel mockup */
+  /* Larghezza e altezza arrivano dalla pagina, calcolate a pari superficie */
+  .str-pista :global(.sp-logo) { flex: none; display: inline-flex; align-items: center; justify-content: center;
+    height: var(--h); max-width: 100%; transition: transform .14s ease, opacity .14s ease; }
+  .str-pista :global(.sp-logo img) { height: 100%; width: 100%; max-width: none; object-fit: contain; display: block; }
+  .str-pista :global(a.sp-logo:hover) { transform: translateY(-2px); }
+  /* Sponsor senza logo: il nome resta contenuto e non domina la riga */
+  .str-pista :global(.sp-nome-piano) { font-weight: 700; color: var(--ink-soft);
+    font-size: .92rem; line-height: 1.2; text-align: center; max-width: 160px; }
+
+  .str-freccia { position: absolute; top: 50%; transform: translateY(-50%);
+    width: 38px; height: 38px; border-radius: 50%; border: 1px solid var(--line);
+    background: var(--ground); color: var(--ink); display: grid; place-items: center;
+    box-shadow: var(--shadow); cursor: pointer; z-index: 2;
+    opacity: 0; pointer-events: none; transition: opacity .16s ease; }
+  .str-freccia.sx { left: -6px; }
+  .str-freccia.dx { right: -6px; }
+  /* Compaiono solo quando servono: mouse sopra o messa a fuoco da tastiera */
+  .striscia:hover .str-freccia, .striscia:focus-within .str-freccia { opacity: 1; pointer-events: auto; }
+  /* Riga ferma perché i loghi ci stanno tutti: nessuna freccia, non c'è dove andare */
+  .striscia[data-ferma='si'] .str-freccia { display: none; }
+  .str-freccia:hover { border-color: var(--ink-faint); }
+
+  @media (max-width: 640px) {
+    .str-pista :global(.sp-logo) { height: var(--h-mob); }
+    .str-pista { gap: 26px; }
+    /* Su telefono non esiste il passaggio del mouse: le frecce restano visibili */
+    .str-freccia { opacity: 1; pointer-events: auto; width: 32px; height: 32px; }
+    .striscia[data-ferma='si'] .str-freccia { display: none; }
+  }
+</style>
+
+<script is:inline>
+  (() => {
+    const avvia = () => {
+      document.querySelectorAll('[data-striscia]').forEach((box) => {
+        if (box.dataset.pronto) return;
+        box.dataset.pronto = '1';
+        const pista = box.querySelector('[data-pista]');
+        const verso = box.dataset.direzione === 'indietro' ? -1 : 1;
+
+        const originali = [...pista.children];
+        if (!originali.length) return;
+
+        if (box.dataset.fissa === 'si') { box.dataset.ferma = 'si'; return; }
+
+        /** Aggiunge una ripetizione della fila in fondo alla pista. */
+        const duplica = () => originali.forEach((n) => {
+          const copia = n.cloneNode(true);
+          copia.setAttribute('aria-hidden', 'true');
+          copia.querySelectorAll('a').forEach((a) => a.setAttribute('tabindex', '-1'));
+          pista.appendChild(copia);
+        });
+
+        // Attenzione: per una fila più stretta del contenitore, scrollWidth
+        // restituisce la larghezza del contenitore, non quella dei loghi. Il
+        // periodo va quindi misurato sulle posizioni, dopo la prima copia.
+        duplica();
+        const periodo = pista.children[originali.length].offsetLeft - pista.children[0].offsetLeft;
+        if (periodo <= 0) { box.dataset.ferma = 'si'; return; }
+
+        // Servono abbastanza ripetizioni perché il giro possa chiudersi senza
+        // che la pista finisca: almeno una vista intera oltre un periodo.
+        let guardia = 0;
+        while (pista.scrollWidth < pista.clientWidth + periodo + 8 && guardia < 40) {
+          duplica(); guardia++;
+        }
+
+        if (verso < 0) pista.scrollLeft = periodo;
+
+        /** Riporta la posizione dentro il primo giro, senza che si veda. */
+        const normalizza = () => {
+          if (pista.scrollLeft >= periodo) pista.scrollLeft -= periodo;
+          else if (pista.scrollLeft <= 0) pista.scrollLeft += periodo;
+        };
+
+        let fermo = false;
+        let ultimo = 0;
+        const VELOCITA = 26; // pixel al secondo: lento, non deve distrarre
+        const passo = (t) => {
+          if (!box.isConnected) return;
+          const dt = ultimo ? Math.min((t - ultimo) / 1000, 0.05) : 0;
+          ultimo = t;
+          if (!fermo) { pista.scrollLeft += verso * VELOCITA * dt; normalizza(); }
+          requestAnimationFrame(passo);
+        };
+
+        const lento = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        if (!lento) requestAnimationFrame(passo);
+
+        // Il mouse sopra ferma lo scorrimento; anche il dito e la tastiera
+        const stop = () => { fermo = true; };
+        const vai = () => { fermo = false; };
+        box.addEventListener('mouseenter', stop);
+        box.addEventListener('mouseleave', vai);
+        box.addEventListener('focusin', stop);
+        box.addEventListener('focusout', vai);
+        pista.addEventListener('touchstart', stop, { passive: true });
+        pista.addEventListener('touchend', vai, { passive: true });
+
+        box.querySelectorAll('[data-scorri]').forEach((b) => {
+          b.addEventListener('click', () => {
+            const quanto = Math.max(pista.clientWidth * 0.7, 200);
+            pista.scrollBy({ left: Number(b.dataset.scorri) * quanto, behavior: 'smooth' });
+          });
+        });
+        pista.addEventListener('scroll', normalizza, { passive: true });
+      });
+    };
+    avvia();
+    document.addEventListener('astro:page-load', avvia);
+  })();
+</script>

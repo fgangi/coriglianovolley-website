@@ -1,14 +1,18 @@
 ---
+import SocialIcons from './SocialIcons.astro';
+
 interface Props {
   nomeSquadra: string;
   bigliettiUrl?: string;
   abbonamentiUrl?: string;
   iscrizioniAperte?: boolean;
+  social?: Record<string, string> | null;
+  gallery?: boolean;
   logoUrl?: string | null;
   legaCredemLogo?: string | null;
   legaCredemUrl?: string;
 }
-const { nomeSquadra, bigliettiUrl, abbonamentiUrl, iscrizioniAperte, logoUrl, legaCredemLogo, legaCredemUrl } = Astro.props;
+const { nomeSquadra, bigliettiUrl, abbonamentiUrl, iscrizioniAperte, social, gallery = true, logoUrl, legaCredemLogo, legaCredemUrl } = Astro.props;
 const path = Astro.url.pathname.replace(/\/$/, '') || '/';
 
 type Item = { href: string; label: string; children?: { href: string; label: string }[] };
@@ -17,8 +21,9 @@ const nav: Item[] = [
   {
     // Le voci seguono l'ordine reale delle sezioni nella pagina
     href: '/squadra/', label: 'Squadra',
+    // Le tendine elencano le sezioni della pagina, non la pagina stessa:
+    // una voce che ripete il titolo del menu non porta da nessuna parte.
     children: [
-      { href: '/squadra/', label: 'La squadra' },
       { href: '/squadra/#roster', label: 'Roster' },
       { href: '/squadra/#staff', label: 'Staff tecnico e medico' },
       { href: '/squadra/#societa', label: 'Organigramma' },
@@ -28,7 +33,7 @@ const nav: Item[] = [
   {
     href: '/partite/', label: 'Partite',
     children: [
-      { href: '/partite/', label: 'Calendario e risultati' },
+      { href: '/partite/#calendario', label: 'Calendario' },
       { href: '/partite/#diretta', label: 'Diretta' },
       { href: '/partite/#classifica', label: 'Classifica' },
     ],
@@ -43,7 +48,7 @@ const nav: Item[] = [
       { href: '/settore-giovanile/#news-vivaio', label: 'News' },
     ],
   },
-  { href: '/gallery/', label: 'Gallery' },
+  ...(gallery ? [{ href: '/gallery/', label: 'Gallery' }] : []),
   { href: '/sponsor/', label: 'Sponsor' },
   { href: '/contatti/', label: 'Contatti' },
 ];
@@ -84,13 +89,19 @@ const isActive = (href: string) => {
 const iniziali = nomeSquadra.split(' ').map((w) => w[0]).join('').slice(0, 2).toUpperCase();
 ---
 <header class="site-header">
+  <div class="topbar">
+    <div class="container">
+      <SocialIcons social={social} classe="social-header" />
+    </div>
+  </div>
+
   <div class="container bar">
     <div class="brand-cluster">
       <a class="brand" href="/">
         {logoUrl
           ? <img class="mark-img" src={logoUrl} alt={`Logo ${nomeSquadra}`} />
           : <span class="mark">{iniziali}</span>}
-        <span class="brand-name">{nomeSquadra}</span>
+        <span class="brand-name sr-only">{nomeSquadra}</span>
       </a>
       {legaCredemLogo && (
         <>
@@ -153,6 +164,26 @@ const iniziali = nomeSquadra.split(' ').map((w) => w[0]).join('').slice(0, 2).to
   </div>
 </header>
 <script>
+/* Intestazione compatta allo scorrimento. Due soglie diverse per entrare e
+   uscire: con una sola, chi si ferma esattamente sul confine vedrebbe
+   l'intestazione aprirsi e chiudersi a ogni pixel di scorrimento. */
+function initHeaderCompatto() {
+  const header = document.querySelector('.site-header') as HTMLElement | null;
+  if (!header || header.dataset.scrollBound === '1') return;
+  header.dataset.scrollBound = '1';
+  const GIU = 120, SU = 60;
+  // Legge solo la posizione di scorrimento, nessuna misura di impaginazione:
+  // può girare direttamente nell'evento, senza attendere un fotogramma.
+  const valuta = () => {
+    const y = window.scrollY;
+    const ora = header.dataset.compatta === 'si';
+    if (!ora && y > GIU) header.dataset.compatta = 'si';
+    else if (ora && y < SU) header.removeAttribute('data-compatta');
+  };
+  window.addEventListener('scroll', valuta, { passive: true });
+  valuta();
+}
+
 // Con le transizioni tra pagine lo script può rieseguirsi: il flag "bound"
 // evita di agganciare due volte gli stessi eventi.
 function initHeader() {
@@ -223,8 +254,9 @@ function initHeader() {
 }
 
 initHeader();
+initHeaderCompatto();
 // Rieseguito dopo ogni transizione di pagina
-document.addEventListener('astro:page-load', initHeader);
+document.addEventListener('astro:page-load', () => { initHeader(); initHeaderCompatto(); });
 // Cambiando pagina il menu mobile va richiuso
 document.addEventListener('astro:before-swap', () => {
   document.querySelector('[data-nav]')?.setAttribute('data-open', 'false');

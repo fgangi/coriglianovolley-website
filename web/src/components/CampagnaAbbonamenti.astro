@@ -1,0 +1,61 @@
+---
+import { img } from '../lib/sanity';
+
+/** Fascia rossa della campagna abbonamenti. Compare solo a campagna attiva. */
+interface Props { campagna?: any }
+const { campagna } = Astro.props;
+const c = campagna ?? {};
+const attiva = c.attiva === true && !!c.url;
+// Sfondo predefinito se non ne è stato caricato uno dal pannello
+const sfondo = c.immagine ? img(c.immagine, 2200) : '/sfondi/abbonamenti.jpg';
+// Il sopratitolo va su due righe come nel mockup: il punto mediano fa da a capo
+const righeOcchiello = String(c.occhiello ?? '').split('·').map((t: string) => t.trim()).filter(Boolean);
+---
+{attiva && (
+  <section class="campagna" style={`background-image:url('${sfondo}')`} aria-label="Campagna abbonamenti">
+    <div class="container camp-testo">
+      {righeOcchiello.length > 0 && (
+        <span class="camp-occhiello">
+          {righeOcchiello.map((r) => <span class="camp-riga">{r}</span>)}
+        </span>
+      )}
+      {c.titolo && <h2 class="camp-titolo">{c.titolo}</h2>}
+      <a class="camp-btn" href={c.url} target="_blank" rel="noopener">
+        {c.etichettaPulsante || 'Abbonati'}
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+      </a>
+    </div>
+  </section>
+)}
+
+<style>
+  /* Proporzioni dello sfondo del mockup: 2172 x 724 */
+  .campagna { position: relative; background-color: #A5101A; background-size: cover;
+    background-position: top center; aspect-ratio: 2172 / 724; min-height: 300px;
+    /* width:100% ancora la larghezza: senza, quando il minimo di altezza entra
+       in gioco, aspect-ratio ricalcola la larghezza dall'altezza e la fascia
+       diventa più larga della pagina. */
+    width: 100%; display: flex; align-items: center; }
+  .camp-testo { display: flex; flex-direction: column; align-items: flex-start; gap: 0; }
+  .camp-occhiello { font-family: var(--font-display); text-transform: uppercase;
+    color: #fff; font-weight: 700; letter-spacing: .18em; font-size: clamp(.8rem, 1.35vw, 1.15rem);
+    line-height: 1.4; display: flex; flex-direction: column; }
+  .camp-riga { display: block; }
+  .camp-titolo { color: #fff; font-size: clamp(2.1rem, 5.75vw, 5.1rem); line-height: .94;
+    margin-top: clamp(10px, 1.4vw, 18px); max-width: 12ch; }
+  .camp-btn { display: inline-flex; align-items: center; gap: .5rem;
+    margin-top: clamp(16px, 2.4vw, 30px); padding: .55rem 1.1rem; border-radius: 8px;
+    background: #fff; color: var(--accent-deep);
+    font-family: var(--font-display); text-transform: uppercase; letter-spacing: .02em;
+    font-size: clamp(.95rem, 1.3vw, 1.12rem); font-weight: 800;
+    transition: transform .12s ease, box-shadow .14s ease; }
+  .camp-btn:hover { transform: translateY(-1px); box-shadow: 0 8px 24px rgba(0,0,0,.28); }
+
+  /* Su schermi stretti le tessere dello sfondo finirebbero sotto al testo:
+     la fascia si alza e l'immagine si sposta a destra. */
+  @media (max-width: 760px) {
+    .campagna { aspect-ratio: auto; min-height: 0; padding: clamp(34px, 9vw, 56px) 0;
+      background-position: 78% center; }
+    .camp-titolo { max-width: 100%; }
+  }
+</style>

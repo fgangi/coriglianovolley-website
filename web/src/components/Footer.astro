@@ -1,7 +1,10 @@
 ---
 import { img, mapEmbedSrc } from '../lib/sanity';
-interface Props { settings: any; }
-const { settings } = Astro.props;
+import SocialIcons from './SocialIcons.astro';
+// Marchio "Corigliano Volley" vettoriale, in linea per poterlo ricolorare
+import marchio from './marchio.svg?raw';
+interface Props { settings: any; gallery?: boolean }
+const { settings, gallery = true } = Astro.props;
 const s = settings ?? {};
 const logoUrl = img(s.logo, 200);
 const social = s.social ?? {};
@@ -15,6 +18,19 @@ const lega = s.loghiLega ?? {};
 const legaCredemLogo = img(lega.legaCredemLogo, 600);
 const legaLogo = img(lega.legaLogo, 700);
 const fipavLogo = img(lega.fipavLogo, 400);
+
+/** Misura che dà a ogni logo la stessa superficie.
+ *  I tre stemmi hanno proporzioni diverse (0,60 · 0,65 · 0,95): imporre la
+ *  stessa altezza li fa sembrare di peso molto diverso, perché uno è quasi
+ *  quadrato e gli altri stretti. A parità di area appaiono equilibrati. */
+const AREA_LOGO = 5100;
+function misuraLogo(source: any): string | undefined {
+  const m = String(source?.asset?._ref ?? '').match(/-(\d+)x(\d+)-/);
+  if (!m) return undefined;
+  const prop = Number(m[1]) / Number(m[2]);
+  const h = Math.min(Math.sqrt(AREA_LOGO / prop), 94);
+  return `height:${Math.round(h)}px;width:${Math.round(prop * h)}px`;
+}
 const mikasaLogo = img(lega.mikasaLogo, 400);
 
 const icons: Record<string, string> = {
@@ -43,44 +59,28 @@ const identificativi = [
 <footer class="site-footer">
   <div class="container">
     <div class="foot-grid">
-      <!-- 1. Navigazione (stesse voci del menu in alto) -->
-      <div>
-        <h4>Naviga</h4>
-        <div class="fnav">
-          <a href="/">Home</a>
-          <a href="/squadra/">Squadra</a>
-          <a href="/partite/">Partite e classifica</a>
-          <a href="/news/">News</a>
-          <a href="/settore-giovanile/">Settore giovanile</a>
-          <a href="/gallery/">Gallery</a>
-          <a href="/sponsor/">Sponsor</a>
-          <a href="/contatti/">Contatti</a>
-          {s.bigliettiUrl && <a href={s.bigliettiUrl} target="_blank" rel="noopener">Biglietti</a>}
-        </div>
-      </div>
-
-      <!-- 2. Squadra: nome, logo e loghi istituzionali -->
+      <!-- 1. Squadra: nome, logo e loghi istituzionali -->
       <div class="foot-brand">
-        <a class="brand" href="/" style="color:#fff;">
-          {logoUrl ? <img class="mark-img" src={logoUrl} alt={`Logo ${nome}`} /> : <span class="mark">{iniziali}</span>}
-          <span class="brand-name">{nome}</span>
+        <a class="brand" href="/" aria-label={nome}>
+          {logoUrl ? <img class="mark-img" src={logoUrl} alt="" /> : <span class="mark">{iniziali}</span>}
+          <span class="brand-word" aria-hidden="true" set:html={marchio} />
         </a>
         {(legaLogo || legaCredemLogo || fipavLogo) && (
           <div class="brand-partners">
             {legaLogo && (
               lega.legaUrl
-                ? <a href={lega.legaUrl} target="_blank" rel="noopener" aria-label="Lega Pallavolo Serie A"><img class="wide" src={legaLogo} alt="Lega Pallavolo Serie A" /></a>
-                : <img class="wide" src={legaLogo} alt="Lega Pallavolo Serie A" />
+                ? <a href={lega.legaUrl} target="_blank" rel="noopener" aria-label="Lega Pallavolo Serie A"><img src={legaLogo} alt="Lega Pallavolo Serie A" style={misuraLogo(lega.legaLogo)} /></a>
+                : <img src={legaLogo} alt="Lega Pallavolo Serie A" style={misuraLogo(lega.legaLogo)} />
             )}
             {legaCredemLogo && (
               lega.legaCredemUrl
-                ? <a href={lega.legaCredemUrl} target="_blank" rel="noopener" aria-label="Serie A Credem Banca"><img src={legaCredemLogo} alt="Serie A Credem Banca" /></a>
-                : <img src={legaCredemLogo} alt="Serie A Credem Banca" />
+                ? <a href={lega.legaCredemUrl} target="_blank" rel="noopener" aria-label="Serie A Credem Banca"><img src={legaCredemLogo} alt="Serie A Credem Banca" style={misuraLogo(lega.legaCredemLogo)} /></a>
+                : <img src={legaCredemLogo} alt="Serie A Credem Banca" style={misuraLogo(lega.legaCredemLogo)} />
             )}
             {fipavLogo && (
               lega.fipavUrl
-                ? <a href={lega.fipavUrl} target="_blank" rel="noopener" aria-label="FIPAV"><img src={fipavLogo} alt="FIPAV — Federazione Italiana Pallavolo" /></a>
-                : <img src={fipavLogo} alt="FIPAV — Federazione Italiana Pallavolo" />
+                ? <a href={lega.fipavUrl} target="_blank" rel="noopener" aria-label="FIPAV"><img src={fipavLogo} alt="FIPAV — Federazione Italiana Pallavolo" style={misuraLogo(lega.fipavLogo)} /></a>
+                : <img src={fipavLogo} alt="FIPAV — Federazione Italiana Pallavolo" style={misuraLogo(lega.fipavLogo)} />
             )}
           </div>
         )}
@@ -88,15 +88,25 @@ const identificativi = [
         {socialLinks.length > 0 && (
           <div class="foot-social">
             <p class="social-invito">Seguici sui nostri canali social</p>
-            <div class="social-icons">
-              {socialLinks.map((it) => (
-                <a href={it.url} target="_blank" rel="noopener" aria-label={labels[it.k]}>
-                  <Fragment set:html={icons[it.k]} />
-                </a>
-              ))}
-            </div>
+            <SocialIcons social={s.social} />
           </div>
         )}
+      </div>
+
+      <!-- 2. Navigazione (stesse voci del menu in alto) -->
+      <div>
+          {/* Home e Contatti non compaiono qui: al primo si arriva dal marchio
+              in questa stessa colonna, ai contatti dalla colonna accanto. */}
+        <h4>Naviga</h4>
+        <div class="fnav">
+          <a href="/squadra/">Squadra</a>
+          <a href="/partite/">Partite e classifica</a>
+          <a href="/news/">News</a>
+          <a href="/settore-giovanile/">Settore giovanile</a>
+          {gallery && <a href="/gallery/">Gallery</a>}
+          <a href="/sponsor/">Sponsor</a>
+          {s.bigliettiUrl && <a href={s.bigliettiUrl} target="_blank" rel="noopener">Biglietti</a>}
+        </div>
       </div>
 
       <!-- 3. Contatti, raggruppati per tipo -->

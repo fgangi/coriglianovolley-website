@@ -2,9 +2,9 @@
 const groq = String.raw;
 
 export const settingsQuery = groq`*[_type == "siteSettings"][0]{
-  nomeSquadra, stagione, logo, fotoSquadra, storia, bigliettiUrl, abbonamentiUrl, iscrizioni, newsletterUrl, direttaUrl, email, pec, telefono, telefoni, denominazione, codiceFipav, partitaIva, indirizzo, mappaPosizione, social,
+  nomeSquadra, stagione, hero, logo, fotoSquadra, storia, bigliettiUrl, campagnaAbbonamenti, iscrizioni, newsletterUrl, direttaUrl, email, pec, telefono, telefoni, denominazione, codiceFipav, partitaIva, indirizzo, mappaPosizione, social,
   loghiLega,
-  prossimaPartita->{data, avversario, dove, competizione, luogo, giornata}
+  prossimaPartita->{data, avversario, avversaria->{nome, logo}, dove, competizione, luogo, giornata}
 }`;
 
 export const newsListQuery = groq`*[_type == "news" && settore == $settore] | order(data desc)[0...$limit]{
@@ -28,15 +28,15 @@ export const newsBySlugQuery = groq`*[_type == "news" && slug.current == $slug][
 export const newsSlugsQuery = groq`*[_type == "news" && defined(slug.current)]{ "slug": slug.current }`;
 
 export const prossimePartiteQuery = groq`*[_type == "partita" && giocata != true] | order(data asc)[0...$limit]{
-  _id, data, avversario, dove, competizione, giornata, luogo, direttaUrl
+  _id, data, avversario, avversaria->{nome, logo}, dove, competizione, giornata, luogo, direttaUrl
 }`;
 
 export const risultatiQuery = groq`*[_type == "partita" && giocata == true] | order(data desc)[0...$limit]{
-  _id, data, avversario, dove, competizione, giornata, giocata, setCasa, setTrasferta, parziali, reportUrl
+  _id, data, avversario, avversaria->{nome, logo}, dove, competizione, giornata, giocata, setCasa, setTrasferta, parziali, reportUrl
 }`;
 
 export const calendarioQuery = groq`*[_type == "partita"] | order(data asc){
-  _id, data, avversario, dove, competizione, giornata, luogo, giocata, setCasa, setTrasferta, parziali, reportUrl, direttaUrl
+  _id, data, avversario, avversaria->{nome, logo}, dove, competizione, giornata, luogo, giocata, setCasa, setTrasferta, parziali, reportUrl, direttaUrl
 }`;
 
 export const classificaQuery = groq`*[_type == "classifica"] | order(aggiornataAl desc)[0]{

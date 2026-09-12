@@ -1,4 +1,5 @@
 import { defineType, defineField } from 'sanity';
+import { DESCRIZIONE_LOGO, validaLogo } from '../regoleLogo';
 
 /** Sponsor / partner. */
 export const sponsor = defineType({
@@ -7,7 +8,14 @@ export const sponsor = defineType({
   type: 'document',
   fields: [
     defineField({ name: 'nome', title: 'Nome', type: 'string', validation: (r) => r.required() }),
-    defineField({ name: 'logo', title: 'Logo', type: 'image', options: { hotspot: true } }),
+    defineField({
+      name: 'logo',
+      title: 'Logo',
+      type: 'image',
+      options: { hotspot: true },
+      description: DESCRIZIONE_LOGO,
+      validation: validaLogo,
+    }),
     defineField({ name: 'url', title: 'Sito web', type: 'url' }),
     defineField({
       name: 'livello',

@@ -9,11 +9,13 @@
   --ink:#16100F; --ink-soft:#5E5456; --ink-faint:#8F8587;
   --line:#E6DEDF; --line-soft:#EFEAEA;
   --accent:#CE1B2C; --accent-strong:#B21826; --accent-ink:#FFFFFF; --accent-tint:#FBE6E8;
+  /* Rosso scuro per testo e icone sui fondi bianchi (pulsanti Biglietti, Abbonati) */
+  --accent-deep:#82171B;
   --black:#141011;
   /* Tipografia: --font-display per i titoli, --font-body per il testo.
      Per cambiare font in futuro basta sostituire questi due valori. */
-  --font-body: 'Archivo Variable', system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  --font-display: var(--font-body);
+  --font-body: 'Inter Variable', system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-display: 'Sofia Sans Extra Condensed Variable', 'Inter Variable', system-ui, sans-serif;
   --radius:14px; --maxw:1120px; --contentw:760px;
   --shadow:0 1px 2px rgba(20,16,17,.05), 0 8px 30px rgba(20,16,17,.06);
 }
@@ -39,15 +41,32 @@ main { display: block; min-height: 60vh; }
 /* --- typography --- */
 /* L'attributo hidden deve prevalere sui display: delle schede */
 [hidden] { display: none !important; }
-h1, h2, h3 { margin: 0; font-family: var(--font-display); letter-spacing: -.02em; text-wrap: balance; line-height: 1.08; }
+/* Scala dei pesi del carattere dei titoli: 900 pagina, 800 sezione, 700 scheda.
+   Su un condensato la crenatura negativa chiude troppo le lettere: quasi zero. */
+/* CONVENZIONE TIPOGRAFICA (dal mockup)
+   - tutto ciò che è MAIUSCOLO usa il carattere condensato
+   - il testo in caso normale usa Inter, titoli di scheda compresi
+   Le due regole sotto e il gruppo .maiuscole più avanti la applicano. */
+/* I comandi non ereditano il carattere dalla pagina: senza questa riga
+   finiscono nel carattere di sistema. Vale per ogni bottone futuro. */
+html { font-family: var(--font-body); }
+button, input, select, textarea { font-family: inherit; }
+h1, h2, h3 { margin: 0; letter-spacing: -.005em; text-wrap: balance; line-height: 1; }
+h1, h2 { font-family: var(--font-display); text-transform: uppercase; }
+/* Nel mockup anche gli occhielli sono nel condensato: sono corti, regge. */
 .brand, .eyebrow, .score, .num, .rp-num, .nm-team { font-family: var(--font-display); }
-h1 { font-size: clamp(2rem, 5.5vw, 3.4rem); font-weight: 800; }
-h2 { font-size: clamp(1.5rem, 3.4vw, 2.1rem); font-weight: 780; }
-h3 { font-size: 1.15rem; font-weight: 720; letter-spacing: -.01em; }
+/* Misure prese dal mockup: "ULTIME NEWS" largo 166px a 1511 di finestra.
+   Il titolo di pagina scala in proporzione per mantenere la gerarchia. */
+h1 { font-size: clamp(2.5rem, 6.1vw, 3.9rem); font-weight: 900; }
+h2 { font-size: clamp(1.7rem, 3.8vw, 2.45rem); font-weight: 800; }
+/* Titoli di scheda: nel mockup sono in Inter, non condensati */
+h3 { font-family: var(--font-body); font-size: 1.16rem; font-weight: 750; letter-spacing: -.01em; line-height: 1.28; }
 p { margin: 0; color: var(--ink-soft); }
 .lead { font-size: clamp(1.05rem, 2.2vw, 1.25rem); color: var(--ink-soft); }
+/* Misure prese dal mockup: più grande e meno spaziato. A .74rem con .15em
+   di spaziatura il condensato diventava una fila di stanghette illeggibili. */
 .eyebrow {
-  font-size: .74rem; font-weight: 700; letter-spacing: .15em; text-transform: uppercase;
+  font-size: 1rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
   color: var(--accent); margin: 0 0 .6rem;
 }
 /* Occhiello e titolo distanziati sempre di 10px, come nelle intestazioni di pagina:
@@ -58,9 +77,11 @@ p { margin: 0; color: var(--ink-soft); }
 .section-head.between > div { display: flex; flex-direction: column; gap: 10px; }
 
 /* --- buttons --- */
+/* Nel mockup i pulsanti sono maiuscoli condensati, come le voci di menu */
 .btn {
   display: inline-flex; align-items: center; gap: .5rem; cursor: pointer;
-  font-weight: 650; font-size: .95rem; padding: .7rem 1.15rem; border-radius: 999px;
+  font-family: var(--font-display); text-transform: uppercase; letter-spacing: .02em;
+  font-weight: 700; font-size: 1.02rem; padding: .62rem 1.15rem; border-radius: 999px;
   border: 1px solid var(--line); background: var(--surface); color: var(--ink);
   transition: transform .12s ease, background .12s ease, border-color .12s ease;
 }
@@ -89,26 +110,60 @@ p { margin: 0; color: var(--ink-soft); }
   font-size: .7rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase;
   padding: .3rem .6rem; border-radius: 999px; background: var(--accent-tint); color: var(--accent-strong);
 }
-.tag { font-size: .78rem; color: var(--ink-faint); }
+.tag { font-size: .8rem; color: var(--ink-faint); text-transform: uppercase; letter-spacing: .04em; font-weight: 650; }
+
+/* Etichette in maiuscolo: tutte nel carattere condensato, come nel mockup.
+   Raggruppate qui per evitare che si scollino una dall'altra nel tempo. */
+.eyebrow, .tag, .pill, .giornata, .dove, .vs, .nm-vs, .spon-etichetta,
+.mese-titolo, .spon-titolo, .area-title, .ruolo-title, .liv-title,
+.social-invito, .dt-giorno, .dt-mese, .dt-ora, th,
+.site-footer h4, .contatti-dl dt {
+  font-family: var(--font-display);
+}
 
 /* --- header --- */
 .site-header {
   position: sticky; top: 0; z-index: 1000;
-  background: color-mix(in srgb, var(--ground) 90%, transparent);
-  backdrop-filter: saturate(140%) blur(10px);
-  border-bottom: 1px solid var(--line);
+  /* Sfumatura del mockup: rosso a sinistra, nero a destra */
+  background: linear-gradient(90deg, #B21826 0%, #000000 100%);
+  color: #fff;
 }
-.site-header .bar { display: flex; align-items: center; justify-content: space-between; min-height: 96px; gap: 16px; padding-top: 10px; padding-bottom: 10px; }
+/* Riga superiore con i social, sopra la barra principale */
+.site-header .topbar { padding: 6px 0 0; }
+.site-header .topbar .container { display: flex; justify-content: flex-end; }
+/* Nel mockup sono icone nude, senza riquadro: serve battere la regola del footer */
+.site-header .social-icons { margin-top: 0; gap: 4px; }
+.site-header .social-icons a { width: 32px; height: 32px; border: 0; border-radius: 0; opacity: .9; }
+.site-header .social-icons a:hover { background: transparent; opacity: 1; }
+.site-header .social-icons svg { width: 19px; height: 19px; }
+.site-header .bar { display: flex; align-items: center; justify-content: space-between; min-height: 122px; gap: 16px; padding-top: 0; padding-bottom: 10px;
+  transition: min-height .22s ease, padding-bottom .22s ease; }
+
+/* Scorrendo la pagina l'intestazione si assottiglia: spariscono i social,
+   marchio e badge si rimpiccioliscono. Occupa meno schermo senza sparire. */
+.site-header .topbar { overflow: hidden; transition: max-height .22s ease, opacity .18s ease; max-height: 46px; opacity: 1; }
+.site-header[data-compatta='si'] .topbar { max-height: 0; opacity: 0; }
+.site-header[data-compatta='si'] .bar { min-height: 64px; padding-bottom: 6px; }
+.site-header[data-compatta='si'] .brand .mark-img { height: 46px; }
+.site-header[data-compatta='si'] .credem img { height: 46px; }
+.site-header[data-compatta='si'] .brand-sep { height: 34px; }
+.brand .mark-img, .credem img, .brand-sep { transition: height .22s ease; }
+@media (prefers-reduced-motion: reduce) {
+  .site-header .bar, .site-header .topbar, .brand .mark-img, .credem img, .brand-sep { transition: none; }
+}
+/* Testo nascosto ma leggibile dai lettori di schermo */
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
 
 /* Cluster loghi: società + nome + Credem/Lega, vicini a sinistra */
 .brand-cluster { display: flex; align-items: center; gap: 18px; flex: none; }
 .brand { display: flex; align-items: center; gap: .7rem; font-weight: 820; letter-spacing: -.02em; font-size: 1.2rem; color: var(--ink); }
 .brand .mark { width: 44px; height: 44px; border-radius: 10px; background: var(--accent); color: #fff; display: grid; place-items: center; font-weight: 900; font-size: 1rem; flex: none; }
-.brand .mark-img { height: 72px; width: auto; max-width: 180px; object-fit: contain; display: block; flex: none; }
+.brand .mark-img { height: 102px; width: auto; max-width: 200px; object-fit: contain; display: block; flex: none; }
 .brand-name { white-space: nowrap; }
-.brand-sep { width: 1px; height: 56px; background: var(--line); flex: none; }
+.brand-sep { width: 1px; height: 72px; background: rgba(255,255,255,.32); flex: none; }
 .credem { display: inline-flex; align-items: center; }
-.credem img { height: 78px; width: auto; max-width: 260px; object-fit: contain; display: block; }
+.credem img { height: 100px; width: auto; max-width: 260px; object-fit: contain; display: block; }
 @media (max-width: 1200px) {
   .brand .mark-img { height: 58px; }
   .credem img { height: 54px; max-width: 200px; }
@@ -116,26 +171,37 @@ p { margin: 0; color: var(--ink-soft); }
 }
 
 /* Navigazione */
-.mainnav { display: flex; align-items: center; gap: 2px; }
+.mainnav { display: flex; align-items: center; gap: 10px; }
 .mainnav-link {
-  display: inline-flex; align-items: center; gap: .3rem; padding: .5rem .55rem; border-radius: 8px;
-  font-size: .88rem; font-weight: 560; color: var(--ink-soft); white-space: nowrap;
-  font-family: inherit; border: 0; background: transparent; cursor: pointer; line-height: inherit;
+  display: inline-flex; align-items: center; gap: .3rem; padding: .5rem .7rem; border-radius: 8px;
+  font-family: var(--font-display); text-transform: uppercase; letter-spacing: .02em;
+  font-size: 1.02rem; font-weight: 700; color: #fff; white-space: nowrap;
+  border: 0; background: transparent; cursor: pointer; line-height: inherit;
 }
-.mainnav-link:hover,
+.mainnav-link:hover { color: #fff; background: rgba(255,255,255,.16); }
+/* Pagina corrente: filetto sotto, non riquadro pieno (nel mockup non c'è box) */
 .mainnav-link[aria-current="page"],
-.mainnav-link[data-active="true"] { color: var(--ink); background: var(--surface-2); }
-.mainnav-link.cta { color: var(--accent-ink); background: var(--accent); }
-.mainnav-link.cta:hover { background: var(--accent-strong); color: var(--accent-ink); }
+.mainnav-link[data-active="true"] { color: #fff; background: transparent; box-shadow: inset 0 -2px 0 #fff; border-radius: 0; }
+.mainnav-link[aria-current="page"]:hover,
+.mainnav-link[data-active="true"]:hover { background: rgba(255,255,255,.16); }
+/* Invito all'azione invertito: pillola bianca con scritta rossa */
+/* Misure prese dal mockup: rettangolo stondato 71x36, non pastiglia piena */
+.mainnav-link.cta { color: var(--accent-deep); background: #fff; border-radius: 8px; padding: .3rem .82rem; font-size: 1.05rem; font-weight: 800; }
+.mainnav-link.cta:hover { background: #fff; color: var(--accent); }
+.caret-icon { color: rgba(255,255,255,.75); transition: transform .15s ease; flex: none; }
+/* Sul pulsante bianco la freccia bianca era invisibile: prende il colore del testo */
+.mainnav-link.cta .caret-icon { color: currentColor; }
+/* Al passaggio del mouse il fondo si schiarisce: la freccia va a pieno bianco,
+   altrimenti il 75% si confonde. Sul pulsante bianco resta rossa. */
+.mainnav-item.has-sub:hover > .mainnav-trigger:not(.cta) .caret-icon,
+.mainnav-item.has-sub:focus-within > .mainnav-trigger:not(.cta) .caret-icon,
+.mainnav-item[data-open="true"] > .mainnav-trigger:not(.cta) .caret-icon { color: #fff; }
 .mainnav-item { position: relative; }
-.caret-icon { color: var(--ink-faint); transition: transform .15s ease; flex: none; }
-/* Sul pulsante rosso il grigio della freccia sparisce: prende il colore del testo */
-.mainnav-item.acquista .caret-icon { color: var(--accent-ink); }
-.mainnav-item[data-open="true"] > .mainnav-trigger { color: var(--ink); background: var(--surface-2); }
+.mainnav-item[data-open="true"] > .mainnav-trigger:not(.cta) { color: #fff; background: rgba(255,255,255,.16); }
 .mainnav-item[data-open="true"] .caret-icon { transform: rotate(180deg); }
 /* "Acquista" è un invito all'azione: resta rosso anche a tendina aperta,
    altrimenti perderebbe risalto proprio mentre lo si sta usando. */
-.mainnav-item.acquista[data-open="true"] > .mainnav-trigger { background: var(--accent-strong); color: var(--accent-ink); }
+.mainnav-item.acquista[data-open="true"] > .mainnav-trigger { background: #fff; color: var(--accent); }
 .submenu { display: none; flex-direction: column; }
 .mainnav-item[data-open="true"] > .submenu { display: flex; }
 
@@ -154,17 +220,22 @@ p { margin: 0; color: var(--ink-soft); }
      (padding-top del .submenu) evita varchi in cui l'hover si perderebbe. */
   .mainnav-item.has-sub:hover > .submenu,
   .mainnav-item.has-sub:focus-within > .submenu { display: flex; }
-  .mainnav-item.has-sub:hover > .mainnav-trigger,
-  .mainnav-item.has-sub:focus-within > .mainnav-trigger { color: var(--ink); background: var(--surface-2); }
+  /* Intestazione scura: il fondo si schiarisce appena, il testo resta bianco.
+     Con il vecchio fondo chiaro la freccia bianca spariva. */
+  .mainnav-item.has-sub:hover > .mainnav-trigger:not(.cta),
+  .mainnav-item.has-sub:focus-within > .mainnav-trigger:not(.cta) { color: #fff; background: rgba(255,255,255,.16); }
   .mainnav-item.has-sub:hover .caret-icon,
   .mainnav-item.has-sub:focus-within .caret-icon { transform: rotate(180deg); }
   .mainnav-item[data-open="true"] > .submenu,
   .mainnav-item.has-sub:hover > .submenu { animation: submenuIn .14s ease; }
   @keyframes submenuIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
-  .submenu a { padding: .55rem .7rem; border-radius: 8px; font-size: .9rem; color: var(--ink-soft); white-space: nowrap; }
+  /* Le tendine seguono il menu: condensato maiuscolo */
+  .submenu a { padding: .55rem .7rem; border-radius: 8px; color: var(--ink-soft); white-space: nowrap;
+    font-family: var(--font-display); text-transform: uppercase; letter-spacing: .02em;
+    font-size: .98rem; font-weight: 700; }
   .submenu a:hover, .submenu a[aria-current="page"] { background: var(--surface-2); color: var(--ink); }
   .mainnav-item.acquista:hover > .mainnav-trigger,
-  .mainnav-item.acquista:focus-within > .mainnav-trigger { background: var(--accent-strong); color: var(--accent-ink); }
+  .mainnav-item.acquista:focus-within > .mainnav-trigger { background: #fff; color: var(--accent); }
   /* Ultima voce della barra: la tendina si allinea a destra per non uscire dallo schermo */
   .mainnav-item.acquista > .submenu { left: auto; right: 0; }
 }
@@ -174,18 +245,24 @@ p { margin: 0; color: var(--ink-soft); }
 @media (max-width: 1150px) {
   .mainnav {
     position: absolute; top: 100%; left: 0; right: 0; flex-direction: column; align-items: stretch;
-    background: var(--ground); border-bottom: 1px solid var(--line); padding: 10px clamp(18px,4vw,32px) 18px;
+      /* Il pannello continua l'intestazione scura: su fondo bianco le voci
+       bianche sparivano. */
+    background: #140F10; border-bottom: 1px solid rgba(255,255,255,.14); padding: 10px clamp(18px,4vw,32px) 18px;
     gap: 2px; display: none; max-height: calc(100vh - 96px); overflow-y: auto; z-index: 1001;
   }
   .mainnav[data-open="true"] { display: flex; }
   .mainnav-link { padding: .8rem .5rem; width: 100%; justify-content: space-between; font-size: .95rem; }
   .submenu { padding: 0 0 8px .9rem; gap: 2px; }
-  .submenu a { padding: .6rem .5rem; font-size: .92rem; color: var(--ink-soft); }
-  .submenu a:hover, .submenu a[aria-current="page"] { color: var(--ink); }
+  .submenu a { padding: .6rem .5rem; color: rgba(255,255,255,.72);
+    font-family: var(--font-display); text-transform: uppercase; letter-spacing: .02em;
+    font-size: 1rem; font-weight: 700; }
+  .submenu a:hover, .submenu a[aria-current="page"] { color: #fff; }
   .nav-toggle {
     display: inline-flex; align-items: center; justify-content: center; width: 42px; height: 42px;
-    border: 1px solid var(--line); background: var(--surface); border-radius: 10px; cursor: pointer; color: var(--ink); flex: none;
+    border: 1px solid rgba(255,255,255,.28); background: transparent; border-radius: 10px; cursor: pointer; color: #fff; flex: none;
   }
+  /* La pillola bianca a tutta larghezza sarebbe un blocco: resta compatta */
+  .mainnav-link.cta { justify-content: center; margin-top: 8px; }
 }
 /* Su schermi stretti riduco le dimensioni: i due loghi restano sempre visibili
    (il logo congiunto Lega/Credem è un obbligo, e il traffico è in gran parte mobile). */
@@ -209,17 +286,48 @@ p { margin: 0; color: var(--ink-soft); }
 }
 
 /* --- footer --- */
-.site-footer { background: var(--black); color: #EDE7E7; margin-top: 56px; }
+/* Sfondo del mockup: foto del castello, già scurita e con il motivo sopra.
+   Il colore pieno resta sotto come riserva se l'immagine non carica. */
+/* Sfondo del mockup: foto del castello, molto scurita. Il velo serve a due
+   cose: avvicinare la luminosità a quella del disegno (7 contro i 19 della
+   foto nuda) e garantire la lettura del testo sopra le zone chiare. In fondo
+   sfuma al nero, dove stanno i dati societari scritti in piccolo. */
+.site-footer { background:
+    linear-gradient(to bottom, rgba(0,0,0,.58) 0%, rgba(0,0,0,.62) 62%, rgba(3,2,2,.97) 100%),
+    var(--black) url('/sfondi/footer.jpg') top center / cover no-repeat;
+  color: #EDE7E7; margin-top: 56px; position: relative; }
+.site-footer > * { position: relative; z-index: 1; }
 .site-footer a { color: #EDE7E7; opacity: .82; transition: opacity .12s ease; }
 .site-footer a:hover { opacity: 1; }
-.site-footer .foot-grid { display: grid; grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr) minmax(0, 1.3fr); gap: 36px; padding: 52px 0 34px; }
+.site-footer .foot-grid { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(0, .75fr) minmax(0, 1.15fr); gap: 40px; padding: 52px 0 34px; }
 @media (max-width: 860px) { .site-footer .foot-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 28px; } }
 @media (max-width: 560px) { .site-footer .foot-grid { grid-template-columns: minmax(0, 1fr); gap: 26px; } }
 /* Colonne laterali allineate a sinistra; solo quella centrale (senza testo) è centrata */
 .site-footer .foot-grid > div { display: flex; flex-direction: column; align-items: flex-start; text-align: left; }
-.site-footer .foot-grid > .foot-brand { align-items: center; text-align: center; }
+/* Nel mockup la colonna del marchio è allineata a sinistra come le altre.
+   width:max-content fa sì che la colonna sia larga quanto il marchio, e le
+   righe sotto (loghi, filetto, social) si allineino allo stesso bordo. */
+.site-footer .foot-grid > .foot-brand { align-items: flex-start; text-align: left; width: max-content; max-width: 100%; }
+.site-footer .foot-brand > * { width: 100%; }
+/* min-width:0 permette al marchio di stringersi: senza, la scritta a
+   larghezza fissa faceva sbordare la pagina sotto i 340px. */
+.site-footer .brand { display: flex; align-items: center; gap: 18px; min-width: 0; max-width: 100%; }
+.brand-word { display: block; color: #fff; min-width: 0; }
+.brand-word svg { display: block; width: 232px; max-width: 100%; height: auto; }
+@media (max-width: 420px) {
+  .site-footer .brand { gap: 12px; }
+  .site-footer .brand .mark-img { height: 66px; }
+  .brand-word svg { width: 168px; }
+}
 .site-footer h4 { font-size: .78rem; letter-spacing: .14em; text-transform: uppercase; margin: 0 0 14px; opacity: .55; }
-.site-footer .fnav { display: flex; flex-direction: column; gap: 9px; font-size: .95rem; align-items: flex-start; }
+.site-footer .fnav { display: flex; flex-direction: column; gap: 9px; align-items: flex-start; }
+/* Nel mockup le voci del footer e i contatti sono in condensato maiuscolo */
+.site-footer .fnav a, .site-footer .cgroup a, .site-footer .cvalue,
+.site-footer .foot-sede .cvalue, .site-footer .cnote, .foot-bottom {
+  font-family: var(--font-display); text-transform: uppercase; letter-spacing: .02em; }
+.site-footer .fnav a { font-size: 1.02rem; font-weight: 650; }
+.site-footer .cgroup a, .site-footer .cvalue { font-size: 1.02rem; font-weight: 650; }
+.foot-bottom { font-weight: 650; }
 .foot-desc { color: #C9C2C2; max-width: 34ch; margin: 12px 0 0; font-size: .92rem; line-height: 1.5; }
 .social-icons { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
 .social-icons a { display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; border: 1px solid rgba(255,255,255,.18); border-radius: 10px; opacity: .92; }
@@ -229,7 +337,7 @@ p { margin: 0; color: var(--ink-soft); }
 .foot-map iframe { width: 100%; height: 190px; border: 0; display: block; }
 /* Logo società nel footer, in evidenza */
 .site-footer .brand { font-size: 1.25rem; color: #fff; }
-.site-footer .brand .mark-img { height: 78px; max-width: 190px; }
+.site-footer .brand .mark-img { height: 92px; max-width: 200px; }
 /* Contatti: gruppi separati dalla spaziatura, senza etichette */
 .foot-contatti { display: flex; flex-direction: column; align-items: flex-start; gap: 18px; width: 100%; }
 .cgroup { display: flex; flex-direction: column; align-items: flex-start; gap: 5px; font-size: .95rem; }
@@ -239,15 +347,23 @@ p { margin: 0; color: var(--ink-soft); }
 .foot-sede { display: flex; flex-direction: column; align-items: flex-start; gap: 10px; margin-top: 22px; width: 100%; }
 
 /* Loghi istituzionali sotto il marchio della società */
-.brand-partners { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 26px; margin-top: 22px; }
-.brand-partners img { height: 92px; width: auto; max-width: 200px; object-fit: contain; display: block; }
-.brand-partners img.wide { height: 70px; max-width: 330px; }
+/* Tre colonne uguali: i loghi hanno proporzioni molto diverse fra loro,
+   in fila libera uno finiva per occupare il doppio dello spazio di un altro. */
+/* Tre colonne uguali sulla stessa larghezza del marchio: i loghi hanno
+   proporzioni molto diverse, in fila libera uno occupava il doppio dell'altro. */
+.brand-partners { display: grid; grid-template-columns: repeat(3, 1fr); align-items: center;
+  gap: 18px; margin-top: 26px; }
+.brand-partners > * { display: grid; place-items: center; min-width: 0; }
+.brand-partners img { max-height: 92px; max-width: 100%; width: auto; height: auto; object-fit: contain; display: block; }
+.brand-partners img.wide { max-height: 74px; }
 
 /* Blocco social centrato nella colonna, sotto i loghi */
-.foot-social { margin-top: 32px; padding-top: 24px; border-top: 1px solid rgba(255,255,255,.12);
-  display: flex; flex-direction: column; align-items: center; gap: 14px; width: 100%; }
-.social-invito { margin: 0; font-size: 1rem; font-weight: 750; letter-spacing: .01em;
-  color: #fff; text-align: center; text-wrap: balance; }
+/* Il filetto bianco copre tutta la colonna, dal logo alla fine della scritta.
+   Scritta e icone sono centrate rispetto a quella colonna, come nel mockup. */
+.foot-social { margin-top: 30px; padding-top: 24px; border-top: 1px solid rgba(255,255,255,.28);
+  display: flex; flex-direction: column; align-items: center; gap: 14px; }
+.social-invito { margin: 0; font-family: var(--font-display); text-transform: uppercase;
+  font-size: 1.05rem; font-weight: 700; letter-spacing: .02em; color: #fff; }
 .foot-social .social-icons { margin-top: 0; justify-content: center; gap: 12px; }
 .foot-social .social-icons a { width: 46px; height: 46px; }
 .foot-social .social-icons svg { width: 20px; height: 20px; }
@@ -264,7 +380,9 @@ p { margin: 0; color: var(--ink-soft); }
 /* Denominazione in evidenza; l'etichetta è maiuscola via CSS, così i lettori
    di schermo continuano a leggerla come una parola e non lettera per lettera. */
 .foot-legale strong { font-weight: 750; }
-.foot-legale .etichetta { text-transform: uppercase; letter-spacing: .04em; }
+/* Resta in Inter come il resto della frase: cambiare carattere a metà riga
+   si nota, ed è testo corrente, non un'etichetta a sé. */
+.foot-legale .etichetta { text-transform: uppercase; letter-spacing: .04em; font-family: var(--font-body); }
 .foot-bottom { padding: 10px 0 18px; font-size: .82rem; opacity: .7; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
 .foot-bottom a { text-decoration: underline; text-underline-offset: 2px; }
 

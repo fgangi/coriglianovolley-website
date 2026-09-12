@@ -9,6 +9,7 @@ import { classifica } from './classifica';
 import { sponsor } from './sponsor';
 import { galleryAlbum } from './galleryAlbum';
 import { squadraGiovanile } from './squadraGiovanile';
+import { squadraAvversaria } from './squadraAvversaria';
 
 export const schemaTypes = [
   // Documenti
@@ -21,6 +22,7 @@ export const schemaTypes = [
   sponsor,
   galleryAlbum,
   squadraGiovanile,
+  squadraAvversaria,
   // Oggetti riutilizzabili
   blockContent,
   posizioneAnteprima,

@@ -1,7 +1,9 @@
 ---
 // Font self-hosted (nessuna chiamata a server esterni).
-// Versione "variabile": un solo file copre tutti i pesi da 100 a 900.
-import '@fontsource-variable/archivo';
+// Versione "variabile": un solo file per famiglia copre tutti i pesi.
+// Sofia Sans Extra Condensed per i titoli, Inter per il testo.
+import '@fontsource-variable/sofia-sans-extra-condensed';
+import '@fontsource-variable/inter';
 import '../styles/global.css';
 import { ClientRouter } from 'astro:transitions';
 import Header from '../components/Header.astro';
@@ -18,11 +20,17 @@ const { title, description } = Astro.props;
 const ANIMAZIONE = 'dissolvenza';
 
 const settings = await sfetch<any>(settingsQuery, {}, null);
+// Una voce di menu che porta a una pagina vuota è peggio di una voce in meno:
+// Gallery compare solo quando c'è almeno un album.
+const albumPubblicati = await sfetch<number>('count(*[_type == "galleryAlbum"])', {}, 0);
 const nomeSquadra = settings?.nomeSquadra ?? 'Corigliano Volley';
 const logoUrl = img(settings?.logo, 200);
 const legaCredemLogo = img(settings?.loghiLega?.legaCredemLogo, 400);
 const legaCredemUrl = settings?.loghiLega?.legaCredemUrl;
 // Stessa condizione della pagina: la voce di menù segue la sezione reale
+// La campagna abbonamenti governa sia la fascia in home sia il pulsante in alto
+const campagna = settings?.campagnaAbbonamenti ?? {};
+const campagnaAttiva = campagna.attiva === true && !!campagna.url;
 const iscrizioniAperte = settings?.iscrizioni?.aperte !== false && !!settings?.iscrizioni?.moduloUrl;
 const pageTitle = title ? `${title} – ${nomeSquadra}` : `${nomeSquadra} – Serie A3`;
 const desc = description ?? `Sito ufficiale ${nomeSquadra}, Serie A3 maschile: news, calendario, risultati, roster e settore giovanile.`;
@@ -43,11 +51,11 @@ const desc = description ?? `Sito ufficiale ${nomeSquadra}, Serie A3 maschile: n
     <ClientRouter />
   </head>
   <body>
-    <Header nomeSquadra={nomeSquadra} bigliettiUrl={settings?.bigliettiUrl} abbonamentiUrl={settings?.abbonamentiUrl} iscrizioniAperte={iscrizioniAperte} logoUrl={logoUrl} legaCredemLogo={legaCredemLogo} legaCredemUrl={legaCredemUrl} />
+    <Header nomeSquadra={nomeSquadra} bigliettiUrl={settings?.bigliettiUrl} abbonamentiUrl={campagnaAttiva ? campagna.url : undefined} iscrizioniAperte={iscrizioniAperte} gallery={albumPubblicati > 0} social={settings?.social} logoUrl={logoUrl} legaCredemLogo={legaCredemLogo} legaCredemUrl={legaCredemUrl} />
     <main>
       <slot />
     </main>
-    <Footer settings={settings} />
+    <Footer settings={settings} gallery={albumPubblicati > 0} />
     {import.meta.env.DEV && <AnteprimaStati />}
 
   </body>

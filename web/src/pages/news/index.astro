@@ -58,7 +58,8 @@ const mostraFiltri = filtri.length > 2;
      al titolo sopra e più vicina ancora alle schede che comanda. */
   .news-wrap > .section { padding-top: clamp(26px, 3.4vw, 44px); }
   .filtri { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: clamp(18px, 2.6vw, 30px); }
-  .filtro { display: inline-flex; align-items: center; gap: 8px;
+  /* <button> non eredita il carattere: senza questa riga finiva in Arial */
+  .filtro { font-family: inherit; display: inline-flex; align-items: center; gap: 8px;
     padding: .5rem .95rem; border-radius: 999px; border: 1px solid var(--line);
     background: var(--surface); color: var(--ink-soft); font-weight: 650; font-size: .92rem;
     transition: border-color .12s ease, background .12s ease, color .12s ease; }

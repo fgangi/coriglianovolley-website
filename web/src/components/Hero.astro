@@ -1,0 +1,105 @@
+---
+import { img } from '../lib/sanity';
+
+/** Apertura della home: immagine grande con claim sovrapposto. */
+interface Props { slide?: any[] }
+const { slide = [] } = Astro.props;
+const voci = (slide ?? []).filter((s) => s?.immagine);
+---
+{voci.length > 0 && (
+  <section class="hero" data-hero aria-label="In evidenza">
+    <div class="hero-viewport">
+      {voci.map((s, i) => {
+        const foto = img(s.immagine, 2400);
+        const corpo = (
+          <>
+            <img class="hero-foto" src={foto} alt={s.evidenza ?? s.titolo ?? ''} loading={i === 0 ? 'eager' : 'lazy'} />
+            <div class="container hero-testo">
+              {s.titolo && <span class="hero-riga1">{s.titolo}</span>}
+              {s.evidenza && <span class="hero-riga2">{s.evidenza}</span>}
+              {s.sottotitolo && <p class="hero-lead">{s.sottotitolo}</p>}
+            </div>
+          </>
+        );
+        return s.url
+          ? <a class="hero-slide" href={s.url} data-slide hidden={i > 0}>{corpo}</a>
+          : <div class="hero-slide" data-slide hidden={i > 0}>{corpo}</div>;
+      })}
+    </div>
+
+    {/* Gli indicatori esistono solo se c'è davvero più di un'immagine */}
+    {voci.length > 1 && (
+      <div class="hero-punti" role="tablist" aria-label="Scegli immagine">
+        {voci.map((_, i) => (
+          <button type="button" class="hero-punto" data-punto={i}
+            aria-label={`Immagine ${i + 1} di ${voci.length}`} aria-selected={i === 0 ? 'true' : 'false'}></button>
+        ))}
+      </div>
+    )}
+  </section>
+)}
+
+<style>
+  .hero { position: relative; background: var(--black); }
+  /* Proporzioni del mockup: 1511 x 657. Su schermi stretti si alza un po'
+     il rapporto, altrimenti resterebbe una striscia troppo bassa. */
+  .hero-viewport { position: relative; aspect-ratio: 1511 / 657; min-height: 320px; overflow: hidden; }
+  @media (max-width: 760px) { .hero-viewport { aspect-ratio: 4 / 5; max-height: 74vh; } }
+
+  .hero-slide { position: absolute; inset: 0; display: block; color: inherit; }
+  .hero-foto { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+
+  .hero-testo { position: relative; height: 100%; display: flex; flex-direction: column;
+    align-items: flex-start; justify-content: center; gap: 2px; padding-bottom: 3%; }
+  .hero-riga1, .hero-riga2 { font-family: var(--font-display); text-transform: uppercase;
+    line-height: .92; letter-spacing: -.005em; display: block; }
+  .hero-riga1 { color: #fff; font-weight: 300; font-size: clamp(2.3rem, 10.2vw, 9.6rem); }
+  /* Sfumatura orizzontale campionata dal mockup */
+  .hero-riga2 { font-weight: 900; font-size: clamp(2.8rem, 11.65vw, 11rem);
+    background: linear-gradient(90deg, #CB1B2B 0%, #981421 100%);
+    -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .hero-lead { color: #fff; margin: 14px 0 0; font-size: clamp(.98rem, 1.5vw, 1.32rem);
+    font-weight: 500; text-shadow: 0 1px 12px rgba(0,0,0,.5); max-width: 40ch; }
+
+  .hero-punti { position: absolute; left: 0; right: 0; bottom: 18px;
+    display: flex; justify-content: center; gap: 8px; }
+  .hero-punto { width: 34px; height: 4px; border-radius: 999px; border: 0; padding: 0;
+    background: #D9D9D9; opacity: .55; cursor: pointer; transition: opacity .15s ease, background .15s ease; }
+  .hero-punto[aria-selected='true'] { background: #A20505; opacity: 1; width: 46px; }
+</style>
+
+<script is:inline>
+  (() => {
+    const avvia = () => {
+      const hero = document.querySelector('[data-hero]');
+      if (!hero || hero.dataset.pronto) return;
+      hero.dataset.pronto = '1';
+      const slide = [...hero.querySelectorAll('[data-slide]')];
+      const punti = [...hero.querySelectorAll('[data-punto]')];
+      if (slide.length < 2) return;
+
+      let attuale = 0;
+      const mostra = (i) => {
+        attuale = (i + slide.length) % slide.length;
+        slide.forEach((s, k) => { s.hidden = k !== attuale; });
+        punti.forEach((p, k) => p.setAttribute('aria-selected', String(k === attuale)));
+      };
+      punti.forEach((p, k) => { p.onclick = () => { mostra(k); ferma(); }; });
+
+      // Avanzamento automatico, sospeso se l'utente preferisce meno movimento
+      let timer = null;
+      const ferma = () => { if (timer) { clearInterval(timer); timer = null; } };
+      const parti = () => {
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+        ferma();
+        timer = setInterval(() => mostra(attuale + 1), 6000);
+      };
+      hero.addEventListener('mouseenter', ferma);
+      hero.addEventListener('mouseleave', parti);
+      document.addEventListener('astro:before-swap', ferma, { once: true });
+      parti();
+    };
+    avvia();
+    document.addEventListener('astro:page-load', avvia);
+  })();
+</script>

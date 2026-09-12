@@ -12,7 +12,16 @@ export const partita = defineType({
       type: 'datetime',
       validation: (r) => r.required(),
     }),
-    defineField({ name: 'avversario', title: 'Avversario', type: 'string', validation: (r) => r.required() }),
+    defineField({
+      name: 'avversaria',
+      title: 'Avversaria',
+      type: 'reference',
+      to: [{ type: 'squadraAvversaria' }],
+      description: 'Si sceglie dall\'elenco delle squadre del girone: porta con sé lo stemma.',
+    }),
+    // Resta come riserva per le amichevoli e per le squadre non ancora inserite
+    defineField({ name: 'avversario', title: 'Avversario (testo libero)', type: 'string',
+      description: 'Usato solo se non è stata scelta una squadra qui sopra.' }),
     defineField({
       name: 'dove',
       title: 'Casa / Trasferta',

@@ -1,13 +1,19 @@
 ---
-import { pezziData } from '../lib/sanity';
+import { pezziData, img } from '../lib/sanity';
 
-interface Props { m: any; }
-const { m } = Astro.props;
+interface Props { m: any; logoNostro?: string | null }
+const { m, logoNostro = null } = Astro.props;
 
 const casa = m.dove === 'casa';
 const nostra = 'Corigliano Volley';
-const sinistra = casa ? nostra : m.avversario;
-const destra = casa ? m.avversario : nostra;
+// Il nome viene dalla squadra collegata; il testo libero resta come riserva
+const avversaria = m.avversaria?.nome ?? m.avversario ?? '';
+const logoAvv = m.avversaria?.logo ? img(m.avversaria.logo, 220) : null;
+const sinistra = casa ? nostra : avversaria;
+const destra = casa ? avversaria : nostra;
+const logoSx = casa ? logoNostro : logoAvv;
+const logoDx = casa ? logoAvv : logoNostro;
+const conLoghi = Boolean(logoSx || logoDx);
 const giocata = m.giocata && m.setCasa != null && m.setTrasferta != null;
 const win = giocata && ((casa && m.setCasa > m.setTrasferta) || (!casa && m.setTrasferta > m.setCasa));
 const d = pezziData(m.data);
@@ -26,36 +32,56 @@ const d = pezziData(m.data);
       <span class={`dove ${casa ? 'in-casa' : 'fuori'}`}>{casa ? 'Casa' : 'Trasferta'}</span>
     </div>
 
-    <div class="teams">
-      <span class={`team ${casa ? 'ours' : ''}`}>{sinistra}</span>
+    <div class={`teams ${conLoghi ? 'con-loghi' : ''}`}>
+      <div class="lato">
+        {logoSx && <img class="stemma" src={logoSx} alt="" loading="lazy" />}
+        <span class={`team ${casa ? 'ours' : ''}`}>{sinistra}</span>
+      </div>
       {giocata
         ? <span class={`score ${win ? 'win' : 'loss'}`}>{m.setCasa}<span class="sep">–</span>{m.setTrasferta}</span>
         : <span class="vs">vs</span>}
-      <span class={`team right ${!casa ? 'ours' : ''}`}>{destra}</span>
+      <div class="lato">
+        {logoDx && <img class="stemma" src={logoDx} alt="" loading="lazy" />}
+        <span class={`team ${!casa ? 'ours' : ''}`}>{destra}</span>
+      </div>
     </div>
 
     {giocata && m.parziali && <div class="extra tabnums">{m.parziali}</div>}
-    {!giocata && m.luogo && <div class="extra">{m.luogo}</div>}
+
     {m.reportUrl && <a class="report" href={m.reportUrl} target="_blank" rel="noopener">Report ufficiale →</a>}
   </div>
+
+  {/* Fuori dal corpo: così si centra sulla scheda intera, non sulla parte
+      a destra della data. */}
+  {!giocata && m.luogo && (
+    <div class="extra luogo">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+      <span>{m.luogo}</span>
+    </div>
+  )}
 </div>
 
 <style>
-  .match { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 16px;
-    background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
-    padding: 16px 18px; align-items: start; }
-  .match.upcoming { border-left: 3px solid var(--accent); }
+  /* Nel mockup la scheda ha il contorno nero sottile su tutti i lati, non il
+     grigio chiaro delle altre schede del sito: è ciò che la fa staccare dal
+     fondo rosso. La linguetta a sinistra è lo stesso nero, più spessa. */
+  /* column-gap separa data e corpo; row-gap resta minimo, altrimenti la riga
+     del luogo (che occupa tutta la larghezza) stacca la scheda in due. */
+  .match { display: grid; grid-template-columns: auto minmax(0, 1fr); column-gap: 12px; row-gap: 2px;
+    background: var(--surface); border: 1px solid var(--black); border-radius: var(--radius);
+    padding: 15px 16px; align-items: start; }
+  .match.upcoming { border-left-width: 4px; }
 
-  /* Tessera data */
-  .data-tile { display: flex; flex-direction: column; align-items: center; justify-content: center;
-    min-width: 62px; padding: 8px 10px; border-radius: 10px;
-    background: var(--surface-2); border: 1px solid var(--line); }
-  .match.upcoming .data-tile { background: var(--accent-tint); border-color: transparent; }
-  .dt-giorno { font-size: 1.6rem; font-weight: 850; line-height: 1; letter-spacing: -.02em;
-    font-variant-numeric: tabular-nums; color: var(--ink); }
-  .match.upcoming .dt-giorno { color: var(--accent-strong); }
-  .dt-mese { font-size: .68rem; font-weight: 750; letter-spacing: .1em; color: var(--ink-faint); margin-top: 2px; }
-  .dt-ora { font-size: .72rem; font-weight: 650; color: var(--ink-soft); margin-top: 5px;
+  /* Data: nel mockup non ha riquadro, sta direttamente sulla scheda ed è
+     grande. Senza la tessera resta più larghezza ai nomi delle squadre. */
+  .data-tile { display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
+    min-width: 58px; padding: 0; background: none; border: 0; }
+  .dt-giorno { font-size: 2.1rem; font-weight: 900; line-height: 1; letter-spacing: -.01em;
+    font-variant-numeric: tabular-nums; color: var(--accent-strong); }
+  .match.played .dt-giorno { color: var(--ink); }
+  .dt-mese { font-size: 1rem; font-weight: 750; letter-spacing: .04em; color: var(--ink-faint);
+    margin-top: 1px; text-transform: uppercase; }
+  .dt-ora { font-size: .92rem; font-weight: 650; color: var(--ink-faint); margin-top: 6px;
     font-variant-numeric: tabular-nums; }
 
   .corpo { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
@@ -68,19 +94,29 @@ const d = pezziData(m.data);
   .dove.in-casa { color: var(--ink); background: var(--surface-2); border-color: transparent; }
   .dove.fuori { color: var(--ink-faint); }
 
-  .teams { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: 10px; }
-  .team { font-weight: 700; font-size: 1rem; }
-  .team.right { text-align: right; }
+  .teams { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: start; gap: 6px; }
+  /* Con gli stemmi i nomi vanno sotto al logo e centrati, come nel mockup */
+  .lato { display: flex; flex-direction: column; align-items: center; gap: 8px; min-width: 0; text-align: center; }
+  .teams:not(.con-loghi) .lato:first-child { align-items: flex-start; text-align: left; }
+  .teams:not(.con-loghi) .lato:last-child { align-items: flex-end; text-align: right; }
+  .stemma { height: 52px; width: auto; max-width: 100%; object-fit: contain; display: block; }
+  .team { font-weight: 700; font-size: .95rem; line-height: 1.25; }
   .team.ours { color: var(--accent); }
+  .teams.con-loghi .vs, .teams.con-loghi .score { align-self: center; margin-top: 18px; }
   .vs { font-size: .74rem; color: var(--ink-faint); text-transform: uppercase; letter-spacing: .08em; font-weight: 700; }
   .score { font-weight: 850; font-size: 1.45rem; font-variant-numeric: tabular-nums; }
   .score .sep { margin: 0 .28rem; color: var(--ink-faint); font-weight: 500; }
   .score.win { color: var(--accent); }
   .extra { font-size: .84rem; color: var(--ink-faint); }
+  /* Riga del luogo: etichetta, quindi condensato maiuscolo con l'icona */
+  .luogo { grid-column: 1 / -1; display: flex; align-items: center; justify-content: center; gap: 6px;
+    font-family: var(--font-display); text-transform: uppercase; letter-spacing: .04em;
+    font-size: .8rem; font-weight: 650; text-align: center; margin-top: 4px; }
+  .luogo svg { flex: none; }
   .report { font-size: .82rem; font-weight: 650; color: var(--accent); }
 
   @media (max-width: 420px) {
-    .match { gap: 12px; padding: 14px; }
+    .match { column-gap: 10px; row-gap: 2px; padding: 14px; }
     .data-tile { min-width: 54px; padding: 7px 8px; }
     .dt-giorno { font-size: 1.35rem; }
     .team { font-size: .92rem; }

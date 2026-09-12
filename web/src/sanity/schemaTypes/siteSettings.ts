@@ -37,6 +37,33 @@ export const siteSettings = defineType({
       ],
     }),
     defineField({
+      name: 'hero',
+      title: 'Immagini di apertura (home)',
+      type: 'array',
+      description:
+        'Le immagini grandi in cima alla home. Con una sola non compaiono gli indicatori; da due in poi scorrono.',
+      of: [
+        {
+          type: 'object',
+          fields: [
+            { name: 'immagine', title: 'Immagine', type: 'image', options: { hotspot: true },
+              validation: (r: any) => r.required() },
+            { name: 'titolo', title: 'Prima riga', type: 'string',
+              description: 'Es. "Corigliano Volley,". Compare in bianco.' },
+            { name: 'evidenza', title: 'Seconda riga (in rosso)', type: 'string',
+              description: 'Es. "in Serie A3!". Compare più grande e in rosso.' },
+            { name: 'sottotitolo', title: 'Sottotitolo', type: 'string' },
+            { name: 'url', title: 'Link (facoltativo)', type: 'string',
+              description: 'Se compilato, tutta l\'immagine diventa cliccabile.' },
+          ],
+          preview: {
+            select: { title: 'evidenza', subtitle: 'titolo', media: 'immagine' },
+            prepare: ({ title, subtitle, media }: any) => ({ title: title || 'Immagine di apertura', subtitle, media }),
+          },
+        },
+      ],
+    }),
+    defineField({
       name: 'stagione',
       title: 'Stagione in corso',
       type: 'string',
@@ -69,11 +96,23 @@ export const siteSettings = defineType({
         'Vendita dei singoli biglietti. Se compilato compare il pulsante "Acquista" in alto a destra.',
     }),
     defineField({
-      name: 'abbonamentiUrl',
-      title: 'Link abbonamenti (Liveticket)',
-      type: 'url',
+      name: 'campagnaAbbonamenti',
+      title: 'Campagna abbonamenti',
+      type: 'object',
       description:
-        'Da compilare quando parte la campagna abbonamenti, da svuotare quando finisce: il pulsante "Acquista" si adatta da solo.',
+        'Un solo interruttore: quando è attiva compare la fascia rossa in home e "Abbonamenti" nel pulsante Acquista. Quando finisce, togli la spunta e spariscono entrambi.',
+      options: { collapsible: true, collapsed: false },
+      fields: [
+        { name: 'attiva', title: 'Campagna attiva', type: 'boolean', initialValue: false },
+        { name: 'url', title: 'Link per abbonarsi (Liveticket)', type: 'url' },
+        { name: 'occhiello', title: 'Sopratitolo', type: 'string',
+          description: 'Es. "Campagna abbonamenti 2026-2027 · Serie A3".' },
+        { name: 'titolo', title: 'Titolo', type: 'string', description: 'Es. "Una città, una squadra".' },
+        { name: 'etichettaPulsante', title: 'Testo del pulsante', type: 'string',
+          description: 'Se vuoto compare "Abbonati".' },
+        { name: 'immagine', title: 'Immagine di sfondo', type: 'image',
+          description: 'Se vuota viene usata quella predefinita.' },
+      ],
     }),
     defineField({
       name: 'iscrizioni',

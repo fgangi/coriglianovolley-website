@@ -46,11 +46,12 @@ function perMese(elenco: any[]) {
 }
 const prossimePerMese = perMese(prossime);
 const giocatePerMese = perMese(giocate);
+const logoUrl = img(settings?.logo, 200);
 ---
 <Layout title="Partite e classifica">
   <PageHero eyebrow="Campo" title="Partite e classifica" lead="Calendario, risultati e classifica aggiornata del girone." />
 
-  <section class="section">
+  <section class="section" id="calendario" style="scroll-margin-top: 90px;">
     <div class="container">
       <!-- PROSSIME -->
       <div class="section-head"><span class="eyebrow">In arrivo</span><h2>Prossime partite</h2></div>
@@ -58,7 +59,7 @@ const giocatePerMese = perMese(giocate);
         prossimePerMese.map((g) => (
           <div class="mese-gruppo">
             <h3 class="mese-titolo">{g.titolo}</h3>
-            <div class="grid cols-2">{g.partite.map((m) => <PartitaRow m={m} />)}</div>
+            <div class="grid cols-2">{g.partite.map((m) => <PartitaRow m={m} logoNostro={logoUrl} />)}</div>
           </div>
         ))
       ) : (
@@ -111,7 +112,7 @@ const giocatePerMese = perMese(giocate);
         giocatePerMese.map((g) => (
           <div class="mese-gruppo">
             <h3 class="mese-titolo">{g.titolo}</h3>
-            <div class="grid cols-2">{g.partite.map((m) => <PartitaRow m={m} />)}</div>
+            <div class="grid cols-2">{g.partite.map((m) => <PartitaRow m={m} logoNostro={logoUrl} />)}</div>
           </div>
         ))
       ) : (
@@ -169,6 +170,8 @@ const giocatePerMese = perMese(giocate);
 </Layout>
 <style>
   .mese-gruppo + .mese-gruppo { margin-top: clamp(24px, 3.5vw, 38px); }
+  /* Etichetta minuscola tutta maiuscola e spaziata: resta nel carattere
+     del testo, il condensato dei titoli qui diventa illeggibile. */
   .mese-titolo { font-size: .95rem; text-transform: uppercase; letter-spacing: .12em; color: var(--ink-faint); font-weight: 700;
     margin: 0 0 20px; padding-bottom: 10px; border-bottom: 1px solid var(--line); }
   .cl-nota { font-size: .86rem; color: var(--ink-faint); margin: 0 0 14px; }

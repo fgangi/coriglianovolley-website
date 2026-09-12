@@ -47,11 +47,16 @@ const gruppi = ordine
   .ruolo-title { font-size: .95rem; text-transform: uppercase; letter-spacing: .12em; color: var(--ink-faint); font-weight: 700;
     margin: 0 0 20px; padding-bottom: 10px; border-bottom: 1px solid var(--line); }
   .player { display: flex; flex-direction: column; }
-  .ph { position: relative; aspect-ratio: 4 / 5; background: var(--surface-2); overflow: hidden; }
+  /* Sfumatura dietro al giocatore, presa dal mockup. Il colore pieno resta
+     sotto come riserva. Si vede per intero solo con le foto scontornate:
+     con una foto su fondo bianco resta coperta, senza rompere nulla. */
+  .ph { position: relative; aspect-ratio: 4 / 5; background: linear-gradient(180deg, #000000 0%, #4A0505 100%), #F1EDED; overflow: hidden; }
   .ph img { width: 100%; height: 100%; object-fit: cover; }
-  .ph-empty { width: 100%; height: 100%; background:
-    radial-gradient(circle at 50% 38%, var(--surface) 0 30%, transparent 31%),
-    linear-gradient(180deg, var(--surface-2), var(--surface)); }
+  /* Foto mancante: segnaposto neutro. Lasciando vedere la sfumatura rossa
+     della scheda, accanto alle foto ancora su fondo bianco sembrerebbe un
+     errore invece di un posto vuoto. Da rivedere quando arriveranno gli
+     scontorni e tutte le schede avranno lo stesso fondo. */
+  .ph-empty { width: 100%; height: 100%; background: linear-gradient(180deg, var(--surface-2), var(--surface)); }
   .num { position: absolute; top: 10px; right: 12px; font-weight: 900; font-size: 1.6rem; color: var(--accent);
     background: var(--ground); width: 42px; height: 42px; border-radius: 10px; display: grid; place-items: center; box-shadow: var(--shadow); }
   .pinfo { padding: 14px 16px 18px; }
