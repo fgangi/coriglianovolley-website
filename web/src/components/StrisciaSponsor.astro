@@ -35,10 +35,12 @@ const { etichetta, direzione = 'avanti', altezza = '70px', altezzaMobile = '54px
     overflow-x: auto; scrollbar-width: none; -ms-overflow-style: none; padding: 6px 0; }
   .str-pista::-webkit-scrollbar { display: none; }
 
-  /* I loghi stanno nudi sullo sfondo: nessun riquadro, come nel mockup */
-  /* Larghezza e altezza arrivano dalla pagina, calcolate a pari superficie */
+  /* I loghi stanno nudi sullo sfondo: nessun riquadro, come nel mockup.
+     Altezza e larghezza arrivano dalla pagina come --lh/--lw, calcolate sul
+     logo già privo dei margini vuoti; --h resta come riserva. */
   .str-pista :global(.sp-logo) { flex: none; display: inline-flex; align-items: center; justify-content: center;
-    height: var(--h); max-width: 100%; transition: transform .14s ease, opacity .14s ease; }
+    height: var(--lh, var(--h)); width: var(--lw, auto);
+    max-width: 100%; transition: transform .14s ease, opacity .14s ease; }
   .str-pista :global(.sp-logo img) { height: 100%; width: 100%; max-width: none; object-fit: contain; display: block; }
   .str-pista :global(a.sp-logo:hover) { transform: translateY(-2px); }
   /* Sponsor senza logo: il nome resta contenuto e non domina la riga */
@@ -59,7 +61,10 @@ const { etichetta, direzione = 'avanti', altezza = '70px', altezzaMobile = '54px
   .str-freccia:hover { border-color: var(--ink-faint); }
 
   @media (max-width: 640px) {
-    .str-pista :global(.sp-logo) { height: var(--h-mob); }
+    /* Su telefono si scala l'altezza calcolata e la larghezza segue le
+       proporzioni. Il tetto alla larghezza è già dentro --lh, quindi resta. */
+    .str-pista :global(.sp-logo) { height: calc(var(--lh, var(--h-mob)) * .76); width: auto; }
+    .str-pista :global(.sp-logo img) { width: auto; }
     .str-pista { gap: 26px; }
     /* Su telefono non esiste il passaggio del mouse: le frecce restano visibili */
     .str-freccia { opacity: 1; pointer-events: auto; width: 32px; height: 32px; }
@@ -89,36 +94,62 @@ const { etichetta, direzione = 'avanti', altezza = '70px', altezzaMobile = '54px
           pista.appendChild(copia);
         });
 
-        // Attenzione: per una fila più stretta del contenitore, scrollWidth
-        // restituisce la larghezza del contenitore, non quella dei loghi. Il
-        // periodo va quindi misurato sulle posizioni, dopo la prima copia.
-        duplica();
-        const periodo = pista.children[originali.length].offsetLeft - pista.children[0].offsetLeft;
-        if (periodo <= 0) { box.dataset.ferma = 'si'; return; }
+        let periodo = 0;
+        let pos = 0;
 
-        // Servono abbastanza ripetizioni perché il giro possa chiudersi senza
-        // che la pista finisca: almeno una vista intera oltre un periodo.
-        let guardia = 0;
-        while (pista.scrollWidth < pista.clientWidth + periodo + 8 && guardia < 40) {
-          duplica(); guardia++;
-        }
+        /**
+         * Misura quanto è lunga una ripetizione e ne accoda quante ne servono.
+         * Va rifatto a ogni cambio di larghezza: lo spazio fra i loghi è in vw,
+         * quindi il periodo cambia insieme alla finestra.
+         */
+        const prepara = () => {
+          // Si riparte sempre dalla fila originale, o le copie si moltiplicano
+          while (pista.children.length > originali.length) pista.lastElementChild.remove();
 
-        if (verso < 0) pista.scrollLeft = periodo;
+          // Attenzione: per una fila più stretta del contenitore, scrollWidth
+          // restituisce la larghezza del contenitore, non quella dei loghi. Il
+          // periodo va quindi misurato sulle posizioni, dopo la prima copia.
+          duplica();
+          periodo = pista.children[originali.length].offsetLeft - pista.children[0].offsetLeft;
+          if (periodo <= 0) { box.dataset.ferma = 'si'; return false; }
+          box.removeAttribute('data-ferma');
 
-        /** Riporta la posizione dentro il primo giro, senza che si veda. */
-        const normalizza = () => {
-          if (pista.scrollLeft >= periodo) pista.scrollLeft -= periodo;
-          else if (pista.scrollLeft <= 0) pista.scrollLeft += periodo;
+          // Servono abbastanza ripetizioni perché il giro possa chiudersi senza
+          // che la pista finisca: almeno una vista intera oltre un periodo.
+          let guardia = 0;
+          while (pista.scrollWidth < pista.clientWidth + periodo + 8 && guardia < 40) {
+            duplica(); guardia++;
+          }
+
+          pos = verso < 0 ? periodo : 0;
+          pista.scrollLeft = pos;
+          return true;
         };
+
+        if (!prepara()) return;
 
         let fermo = false;
         let ultimo = 0;
         const VELOCITA = 26; // pixel al secondo: lento, non deve distrarre
+
+        /**
+         * La posizione si tiene qui, in virgola mobile, e si scrive sulla pista
+         * a ogni fotogramma. Scriverla sommando direttamente su scrollLeft non
+         * funziona: a 26px/s l'avanzamento è di 0,43px per fotogramma, e il
+         * browser arrotonda scrollLeft al pixel dello schermo. Il resto andava
+         * perso a ogni giro e la fila restava ferma — è il motivo per cui certe
+         * righe non partivano mai.
+         */
         const passo = (t) => {
           if (!box.isConnected) return;
           const dt = ultimo ? Math.min((t - ultimo) / 1000, 0.05) : 0;
           ultimo = t;
-          if (!fermo) { pista.scrollLeft += verso * VELOCITA * dt; normalizza(); }
+          if (!fermo && periodo > 0) {
+            pos += verso * VELOCITA * dt;
+            if (pos >= periodo) pos -= periodo;
+            else if (pos < 0) pos += periodo;
+            pista.scrollLeft = pos;
+          }
           requestAnimationFrame(passo);
         };
 
@@ -127,7 +158,7 @@ const { etichetta, direzione = 'avanti', altezza = '70px', altezzaMobile = '54px
 
         // Il mouse sopra ferma lo scorrimento; anche il dito e la tastiera
         const stop = () => { fermo = true; };
-        const vai = () => { fermo = false; };
+        const vai = () => { fermo = false; pos = pista.scrollLeft; };
         box.addEventListener('mouseenter', stop);
         box.addEventListener('mouseleave', vai);
         box.addEventListener('focusin', stop);
@@ -141,7 +172,26 @@ const { etichetta, direzione = 'avanti', altezza = '70px', altezzaMobile = '54px
             pista.scrollBy({ left: Number(b.dataset.scorri) * quanto, behavior: 'smooth' });
           });
         });
-        pista.addEventListener('scroll', normalizza, { passive: true });
+
+        // Se la pista si è mossa per conto suo (frecce, dito, rotellina) si
+        // riparte da lì. Uno scarto di un pixel è solo l'arrotondamento nostro.
+        pista.addEventListener('scroll', () => {
+          if (Math.abs(pista.scrollLeft - pos) > 2) {
+            pos = pista.scrollLeft;
+            if (periodo > 0) {
+              if (pos >= periodo) pos -= periodo;
+              else if (pos < 0) pos += periodo;
+              pista.scrollLeft = pos;
+            }
+          }
+        }, { passive: true });
+
+        // Cambiando larghezza cambia lo spazio fra i loghi, quindi il periodo
+        let attesaMisura = 0;
+        window.addEventListener('resize', () => {
+          clearTimeout(attesaMisura);
+          attesaMisura = setTimeout(prepara, 180);
+        }, { passive: true });
       });
     };
     avvia();

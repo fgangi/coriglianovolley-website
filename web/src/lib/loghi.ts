@@ -95,3 +95,23 @@ export async function logoRifilato(source: any, pid: string, ds: string, larghez
     prop: r.width / r.height,
   };
 }
+
+/**
+ * Misura di un logo dentro una fila. Criterio: STESSA ALTEZZA per tutti i
+ * loghi dello stesso livello, che è ciò che l'occhio legge come "ordinato".
+ * La pari superficie, provata prima, dava risultati opposti: con proporzioni
+ * che vanno da 0,8 a 6,8 un logo allungato finiva alto 30px e uno quadrato 86.
+ * Un tetto alla larghezza evita che i pochi casi estremi dominino la fila:
+ * solo quelli scendono sotto l'altezza comune.
+ *
+ * Esce come variabili CSS e non come height/width diretti: uno stile in linea
+ * batte qualunque foglio di stile, quindi scrivendo height qui le misure
+ * ridotte per telefono non sarebbero mai entrate in vigore.
+ */
+export function misuraLogo(prop: number, altezza: number): string {
+  let h = altezza;
+  let w = prop * h;
+  const wMax = altezza * 4.6;
+  if (w > wMax) { w = wMax; h = w / prop; }
+  return `--lh:${Math.round(h)}px;--lw:${Math.round(w)}px`;
+}

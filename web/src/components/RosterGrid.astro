@@ -50,15 +50,28 @@ const gruppi = ordine
   /* Sfumatura dietro al giocatore, presa dal mockup. Il colore pieno resta
      sotto come riserva. Si vede per intero solo con le foto scontornate:
      con una foto su fondo bianco resta coperta, senza rompere nulla. */
-  .ph { position: relative; aspect-ratio: 4 / 5; background: linear-gradient(180deg, #000000 0%, #4A0505 100%), #F1EDED; overflow: hidden; }
+  .ph { position: relative; aspect-ratio: 4 / 5; background: linear-gradient(180deg, #000000 0%, #4A0505 100%), #F1EDED; overflow: hidden;
+    /* Riferimento per la misura del numero: così cresce con la scheda */
+    container-type: inline-size; }
   .ph img { width: 100%; height: 100%; object-fit: cover; }
   /* Foto mancante: segnaposto neutro. Lasciando vedere la sfumatura rossa
      della scheda, accanto alle foto ancora su fondo bianco sembrerebbe un
      errore invece di un posto vuoto. Da rivedere quando arriveranno gli
      scontorni e tutte le schede avranno lo stesso fondo. */
   .ph-empty { width: 100%; height: 100%; background: linear-gradient(180deg, var(--surface-2), var(--surface)); }
-  .num { position: absolute; top: 10px; right: 12px; font-weight: 900; font-size: 1.6rem; color: var(--accent);
-    background: var(--ground); width: 42px; height: 42px; border-radius: 10px; display: grid; place-items: center; box-shadow: var(--shadow); }
+  /* Nel mockup il numero non è una targhetta ma una cifra grande e cava, in
+     alto a destra, col solo contorno chiaro sopra allo sfondo scuro. La misura
+     è in cqw: resta la stessa frazione della scheda a ogni larghezza.
+     Il valore in rem prima serve ai browser senza unità di contenitore. */
+  .num { position: absolute; top: -3px; right: 5%; pointer-events: none;
+    font-family: var(--font-display); font-weight: 800; line-height: 1;
+    font-size: 3.4rem; font-size: 28cqw;
+    color: transparent; -webkit-text-stroke: 1.3px rgba(255, 255, 255, .5);
+    font-variant-numeric: tabular-nums; }
+  /* Senza il contorno del testo la cifra sparirebbe: lì torna piena, smorzata */
+  @supports not (-webkit-text-stroke: 1px #000) {
+    .num { color: rgba(255, 255, 255, .3); }
+  }
   .pinfo { padding: 14px 16px 18px; }
   .pinfo h4 { font-weight: 500; font-size: 1.05rem; margin: 0; letter-spacing: -.01em; }
   .pinfo h4 strong { font-weight: 820; }

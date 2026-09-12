@@ -4,7 +4,7 @@ import NewsCard from '../components/NewsCard.astro';
 import PartitaRow from '../components/PartitaRow.astro';
 import Carousel from '../components/Carousel.astro';
 import StrisciaSponsor from '../components/StrisciaSponsor.astro';
-import { logoRifilato } from '../lib/loghi';
+import { logoRifilato, misuraLogo } from '../lib/loghi';
 import NewsInEvidenza from '../components/NewsInEvidenza.astro';
 import Hero from '../components/Hero.astro';
 import CampagnaAbbonamenti from '../components/CampagnaAbbonamenti.astro';
@@ -52,21 +52,6 @@ const SEZIONI_SPONSOR: { label: string; livello: string; h: number; fissa?: bool
   // Lo sponsor tecnico resta fermo come la riga finale: sono pochi e fissi
   { label: 'Sponsor tecnico', livello: 'tecnico', h: 48, fissa: true },
 ];
-/**
- * Misura del logo. Criterio: STESSA ALTEZZA per tutti i loghi dello stesso
- * livello, che è ciò che l'occhio legge come "ordinato" in una fila.
- * La pari superficie, provata prima, dava risultati opposti: con proporzioni
- * che vanno da 0,8 a 6,8 un logo allungato finiva alto 30px e uno quadrato 86.
- * Un tetto alla larghezza evita che i pochi casi estremi dominino la riga:
- * solo quelli scendono sotto l'altezza comune.
- */
-function misuraLogo(prop: number, altezza: number): string {
-  let h = altezza;
-  let w = prop * h;
-  const wMax = altezza * 4.6;
-  if (w > wMax) { w = wMax; h = w / prop; }
-  return `height:${Math.round(h)}px;width:${Math.round(w)}px`;
-}
 const gruppiSponsor = SEZIONI_SPONSOR
   .map((s) => ({ ...s, items: sponsor.filter((x) => x.livello === s.livello) }))
   .filter((g) => g.items.length > 0);
@@ -89,16 +74,31 @@ const FINALI: { label: string; livello: string }[] = [
   { label: 'Media partner', livello: 'media' },
   { label: 'Ticketing partner', livello: 'ticketing' },
 ];
-const sponsorFinali: { label: string; nome: string; logo: string | null; url?: string }[] = [
+const H_FINALI = 48; // come i Partner: dopo quel livello non c'è più gerarchia
+const grezziFinali: { label: string; nome: string; source: any; url?: string }[] = [
   ...FINALI.flatMap((f) =>
     sponsor
       .filter((x) => x.livello === f.livello)
-      .map((x) => ({ label: f.label, nome: x.nome, logo: img(x.logo, 220), url: x.url }))
+      .map((x) => ({ label: f.label, nome: x.nome, source: x.logo, url: x.url }))
   ),
-  ...(mikasaLogo
-    ? [{ label: 'Pallone ufficiale', nome: 'Mikasa', logo: mikasaLogo, url: lega.mikasaUrl }]
+  ...(lega.mikasaLogo
+    ? [{ label: 'Pallone ufficiale', nome: 'Mikasa', source: lega.mikasaLogo, url: lega.mikasaUrl }]
     : []),
 ];
+/**
+ * Anche questi passano dalla rifilatura dei margini e dalla stessa misura
+ * delle righe sopra. Senza, un logo salvato con molto vuoto attorno appariva
+ * la metà degli altri pur avendo la stessa altezza impostata.
+ */
+const sponsorFinali = await Promise.all(grezziFinali.map(async (f) => {
+  const pronto = await logoRifilato(f.source, PID, DS);
+  return {
+    ...f,
+    logo: pronto?.url ?? img(f.source, 220),
+    misura: pronto ? misuraLogo(pronto.prop, H_FINALI) : undefined,
+  };
+}));
+
 // Anteprime che rimandano alle sezioni dedicate
 const prossimeList = prossime.slice(0, 3);
 const direttaLink = prossime.find((m) => m.direttaUrl)?.direttaUrl ?? settings?.direttaUrl ?? null;
@@ -282,8 +282,8 @@ const logoUrl = img(settings?.logo, 200);
                 <div class="spon-finale">
                   <span class="spon-etichetta">{f.label}</span>
                   {f.url
-                    ? <a href={f.url} target="_blank" rel="noopener" class="sp-logo" title={f.nome}>{inner}</a>
-                    : <div class="sp-logo" title={f.nome}>{inner}</div>}
+                    ? <a href={f.url} target="_blank" rel="noopener" class="sp-logo" title={f.nome} style={f.misura}>{inner}</a>
+                    : <div class="sp-logo" title={f.nome} style={f.misura}>{inner}</div>}
                 </div>
               );
             })}
@@ -360,14 +360,23 @@ const logoUrl = img(settings?.logo, 200);
   /* Ultima riga: media, ticketing, tecnico e pallone tutti insieme */
   .spon-finali { display: flex; flex-wrap: wrap; gap: 18px; padding-top: 4px; }
   .spon-finale { display: flex; flex-direction: column; gap: 7px; }
-  .spon-etichetta { font-size: .68rem; text-transform: uppercase; letter-spacing: .1em;
+  /* Stesso trattamento dei titoli di livello qui sopra: sono etichette dello
+     stesso tipo, e il condensato sotto i 13px non si legge più. */
+  .spon-etichetta { font-size: .95rem; text-transform: uppercase; letter-spacing: .12em;
     color: var(--ink-faint); font-weight: 700; }
   /* Stessa altezza dei "Partner", per coerenza con la riga sopra */
   .spon-finali { gap: clamp(26px, 4vw, 54px); align-items: flex-start; }
-  /* Stessa altezza dei Partner: dopo quel livello non c'è più gerarchia */
-  .spon-finali .sp-logo { height: 48px; display: inline-flex; align-items: center; }
-  .spon-finali .sp-logo img { height: 100%; width: auto; object-fit: contain; display: block; }
-  @media (max-width: 640px) { .spon-finali .sp-logo { height: 38px; } }
+  /* Stessa altezza dei Partner: dopo quel livello non c'è più gerarchia.
+     Le misure arrivano dalla pagina come --lh/--lw, calcolate sul logo già
+     privo dei margini vuoti: prima questi tre restavano molto più piccoli
+     degli altri pur avendo la stessa altezza impostata. */
+  .spon-finali .sp-logo { height: var(--lh, 48px); width: var(--lw, auto);
+    display: inline-flex; align-items: center; }
+  .spon-finali .sp-logo img { height: 100%; width: 100%; object-fit: contain; display: block; }
+  @media (max-width: 640px) {
+    .spon-finali .sp-logo { height: calc(var(--lh, 48px) * .78); width: auto; }
+    .spon-finali .sp-logo img { width: auto; }
+  }
 
 
   /* Schede giocatore nel carosello */
@@ -376,14 +385,27 @@ const logoUrl = img(settings?.logo, 200);
   /* Sfumatura dietro al giocatore, presa dal mockup. Il colore pieno resta
      sotto come riserva. Si vede per intero solo con le foto scontornate:
      con una foto su fondo bianco resta coperta, senza rompere nulla. */
-  .rp-ph { position: relative; aspect-ratio: 4 / 5; background: linear-gradient(180deg, #000000 0%, #4A0505 100%), #F1EDED; overflow: hidden; }
+  .rp-ph { position: relative; aspect-ratio: 4 / 5; background: linear-gradient(180deg, #000000 0%, #4A0505 100%), #F1EDED; overflow: hidden;
+    /* Riferimento per la misura del numero: così cresce con la scheda */
+    container-type: inline-size; }
   .rp-ph img { width: 100%; height: 100%; object-fit: cover; }
   /* Foto mancante: segnaposto neutro. Lasciando vedere la sfumatura rossa
      della scheda, accanto alle foto ancora su fondo bianco sembrerebbe un
      errore invece di un posto vuoto. Da rivedere quando arriveranno gli
      scontorni e tutte le schede avranno lo stesso fondo. */
   .rp-empty { width: 100%; height: 100%; background: linear-gradient(180deg, var(--surface-2), var(--surface)); }
-  .rp-num { position: absolute; top: 6px; right: 8px; font-weight: 900; color: var(--accent); font-size: 1.05rem; background: var(--ground); width: 28px; height: 28px; border-radius: 7px; display: grid; place-items: center; box-shadow: var(--shadow); }
+  /* Nel mockup il numero non è una targhetta ma una cifra grande e cava,
+     in alto a destra, disegnata col solo contorno chiaro sopra allo sfondo
+     scuro della foto. Non ruba spazio al volto e non va ritagliata. */
+  .rp-num { position: absolute; top: -3px; right: 5%; pointer-events: none;
+    font-family: var(--font-display); font-weight: 800; line-height: 1;
+    font-size: 3.3rem; font-size: 28cqw;
+    color: transparent; -webkit-text-stroke: 1.2px rgba(255, 255, 255, .5);
+    font-variant-numeric: tabular-nums; }
+  /* Senza il contorno del testo la cifra sparirebbe: lì torna piena, smorzata */
+  @supports not (-webkit-text-stroke: 1px #000) {
+    .rp-num { color: rgba(255, 255, 255, .3); }
+  }
   .rp-info { padding: 10px 12px; display: flex; flex-direction: column; gap: 1px; }
   .rp-info strong { font-weight: 750; letter-spacing: -.01em; }
 

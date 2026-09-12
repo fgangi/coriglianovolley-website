@@ -105,12 +105,16 @@ p { margin: 0; color: var(--ink-soft); }
 @media (max-width: 620px) { .cols-2, .cols-3, .cols-4 { grid-template-columns: minmax(0, 1fr); } }
 
 /* --- pills / tags --- */
+/* Il condensato dei titoli sotto i 13px perde le aste e diventa illeggibile.
+   Queste etichette restano nel carattere di marca ma con un corpo minimo e un
+   peso alto, che è come sono disegnate nel mockup: piccole ma robuste. */
 .pill {
   display: inline-flex; align-items: center; gap: .4rem;
-  font-size: .7rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase;
-  padding: .3rem .6rem; border-radius: 999px; background: var(--accent-tint); color: var(--accent-strong);
+  font-size: .84rem; font-weight: 800; letter-spacing: .05em; text-transform: uppercase;
+  line-height: 1.15;
+  padding: .3rem .62rem; border-radius: 999px; background: var(--accent-tint); color: var(--accent-strong);
 }
-.tag { font-size: .8rem; color: var(--ink-faint); text-transform: uppercase; letter-spacing: .04em; font-weight: 650; }
+.tag { font-size: .88rem; color: var(--ink-faint); text-transform: uppercase; letter-spacing: .05em; font-weight: 750; }
 
 /* Etichette in maiuscolo: tutte nel carattere condensato, come nel mockup.
    Raggruppate qui per evitare che si scollino una dall'altra nel tempo. */
@@ -353,7 +357,9 @@ p { margin: 0; color: var(--ink-soft); }
    proporzioni molto diverse, in fila libera uno occupava il doppio dell'altro. */
 .brand-partners { display: grid; grid-template-columns: repeat(3, 1fr); align-items: center;
   gap: 18px; margin-top: 26px; }
-.brand-partners > * { display: grid; place-items: center; min-width: 0; }
+/* Ogni logo sta centrato nella propria colonna: è così che i tre finiscono
+   per occupare in parti uguali tutta la larghezza del filetto qui sotto. */
+.brand-partners > * { display: grid; place-items: center; min-width: 0; width: 100%; }
 .brand-partners img { max-height: 92px; max-width: 100%; width: auto; height: auto; object-fit: contain; display: block; }
 .brand-partners img.wide { max-height: 74px; }
 
@@ -367,7 +373,10 @@ p { margin: 0; color: var(--ink-soft); }
 .foot-social .social-icons { margin-top: 0; justify-content: center; gap: 12px; }
 .foot-social .social-icons a { width: 46px; height: 46px; }
 .foot-social .social-icons svg { width: 20px; height: 20px; }
-.brand-partners a { display: inline-flex; opacity: .95; }
+/* Niente display qui: lo decide la regola su .brand-partners > *. Con
+   inline-flex i loghi collegati restavano appoggiati al bordo sinistro della
+   propria cella, perché justify-items non ha effetto dentro un flex. */
+.brand-partners a { opacity: .95; }
 .brand-partners a:hover { opacity: 1; }
 @media (max-width: 560px) {
   .site-footer .brand .mark-img { height: 64px; }

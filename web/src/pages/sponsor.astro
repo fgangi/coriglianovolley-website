@@ -3,7 +3,7 @@ import Layout from '../layouts/Layout.astro';
 import PageHero from '../components/PageHero.astro';
 import { sfetch, img } from '../lib/sanity';
 import { sponsorQuery, settingsQuery } from '../lib/queries';
-import { logoRifilato } from '../lib/loghi';
+import { logoRifilato, misuraLogo } from '../lib/loghi';
 
 const sponsor = await sfetch<any[]>(sponsorQuery, {}, []);
 const settings = await sfetch<any>(settingsQuery, {}, null);
@@ -27,22 +27,6 @@ const SEZIONI: { label: string; livelli: string[]; h: number }[] = [
 const gruppi = SEZIONI
   .map((s) => ({ ...s, items: sponsor.filter((x) => s.livelli.includes(x.livello)) }))
   .filter((g) => g.items.length > 0);
-
-/**
- * Misura del logo. Criterio: STESSA ALTEZZA per tutti i loghi dello stesso
- * livello, che è ciò che l'occhio legge come "ordinato" in una fila.
- * La pari superficie, provata prima, dava risultati opposti: con proporzioni
- * che vanno da 0,8 a 6,8 un logo allungato finiva alto 30px e uno quadrato 86.
- * Un tetto alla larghezza evita che i pochi casi estremi dominino la riga:
- * solo quelli scendono sotto l'altezza comune.
- */
-function misuraLogo(prop: number, altezza: number): string {
-  let h = altezza;
-  let w = prop * h;
-  const wMax = altezza * 4.6;
-  if (w > wMax) { w = wMax; h = w / prop; }
-  return `height:${Math.round(h)}px;width:${Math.round(w)}px`;
-}
 
 const PID = import.meta.env.PUBLIC_SANITY_PROJECT_ID;
 const DS = import.meta.env.PUBLIC_SANITY_DATASET || 'production';
@@ -107,11 +91,21 @@ for (const g of gruppi) {
      restare sempre visibile invece di passare ogni tanto. */
   .sponsor-grid { display: flex; flex-wrap: wrap; align-items: center;
     gap: clamp(30px, 4.5vw, 70px) clamp(34px, 5vw, 76px); }
+  /* Le misure arrivano dalla pagina come --lh/--lw, calcolate sul logo già
+     privo dei margini vuoti. Chi non ha logo non le ha e resta a dimensione
+     naturale: lì dentro c'è solo il nome scritto. */
   .sp-logo { flex: none; display: inline-flex; align-items: center; justify-content: center;
+    height: var(--lh, auto); width: var(--lw, auto);
     max-width: 100%; transition: transform .14s ease; }
   .sp-logo img { height: 100%; width: 100%; object-fit: contain; display: block; }
   a.sp-logo:hover { transform: translateY(-3px); }
   .sp-nome-piano { font-weight: 700; color: var(--ink-soft); font-size: .95rem;
     line-height: 1.2; text-align: center; max-width: 170px; }
-  @media (max-width: 640px) { .sponsor-grid { gap: 26px 30px; } }
+  @media (max-width: 640px) {
+    .sponsor-grid { gap: 26px 30px; }
+    /* Su telefono si scala l'altezza e la larghezza segue le proporzioni:
+       il tetto alla larghezza resta perché è già dentro --lh. */
+    .sp-logo { height: calc(var(--lh, 48px) * .76); width: auto; }
+    .sp-logo img { width: auto; }
+  }
 </style>

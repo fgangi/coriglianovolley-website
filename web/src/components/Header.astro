@@ -164,23 +164,48 @@ const iniziali = nomeSquadra.split(' ').map((w) => w[0]).join('').slice(0, 2).to
   </div>
 </header>
 <script>
-/* Intestazione compatta allo scorrimento. Due soglie diverse per entrare e
-   uscire: con una sola, chi si ferma esattamente sul confine vedrebbe
-   l'intestazione aprirsi e chiudersi a ogni pixel di scorrimento. */
+/* Intestazione compatta allo scorrimento.
+ *
+ * Attenzione a come si scelgono le soglie. L'intestazione è "sticky", quindi
+ * occupa spazio nel flusso: passando da estesa (160px) a compatta (70px) la
+ * pagina si accorcia di 90px, e il browser sposta lo scorrimento della stessa
+ * quantità per non far saltare il contenuto sotto gli occhi (scroll anchoring).
+ *
+ * Con due soglie fisse (prima: 120 in giù, 60 in su) quel salto scavalcava la
+ * soglia di ritorno: a 130 si compattava, l'ancoraggio portava a 40, 40 è sotto
+ * 60 quindi si riapriva, l'ancoraggio riportava a 130, e via all'infinito.
+ * Era il "sali e scendi" che si vedeva fermandosi proprio sul confine.
+ *
+ * La soglia qui è invece l'altezza attuale dell'intestazione, con un margine.
+ * Così si sposta insieme al salto e non può essere scavalcata: in compatta si
+ * confronta con 70, in estesa con 160, e i due stati non si rincorrono più. */
 function initHeaderCompatto() {
   const header = document.querySelector('.site-header') as HTMLElement | null;
   if (!header || header.dataset.scrollBound === '1') return;
   header.dataset.scrollBound = '1';
-  const GIU = 120, SU = 60;
-  // Legge solo la posizione di scorrimento, nessuna misura di impaginazione:
-  // può girare direttamente nell'evento, senza attendere un fotogramma.
+
+  const MARGINE = 16;
+  let inCoda = false;
+
   const valuta = () => {
+    inCoda = false;
     const y = window.scrollY;
+    const h = header.offsetHeight; // altezza di adesso, non quella piena
     const ora = header.dataset.compatta === 'si';
-    if (!ora && y > GIU) header.dataset.compatta = 'si';
-    else if (ora && y < SU) header.removeAttribute('data-compatta');
+    if (!ora && y > h + MARGINE) header.dataset.compatta = 'si';
+    else if (ora && y < h - MARGINE) header.removeAttribute('data-compatta');
   };
-  window.addEventListener('scroll', valuta, { passive: true });
+
+  // offsetHeight obbliga il browser a ricalcolare l'impaginazione: una volta
+  // per fotogramma basta, a ogni evento di scorrimento sarebbe uno spreco.
+  const programma = () => {
+    if (inCoda) return;
+    inCoda = true;
+    requestAnimationFrame(valuta);
+  };
+
+  window.addEventListener('scroll', programma, { passive: true });
+  window.addEventListener('resize', programma, { passive: true });
   valuta();
 }
 

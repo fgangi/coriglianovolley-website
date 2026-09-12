@@ -32,7 +32,7 @@ const legaCredemUrl = settings?.loghiLega?.legaCredemUrl;
 const campagna = settings?.campagnaAbbonamenti ?? {};
 const campagnaAttiva = campagna.attiva === true && !!campagna.url;
 const iscrizioniAperte = settings?.iscrizioni?.aperte !== false && !!settings?.iscrizioni?.moduloUrl;
-const pageTitle = title ? `${title} – ${nomeSquadra}` : `${nomeSquadra} – Serie A3`;
+const pageTitle = title ? `${title} - ${nomeSquadra}` : `${nomeSquadra} - Serie A3`;
 const desc = description ?? `Sito ufficiale ${nomeSquadra}, Serie A3 maschile: news, calendario, risultati, roster e settore giovanile.`;
 ---
 <!doctype html>
@@ -46,7 +46,12 @@ const desc = description ?? `Sito ufficiale ${nomeSquadra}, Serie A3 maschile: n
     <meta property="og:title" content={pageTitle} />
     <meta property="og:description" content={desc} />
     <meta property="og:type" content="website" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    {/* Stemma della società. Nell'.ico ci sono tre misure: a 16px lo
+       stemma intero diventa una macchia, quindi quella misura contiene
+       solo il pallone centrale. */}
+    <link rel="icon" href="/favicon.ico" sizes="16x16 32x32 48x48" />
+    <link rel="icon" type="image/png" href="/favicon-96.png" sizes="96x96" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     {/* Transizioni fluide tra le pagine invece del ricaricamento secco */}
     <ClientRouter />
   </head>

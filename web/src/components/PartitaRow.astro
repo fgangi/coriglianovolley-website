@@ -86,10 +86,10 @@ const d = pezziData(m.data);
 
   .corpo { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
   .meta { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-  .giornata { font-size: .7rem; font-weight: 750; letter-spacing: .08em; text-transform: uppercase;
+  .giornata { font-size: .84rem; font-weight: 800; letter-spacing: .06em; text-transform: uppercase;
     color: var(--accent-strong); background: var(--accent-tint); padding: .22rem .5rem; border-radius: 999px; }
   /* Casa / Trasferta come etichetta, leggibile anche senza emoji */
-  .dove { font-size: .68rem; font-weight: 750; letter-spacing: .08em; text-transform: uppercase;
+  .dove { font-size: .84rem; font-weight: 800; letter-spacing: .06em; text-transform: uppercase;
     padding: .22rem .5rem; border-radius: 999px; border: 1px solid var(--line); color: var(--ink-soft); }
   .dove.in-casa { color: var(--ink); background: var(--surface-2); border-color: transparent; }
   .dove.fuori { color: var(--ink-faint); }
@@ -108,10 +108,12 @@ const d = pezziData(m.data);
   .score .sep { margin: 0 .28rem; color: var(--ink-faint); font-weight: 500; }
   .score.win { color: var(--accent); }
   .extra { font-size: .84rem; color: var(--ink-faint); }
-  /* Riga del luogo: etichetta, quindi condensato maiuscolo con l'icona */
+  /* Riga del luogo: etichetta, quindi condensato maiuscolo con l'icona.
+     Nel mockup sta staccata in fondo alla scheda, non appiccicata ai nomi
+     delle squadre: quello stacco è ciò che la rende leggibile. */
   .luogo { grid-column: 1 / -1; display: flex; align-items: center; justify-content: center; gap: 6px;
-    font-family: var(--font-display); text-transform: uppercase; letter-spacing: .04em;
-    font-size: .8rem; font-weight: 650; text-align: center; margin-top: 4px; }
+    font-family: var(--font-display); text-transform: uppercase; letter-spacing: .05em;
+    font-size: .88rem; font-weight: 700; text-align: center; margin-top: 18px; }
   .luogo svg { flex: none; }
   .report { font-size: .82rem; font-weight: 650; color: var(--accent); }
 

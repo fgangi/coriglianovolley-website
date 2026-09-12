@@ -9,6 +9,20 @@ const s = settings ?? {};
 const logoUrl = img(s.logo, 200);
 const social = s.social ?? {};
 const anno = new Date().getFullYear();
+
+/**
+ * Crediti del sito. Convenzione diffusa: una riga sola, ruolo e nome per
+ * esteso, chi ha disegnato prima di chi ha sviluppato (è l'ordine in cui il
+ * lavoro è successo), e ogni nome collegato a un proprio profilo pubblico.
+ * Si citano solo i ruoli davvero svolti su questo sito.
+ *
+ * Chi non ha ancora un nome qui semplicemente non compare: meglio una riga
+ * in meno che un segnaposto pubblicato per sbaglio.
+ */
+const CREDITI: { ruolo: string; nome: string; url?: string }[] = [
+  { ruolo: 'Design', nome: 'Micaela Lavecchia', url: 'https://www.linkedin.com/in/micaela-lvc/' },
+  { ruolo: 'Sviluppo', nome: 'Francesco Gangi', url: 'https://github.com/fgangi' },
+].filter((c) => c.nome);
 const nome = s.nomeSquadra ?? 'Corigliano Volley';
 const iniziali = nome.split(' ').map((w: string) => w[0]).join('').slice(0, 2).toUpperCase();
 // Mappa: accetta codice iframe, URL di embed, coordinate o indirizzo (vedi mapEmbedSrc)
@@ -157,7 +171,18 @@ const identificativi = [
 
     <div class="foot-bottom">
       <span>© {anno} {nome}</span>
-      <span>Sviluppato da <a href="https://github.com/fgangi" target="_blank" rel="noopener">Francesco Gangi</a></span>
+      {CREDITI.length > 0 && (
+        <span class="crediti">
+          {CREDITI.map((c, i) => (
+            <>
+              {i > 0 && <span class="sep" aria-hidden="true"> · </span>}
+              {c.ruolo} di {c.url
+                ? <a href={c.url} target="_blank" rel="noopener">{c.nome}</a>
+                : c.nome}
+            </>
+          ))}
+        </span>
+      )}
     </div>
   </div>
 </footer>
