@@ -3,6 +3,8 @@ import Layout from '../layouts/Layout.astro';
 import NewsCard from '../components/NewsCard.astro';
 import PartitaRow from '../components/PartitaRow.astro';
 import Carousel from '../components/Carousel.astro';
+import SchedaGiocatore from '../components/SchedaGiocatore.astro';
+import SchedaStaff from '../components/SchedaStaff.astro';
 import StrisciaSponsor from '../components/StrisciaSponsor.astro';
 import { logoRifilato, misuraLogo } from '../lib/loghi';
 import NewsInEvidenza from '../components/NewsInEvidenza.astro';
@@ -111,8 +113,6 @@ const staffPreview = [...staff].sort(
 /** Nelle schede ridotte mostriamo il primo incarico: chi ne ha due lo vede
  *  comunque per intero nella pagina Squadra. Evita schede disallineate senza
  *  ricorrere ai puntini di sospensione. */
-const primoRuolo = (r?: string) => (r ?? '').split('·')[0].trim();
-const RUOLI_LABEL: Record<string, string> = { palleggiatore: 'Palleggiatore', opposto: 'Opposto', schiacciatore: 'Schiacciatore', centrale: 'Centrale', libero: 'Libero' };
 const logoUrl = img(settings?.logo, 200);
 ---
 <Layout>
@@ -155,7 +155,10 @@ const logoUrl = img(settings?.logo, 200);
         <a class="btn" href="/news/">Tutte le news</a>
       </div>
       {latest.length ? (
-        <div class="grid cols-3">{latest.map((n) => <NewsCard item={n} />)}</div>
+        <Carousel etichetta="Ultime news" grigliaPc={3} allinea="stretch"
+          larghezza="320px" larghezzaTablet="min(320px, 44vw)" larghezzaMobile="85%">
+          {latest.map((n) => <NewsCard item={n} />)}
+        </Carousel>
       ) : featured ? (
         <div class="empty"><strong>Nessun'altra notizia</strong>Pubblica altre news nel pannello per riempire questa sezione.</div>
       ) : (
@@ -172,47 +175,41 @@ const logoUrl = img(settings?.logo, 200);
           <div><span class="eyebrow">In arrivo</span><h2>Prossime partite</h2></div>
           <a class="btn chiaro" href="/partite/">Calendario completo</a>
         </div>
-        <div class="grid cols-3">{prossimeList.map((m) => <PartitaRow m={m} logoNostro={logoUrl} />)}</div>
+        <Carousel etichetta="Prossime partite" grigliaPc={3} allinea="stretch"
+          larghezza="340px" larghezzaTablet="min(340px, 46vw)" larghezzaMobile="88%">
+          {prossimeList.map((m) => <PartitaRow m={m} logoNostro={logoUrl} />)}
+        </Carousel>
       </div>
     </section>
   )}
 
-  <!-- RISULTATI -->
-  <section class="section">
-    <div class="container">
-      <div class="section-head between">
-        <div><span class="eyebrow">Campo</span><h2>Ultimi risultati</h2></div>
-        <a class="btn" href="/partite/">Tutte le partite</a>
-      </div>
-      {risultati.length ? (
-        <div class="grid cols-3">{risultati.map((m) => <PartitaRow m={m} logoNostro={logoUrl} />)}</div>
-      ) : (
-        <div class="empty"><strong>Ancora nessun risultato</strong>I risultati appariranno qui dopo le prime giornate.</div>
-      )}
-    </div>
-  </section>
-
-  <!-- ROSTER (anteprima) -->
-  {rosterPreview.length > 0 && (
+  <!-- RISULTATI: la sezione compare solo dopo la prima partita giocata.
+       Prima del campionato un riquadro vuoto in home era solo rumore. -->
+  {risultati.length > 0 && (
     <section class="section">
       <div class="container">
         <div class="section-head between">
+          <div><span class="eyebrow">Campo</span><h2>Ultimi risultati</h2></div>
+          <a class="btn" href="/partite/">Tutte le partite</a>
+        </div>
+        <Carousel etichetta="Ultimi risultati" grigliaPc={3} allinea="stretch"
+          larghezza="340px" larghezzaTablet="min(340px, 46vw)" larghezzaMobile="88%">
+          {risultati.map((m) => <PartitaRow m={m} logoNostro={logoUrl} />)}
+        </Carousel>
+      </div>
+    </section>
+  )}
+
+  <!-- ROSTER (anteprima): fascia scura, come nel mockup -->
+  {rosterPreview.length > 0 && (
+    <section class="section fascia fascia-roster">
+      <div class="container">
+        <div class="section-head between">
           <div><span class="eyebrow">La squadra</span><h2>Il roster</h2></div>
-          <a class="btn" href="/squadra/#roster">Tutta la squadra</a>
+          <a class="btn chiaro" href="/squadra/#roster">Tutta la squadra</a>
         </div>
         <Carousel etichetta="Giocatori della rosa" allinea="stretch">
-          {rosterPreview.map((p) => {
-            const foto = img(p.foto, 320, 380);
-            return (
-              <a class="rp-card" href="/squadra/#roster">
-                <div class="rp-ph">
-                  {foto ? <img src={foto} alt={`${p.nome} ${p.cognome}`} loading="lazy" /> : <div class="rp-empty" aria-hidden="true"></div>}
-                  {p.numero != null && <span class="rp-num">{p.numero}</span>}
-                </div>
-                <div class="rp-info"><strong>{p.cognome}</strong><span class="tag">{RUOLI_LABEL[p.ruolo] ?? ''}</span></div>
-              </a>
-            );
-          })}
+          {rosterPreview.map((p) => <SchedaGiocatore p={p} href="/squadra/#roster" />)}
         </Carousel>
       </div>
     </section>
@@ -227,18 +224,7 @@ const logoUrl = img(settings?.logo, 200);
           <a class="btn" href="/squadra/#staff">Tutto lo staff</a>
         </div>
         <Carousel etichetta="Staff e dirigenza" allinea="stretch">
-          {staffPreview.map((m) => {
-            const foto = img(m.foto, 300, 300);
-            return (
-              <div class="card member-mini">
-                <div class="mm-ph">{foto ? <img src={foto} alt={m.nome} loading="lazy" /> : <div class="rp-empty" aria-hidden="true"></div>}</div>
-                <div class="mm-info">
-                  <strong>{m.nome}</strong>
-                  <span class="tag" title={m.ruolo}>{primoRuolo(m.ruolo)}</span>
-                </div>
-              </div>
-            );
-          })}
+          {staffPreview.map((m) => <SchedaStaff m={m} />)}
         </Carousel>
       </div>
     </section>
@@ -246,9 +232,19 @@ const logoUrl = img(settings?.logo, 200);
 
   <!-- SPONSOR -->
   {(sponsor.length > 0 || mikasaLogo) && (
-    <section class="section">
+    <section class="section" data-pausa-strisce>
       <div class="container">
-        <div class="section-head"><span class="eyebrow">Insieme a noi</span><h2>I nostri partner</h2></div>
+        <div class="section-head between">
+          <div><span class="eyebrow">Insieme a noi</span><h2>I nostri partner</h2></div>
+          {/* Regola di accessibilità WCAG 2.2.2: ciò che si muove da solo per più
+              di 5 secondi deve potersi fermare. Sul telefono non c'è il mouse
+              sopra, quindi serve un comando esplicito. Vale per tutte le righe. */}
+          <button type="button" class="btn pausa-strisce" data-pausa-comando aria-pressed="false">
+            <svg class="ico-pausa" width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>
+            <svg class="ico-play" width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 4.5v15a1 1 0 0 0 1.5.86l12.5-7.5a1 1 0 0 0 0-1.72L8.5 3.64A1 1 0 0 0 7 4.5z"/></svg>
+            <span class="testo-pausa">Ferma lo scorrimento</span><span class="testo-play">Riprendi lo scorrimento</span>
+          </button>
+        </div>
         {/* Ogni riga scorre nel verso opposto alla precedente */}
         {gruppiSponsor.map((g, i) => (
           <div class="spon-gruppo">
@@ -294,6 +290,29 @@ const logoUrl = img(settings?.logo, 200);
   )}
 </Layout>
 
+<script is:inline>
+  (() => {
+    const CHIAVE = 'cv-strisce-in-pausa';
+    const avvia = () => {
+      const sezione = document.querySelector('[data-pausa-strisce]');
+      const btn = sezione?.querySelector('[data-pausa-comando]');
+      if (!sezione || !btn || btn.dataset.pronto) return;
+      btn.dataset.pronto = '1';
+      const imposta = (ferma) => {
+        sezione.dataset.pausa = ferma ? 'si' : 'no';
+        btn.setAttribute('aria-pressed', String(ferma));
+        try { localStorage.setItem(CHIAVE, ferma ? '1' : '0'); } catch {}
+      };
+      let iniziale = false;
+      try { iniziale = localStorage.getItem(CHIAVE) === '1'; } catch {}
+      imposta(iniziale);
+      btn.addEventListener('click', () => imposta(sezione.dataset.pausa !== 'si'));
+    };
+    avvia();
+    document.addEventListener('astro:page-load', avvia);
+  })();
+</script>
+
 <style>
   /* Fasce colorate: lo sfondo è un'immagine già composta (sfumatura + motivo).
      Il colore pieno resta sotto come riserva se l'immagine non carica. */
@@ -308,15 +327,20 @@ const logoUrl = img(settings?.logo, 200);
   /* Ancorato in alto: col centro la fascia mostrava la parte di mezzo
      dell'immagine e partiva da un rosso più chiaro di quello del disegno. */
   .fascia { background-size: cover; background-position: top center; background-repeat: no-repeat; }
-  /* Sezione staff: motivo a palloni ripetuto sul fondo chiaro.
-     L'immagine è una griglia regolare, quindi si affianca senza stacchi. */
-  .fascia-staff { background: var(--surface) url('/sfondi/staff.png') top left repeat; }
-  /* Il file esportato di questa fascia è più chiaro di quanto si veda nel
-     mockup (#A50C0F contro #760A0D): probabilmente in Figma ha sopra un velo
-     che l'esportazione non ha incluso. Lo ricreo qui, misurato sul disegno.
-     Quando arriverà l'esportazione corretta basterà togliere il primo strato. */
-  .fascia-partite { background-color: #7E080D;
-    background-image: linear-gradient(rgba(0,0,0,.28), rgba(0,0,0,.28)), url('/sfondi/calendario.jpg'); }
+  /* Sezione staff: motivo a palloni sul fondo chiaro, sempre tre file intere.
+     Il file è ritagliato dall'originale della designer (8 x 4 palloni) a
+     esattamente 3 file e 8 colonne, con mezzo intervallo su ogni bordo: così
+     ripetuto in orizzontale non mostra giunture. L'altezza segue la fascia,
+     quindi le file restano tre a qualunque larghezza; con "cover" il loro
+     numero dipendeva dalla finestra e l'ultima finiva tagliata. */
+  .fascia-staff { background: var(--surface) url('/sfondi/staff.png') center top / auto 100% repeat-x; }
+  /* File originale della designer, vettoriale: sfumatura, velo scuro e motivo
+     a palloni sono già dentro, quindi resta nitido a ogni larghezza e non
+     serve più il velo ricreato a mano sopra la vecchia esportazione. */
+  .fascia-partite { background-color: #7E080D; background-image: url('/sfondi/partite.svg'); }
+  .fascia-roster { background-color: #1A0707; background-image: url('/sfondi/roster.jpg'); }
+  /* Tablet e telefono: versione leggera (87 KB invece di 359) */
+  @media (max-width: 1023px) { .fascia-roster { background-image: url('/sfondi/roster-1200.jpg'); } }
   .fascia .section-head h2, .fascia .section-head .eyebrow { color: #fff; }
   /* Pillola chiara sul fondo scuro */
   .fascia .btn.chiaro { background: #fff; border-color: transparent; color: var(--accent-deep); }
@@ -331,7 +355,12 @@ const logoUrl = img(settings?.logo, 200);
   /* stretch: le due schede chiudono alla stessa altezza. Senza, quella della
      partita (più alta) lasciava la notizia "corta" e i bordi disallineati. */
   .apertura.con-partita { grid-template-columns: minmax(0, 2.3fr) minmax(0, 1fr); align-items: stretch; }
-  @media (max-width: 1000px) { .apertura.con-partita { grid-template-columns: minmax(0, 1fr); } }
+  /* Su tablet e telefono resta solo la notizia: la prossima partita è già
+     nella sezione "Prossime partite" poco sotto, e impilata qui la ripeteva. */
+  @media (max-width: 1023px) {
+    .apertura.con-partita { grid-template-columns: minmax(0, 1fr); }
+    .apertura .next-match { display: none; }
+  }
   .nm-cta { display: flex; flex-direction: column; gap: 10px; margin-top: 18px; width: 100%; }
   .nm-cta .btn { justify-content: center; }
   .btn.live { background: var(--ink); color: #fff; border-color: transparent; }
@@ -352,7 +381,15 @@ const logoUrl = img(settings?.logo, 200);
 
   /* Pallone ufficiale (Mikasa) */
   /* Gruppi di sponsor per categoria */
-  .spon-gruppo + .spon-gruppo { margin-top: clamp(24px, 3.5vw, 38px); }
+  /* Pulsante pausa: mostra l'azione che farà, non lo stato attuale */
+  .pausa-strisce { gap: 8px; min-height: 44px; }
+  .pausa-strisce .ico-play, .pausa-strisce .testo-play { display: none; }
+  .pausa-strisce[aria-pressed='true'] .ico-pausa, .pausa-strisce[aria-pressed='true'] .testo-pausa { display: none; }
+  .pausa-strisce[aria-pressed='true'] .ico-play, .pausa-strisce[aria-pressed='true'] .testo-play { display: inline; }
+
+  /* Righe che scorrono: serve aria fra una e l'altra, altrimenti i loghi di
+     livelli diversi si leggono come un unico blocco in movimento. */
+  .spon-gruppo + .spon-gruppo { margin-top: clamp(40px, 6vw, 72px); }
   /* Etichetta minuscola tutta maiuscola e spaziata: resta nel carattere
      del testo, il condensato dei titoli qui diventa illeggibile. */
   .spon-titolo { font-size: .95rem; text-transform: uppercase; letter-spacing: .12em; color: var(--ink-faint); font-weight: 700;
@@ -374,51 +411,10 @@ const logoUrl = img(settings?.logo, 200);
     display: inline-flex; align-items: center; }
   .spon-finali .sp-logo img { height: 100%; width: 100%; object-fit: contain; display: block; }
   @media (max-width: 640px) {
-    .spon-finali .sp-logo { height: calc(var(--lh, 48px) * .78); width: auto; }
-    .spon-finali .sp-logo img { width: auto; }
+    .spon-finali .sp-logo { height: var(--lh-mob, 38px); width: var(--lw-mob, auto); }
   }
 
 
-  /* Schede giocatore nel carosello */
-  .rp-card { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; transition: transform .14s ease, border-color .14s ease; }
-  .rp-card:hover { transform: translateY(-3px); border-color: var(--ink-faint); }
-  /* Sfumatura dietro al giocatore, presa dal mockup. Il colore pieno resta
-     sotto come riserva. Si vede per intero solo con le foto scontornate:
-     con una foto su fondo bianco resta coperta, senza rompere nulla. */
-  .rp-ph { position: relative; aspect-ratio: 4 / 5; background: linear-gradient(180deg, #000000 0%, #4A0505 100%), #F1EDED; overflow: hidden;
-    /* Riferimento per la misura del numero: così cresce con la scheda */
-    container-type: inline-size; }
-  .rp-ph img { width: 100%; height: 100%; object-fit: cover; }
-  /* Foto mancante: segnaposto neutro. Lasciando vedere la sfumatura rossa
-     della scheda, accanto alle foto ancora su fondo bianco sembrerebbe un
-     errore invece di un posto vuoto. Da rivedere quando arriveranno gli
-     scontorni e tutte le schede avranno lo stesso fondo. */
-  .rp-empty { width: 100%; height: 100%; background: linear-gradient(180deg, var(--surface-2), var(--surface)); }
-  /* Nel mockup il numero non è una targhetta ma una cifra grande e cava,
-     in alto a destra, disegnata col solo contorno chiaro sopra allo sfondo
-     scuro della foto. Non ruba spazio al volto e non va ritagliata. */
-  .rp-num { position: absolute; top: -3px; right: 5%; pointer-events: none;
-    font-family: var(--font-display); font-weight: 800; line-height: 1;
-    font-size: 3.3rem; font-size: 28cqw;
-    color: transparent; -webkit-text-stroke: 1.2px rgba(255, 255, 255, .5);
-    font-variant-numeric: tabular-nums; }
-  /* Senza il contorno del testo la cifra sparirebbe: lì torna piena, smorzata */
-  @supports not (-webkit-text-stroke: 1px #000) {
-    .rp-num { color: rgba(255, 255, 255, .3); }
-  }
-  .rp-info { padding: 10px 12px; display: flex; flex-direction: column; gap: 1px; }
-  .rp-info strong { font-weight: 750; letter-spacing: -.01em; }
-
-  /* Anteprima staff */
-  .member-mini { display: flex; flex-direction: column; }
-  /* Sfumatura dietro al giocatore, presa dal mockup. Il colore pieno resta
-     sotto come riserva. Si vede per intero solo con le foto scontornate:
-     con una foto su fondo bianco resta coperta, senza rompere nulla. */
-  .mm-ph { aspect-ratio: 1 / 1; background: linear-gradient(180deg, #4A0505 0%, #F30404 100%), #F1EDED; overflow: hidden; }
-  .mm-ph img { width: 100%; height: 100%; object-fit: cover; }
-  /* Stesso trattamento delle schede giocatore: nome e ruolo su una riga sola,
-     così il ruolo parte alla stessa altezza in tutte le schede. */
-  .mm-info { padding: 10px 12px; display: flex; flex-direction: column; gap: 1px; }
-  .mm-info strong, .mm-info .tag { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .mm-info strong { font-weight: 750; letter-spacing: -.01em; }
+  /* Le schede di giocatori e staff stanno in SchedaGiocatore e SchedaStaff,
+     condivise con la pagina squadra. */
 </style>

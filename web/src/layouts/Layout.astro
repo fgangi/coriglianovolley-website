@@ -13,8 +13,12 @@ import { settingsQuery } from '../lib/queries';
 // Barra per simulare stati diversi: esiste solo durante lo sviluppo
 import AnteprimaStati from '../components/AnteprimaStati.astro';
 
-interface Props { title?: string; description?: string; }
-const { title, description } = Astro.props;
+interface Props {
+  title?: string; description?: string;
+  /** false sulle pagine che mostrano già la mappa (contatti): nel footer sarebbe doppia */
+  mappaFooter?: boolean;
+}
+const { title, description, mappaFooter = true } = Astro.props;
 
 // Stile della transizione fra pagine: 'zoom' | 'slide' | 'dissolvenza'
 const ANIMAZIONE = 'dissolvenza';
@@ -23,6 +27,13 @@ const settings = await sfetch<any>(settingsQuery, {}, null);
 // Una voce di menu che porta a una pagina vuota è peggio di una voce in meno:
 // Gallery compare solo quando c'è almeno un album.
 const albumPubblicati = await sfetch<number>('count(*[_type == "galleryAlbum"])', {}, 0);
+// Stesso principio per le voci delle tendine: ogni voce porta a una sezione
+// che nella pagina esiste davvero. Le condizioni sono le stesse delle pagine.
+const sezioni = await sfetch<any>(`{
+  "risultati": count(*[_type == "partita" && giocata == true]),
+  "direttaPartite": count(*[_type == "partita" && giocata != true && defined(direttaUrl)]),
+  "gruppiGiovanili": count(*[_type == "squadraGiovanile"])
+}`, {}, { risultati: 0, direttaPartite: 0, gruppiGiovanili: 0 });
 const nomeSquadra = settings?.nomeSquadra ?? 'Corigliano Volley';
 const logoUrl = img(settings?.logo, 200);
 const legaCredemLogo = img(settings?.loghiLega?.legaCredemLogo, 400);
@@ -56,11 +67,11 @@ const desc = description ?? `Sito ufficiale ${nomeSquadra}, Serie A3 maschile: n
     <ClientRouter />
   </head>
   <body>
-    <Header nomeSquadra={nomeSquadra} bigliettiUrl={settings?.bigliettiUrl} abbonamentiUrl={campagnaAttiva ? campagna.url : undefined} iscrizioniAperte={iscrizioniAperte} gallery={albumPubblicati > 0} social={settings?.social} logoUrl={logoUrl} legaCredemLogo={legaCredemLogo} legaCredemUrl={legaCredemUrl} />
+    <Header nomeSquadra={nomeSquadra} bigliettiUrl={settings?.bigliettiUrl} abbonamentiUrl={campagnaAttiva ? campagna.url : undefined} iscrizioniAperte={iscrizioniAperte} gallery={albumPubblicati > 0} risultati={sezioni.risultati > 0} diretta={sezioni.direttaPartite > 0 || !!settings?.direttaUrl} gruppiGiovanili={sezioni.gruppiGiovanili > 0} social={settings?.social} logoUrl={logoUrl} legaCredemLogo={legaCredemLogo} legaCredemUrl={legaCredemUrl} />
     <main>
       <slot />
     </main>
-    <Footer settings={settings} gallery={albumPubblicati > 0} />
+    <Footer settings={settings} gallery={albumPubblicati > 0} mappa={mappaFooter} />
     {import.meta.env.DEV && <AnteprimaStati />}
 
   </body>

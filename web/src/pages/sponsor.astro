@@ -82,7 +82,8 @@ for (const g of gruppi) {
   </section>
 </Layout>
 <style>
-  .liv-group + .liv-group { margin-top: clamp(30px, 4.4vw, 50px); }
+  /* Stesso stacco fra livelli usato in home fra le righe che scorrono */
+  .liv-group + .liv-group { margin-top: clamp(40px, 6vw, 72px); }
   .liv-title { font-size: .95rem; text-transform: uppercase; letter-spacing: .12em; color: var(--ink-faint); font-weight: 700;
     margin: 0 0 22px; padding-bottom: 10px; border-bottom: 1px solid var(--line); }
 
@@ -101,11 +102,13 @@ for (const g of gruppi) {
   a.sp-logo:hover { transform: translateY(-3px); }
   .sp-nome-piano { font-weight: 700; color: var(--ink-soft); font-size: .95rem;
     line-height: 1.2; text-align: center; max-width: 170px; }
-  @media (max-width: 640px) {
-    .sponsor-grid { gap: 26px 30px; }
+  @media (max-width: 639px) {
+    /* Sul telefono i loghi in fila libera andavano a capo in modo irregolare
+       (due, poi uno, poi uno…) tutti addossati a sinistra. Due colonne con il
+       logo centrato nella propria cella danno righe ordinate. */
+    .sponsor-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); justify-items: center; gap: 30px 16px; }
     /* Su telefono si scala l'altezza e la larghezza segue le proporzioni:
        il tetto alla larghezza resta perché è già dentro --lh. */
-    .sp-logo { height: calc(var(--lh, 48px) * .76); width: auto; }
-    .sp-logo img { width: auto; }
+    .sp-logo { height: var(--lh-mob, auto); width: var(--lw-mob, auto); }
   }
 </style>

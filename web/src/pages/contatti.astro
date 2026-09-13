@@ -1,65 +1,216 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import PageHero from '../components/PageHero.astro';
-import { sfetch } from '../lib/sanity';
+import { sfetch, mapEmbedSrc } from '../lib/sanity';
 import { settingsQuery } from '../lib/queries';
 
+/**
+ * Pagina contatti in quattro blocchi, dal più usato al meno usato:
+ *  1. Contattaci: email e telefono come pulsanti, comodi da toccare
+ *  2. Per cosa ci cerchi: a chi rivolgersi per biglietti, iscrizioni, stampa
+ *  3. Dove giochiamo: palazzetto (che è anche la sede operativa) con mappa
+ *  4. Dati societari: PEC e identificativi, in piccolo
+ * Ogni voce compare solo se il dato c'è nel pannello: niente righe vuote.
+ */
 const s = await sfetch<any>(settingsQuery, {}, null);
-const social = s?.social ?? {};
-const socialLinks = [
-  ['Instagram', social.instagram], ['Facebook', social.facebook], ['YouTube', social.youtube],
-  ['X', social.x], ['TikTok', social.tiktok],
-].filter(([, url]) => !!url);
+
 // Elenco telefoni (con supporto al vecchio campo singolo)
 const telefoni: { etichetta?: string; numero: string }[] =
   (s?.telefoni?.length ? s.telefoni : s?.telefono ? [{ numero: s.telefono }] : []) ?? [];
 const telHref = (n: string) => 'tel:' + n.replace(/[^\d+]/g, '');
+
+// Il nome del palazzetto non ha un campo nel pannello: se cambierà, va qui.
+const PALAZZETTO = 'Pala Brillia';
+const indirizzo = s?.indirizzo ? String(s.indirizzo).replace(/\s*\n\s*/g, ', ') : null;
+const mapSrc = mapEmbedSrc(s?.mappaPosizione || s?.indirizzo);
+// Indicazioni stradali: apre il navigatore di Google Maps verso il palazzetto
+const indicazioni = indirizzo
+  ? `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(`${PALAZZETTO}, ${indirizzo}`)}`
+  : null;
+
+// "Per cosa ci cerchi": solo le voci che portano davvero da qualche parte
+const campagna = s?.campagnaAbbonamenti ?? {};
+const abbonamentiUrl = campagna.attiva === true && campagna.url ? campagna.url : null;
+const iscrizioniAperte = s?.iscrizioni?.aperte !== false && !!s?.iscrizioni?.moduloUrl;
+type Voce = { titolo: string; testo: string; azioni: { label: string; href: string; esterno?: boolean }[] };
+const voci: Voce[] = [
+  (s?.bigliettiUrl || abbonamentiUrl) && {
+    titolo: 'Biglietti e abbonamenti',
+    testo: 'Acquisto online per le partite in casa.',
+    azioni: [
+      ...(s?.bigliettiUrl ? [{ label: 'Biglietteria', href: s.bigliettiUrl, esterno: true }] : []),
+      ...(abbonamentiUrl ? [{ label: 'Abbonamenti', href: abbonamentiUrl, esterno: true }] : []),
+    ],
+  },
+  {
+    titolo: 'Settore giovanile',
+    testo: iscrizioniAperte ? 'Le iscrizioni ai corsi sono aperte.' : 'Squadre, corsi e notizie del vivaio.',
+    azioni: iscrizioniAperte
+      ? [{ label: 'Modulo di iscrizione', href: s.iscrizioni.moduloUrl, esterno: true }, { label: 'Settore giovanile', href: '/settore-giovanile/' }]
+      : [{ label: 'Settore giovanile', href: '/settore-giovanile/' }],
+  },
+  s?.email && {
+    titolo: 'Stampa e sponsor',
+    testo: 'Richieste stampa, collaborazioni e sponsorizzazioni.',
+    azioni: [{ label: 'Scrivici', href: `mailto:${s.email}` }],
+  },
+].filter(Boolean) as Voce[];
+
+const identificativi = [
+  s?.codiceFipav ? { dt: 'Codice FIPAV', dd: s.codiceFipav } : null,
+  s?.partitaIva ? { dt: 'Partita IVA', dd: s.partitaIva } : null,
+].filter(Boolean) as { dt: string; dd: string }[];
 ---
-<Layout title="Contatti">
-  <PageHero eyebrow="Scrivici" title="Contatti" lead="Come raggiungerci e restare in contatto con la società." />
+<Layout title="Contatti" description="Email, telefono, palazzetto e dati societari di Corigliano Volley." mappaFooter={false}>
+  <PageHero eyebrow="La società" title="Contatti" lead={`Scrivici, chiamaci o vieni a trovarci al ${PALAZZETTO}.`} />
+
   <section class="section">
-    <div class="container">
-      <div class="grid cols-2">
-        <div class="card info">
-          <h3>Recapiti</h3>
-          <dl>
-            {s?.email && (<><dt>Email</dt><dd><a href={`mailto:${s.email}`}>{s.email}</a></dd></>)}
-            {s?.pec && (<><dt>PEC</dt><dd><a href={`mailto:${s.pec}`}>{s.pec}</a></dd></>)}
+    <div class="container contatti">
+
+      <!-- 1. Contattaci -->
+      {(s?.email || telefoni.length > 0) && (
+        <div class="card blocco">
+          <h2 class="blocco-titolo">Contattaci</h2>
+          <div class="azioni-contatto">
+            {s?.email && (
+              <a class="contatto" href={`mailto:${s.email}`}>
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><polyline points="3 7 12 13 21 7"/></svg>
+                <span><span class="contatto-tipo">Scrivi un'email</span><span class="contatto-valore">{s.email}</span></span>
+              </a>
+            )}
             {telefoni.map((t) => (
-              <>
-                <dt>{t.etichetta || 'Telefono'}</dt>
-                <dd><a href={telHref(t.numero)}>{t.numero}</a></dd>
-              </>
+              <a class="contatto" href={telHref(t.numero)}>
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.5c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z"/></svg>
+                <span><span class="contatto-tipo">{t.etichetta ? `Chiama · ${t.etichetta}` : 'Chiama'}</span><span class="contatto-valore">{t.numero}</span></span>
+              </a>
             ))}
-            {s?.indirizzo && (<><dt>Sede / palazzetto</dt><dd style="white-space:pre-line;">{s.indirizzo}</dd></>)}
-          </dl>
-          {!s?.email && !s?.pec && telefoni.length === 0 && !s?.indirizzo && (
-            <p class="muted">I recapiti verranno inseriti nel pannello, alla voce “Impostazioni sito”.</p>
-          )}
-          {socialLinks.length > 0 && (
-            <div class="social">
-              {socialLinks.map(([label, url]) => (<a class="btn" href={url} target="_blank" rel="noopener">{label}</a>))}
+          </div>
+        </div>
+      )}
+
+      <!-- 2. Per cosa ci cerchi -->
+      {voci.length > 0 && (
+        <div class="card blocco">
+          <h2 class="blocco-titolo">Per cosa ci cerchi?</h2>
+          <ul class="voci">
+            {voci.map((v) => (
+              <li class="voce">
+                <div>
+                  <h3 class="voce-titolo">{v.titolo}</h3>
+                  <p class="voce-testo">{v.testo}</p>
+                </div>
+                <div class="voce-azioni">
+                  {v.azioni.map((a) => (
+                    <a class="btn" href={a.href} {...(a.esterno ? { target: '_blank', rel: 'noopener' } : {})}>{a.label}</a>
+                  ))}
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      <!-- 3. Dove giochiamo -->
+      {(indirizzo || mapSrc) && (
+        <div class="card blocco palazzetto">
+          <div class="pal-testo">
+            <h2 class="blocco-titolo">Dove giochiamo</h2>
+            <p class="pal-nome">{PALAZZETTO}</p>
+            <p class="pal-nota">Palazzetto delle partite in casa e sede operativa della società.</p>
+            {indirizzo && <p class="pal-indirizzo">{indirizzo}</p>}
+            {indicazioni && (
+              <a class="btn primary" href={indicazioni} target="_blank" rel="noopener">
+                Indicazioni stradali
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+              </a>
+            )}
+          </div>
+          {mapSrc && (
+            <div class="pal-mappa">
+              <iframe src={mapSrc} loading="lazy" title={`Mappa ${PALAZZETTO}`} allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>
             </div>
           )}
         </div>
-        <div class="card info">
-          <h3>Ufficio stampa e sponsor</h3>
-          <p>Per collaborazioni, richieste stampa o opportunità di sponsorizzazione, scrivici all'indirizzo email della società: ti risponderemo il prima possibile.</p>
-          {s?.bigliettiUrl && (
-            <a class="btn primary" style="margin-top:14px;" href={s.bigliettiUrl} target="_blank" rel="noopener">Vai alla biglietteria →</a>
-          )}
+      )}
+
+      <!-- 4. Dati societari -->
+      {(s?.denominazione || indirizzo || s?.pec || identificativi.length > 0) && (
+        <div class="card blocco societa">
+          <h2 class="blocco-titolo piccolo">Dati societari</h2>
+          <dl class="dati">
+            {s?.denominazione && <div><dt>Denominazione</dt><dd>{s.denominazione}</dd></div>}
+            {indirizzo && <div><dt>Sede operativa</dt><dd>{indirizzo}</dd></div>}
+            {s?.pec && (
+              <div>
+                <dt>PEC</dt>
+                <dd><a href={`mailto:${s.pec}`}>{s.pec}</a><span class="nota-pec">Solo per comunicazioni ufficiali</span></dd>
+              </div>
+            )}
+            {identificativi.map((i) => <div><dt>{i.dt}</dt><dd class="tabnums">{i.dd}</dd></div>)}
+          </dl>
         </div>
-      </div>
+      )}
+
+      {!s?.email && telefoni.length === 0 && !indirizzo && (
+        <div class="empty"><strong>Recapiti non ancora inseriti</strong>Si compilano nel pannello, alla voce “Impostazioni sito”.</div>
+      )}
     </div>
   </section>
 </Layout>
+
 <style>
-  .info { padding: 26px 24px; }
-  .info h3 { margin-bottom: 14px; }
-  dl { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 8px 20px; margin: 0; }
-  dt { font-family: var(--font-display); color: var(--ink-faint); font-size: .82rem; text-transform: uppercase; letter-spacing: .06em; font-weight: 700; align-self: center; }
-  dd { margin: 0; font-weight: 550; }
-  dd a { color: var(--accent); }
-  .social { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 20px; }
-  .info p { color: var(--ink-soft); }
+  /* PC: contattaci e "per cosa ci cerchi" affiancati, poi palazzetto e dati a
+     tutta larghezza. Tablet e telefono: un blocco sotto l'altro. */
+  .contatti { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr); gap: clamp(14px, 2.4vw, 22px); align-items: start; }
+  .palazzetto, .societa { grid-column: 1 / -1; }
+  @media (max-width: 1023px) { .contatti { grid-template-columns: minmax(0, 1fr); } }
+
+  .blocco { padding: clamp(20px, 3vw, 30px); }
+  /* Titoli dei blocchi: sotto al titolo di pagina, sopra alle voci */
+  .blocco-titolo { font-size: clamp(1.45rem, 2.4vw, 1.75rem); margin: 0 0 18px; }
+  .blocco-titolo.piccolo { font-size: 1.2rem; margin-bottom: 14px; }
+
+  /* 1. Pulsanti di contatto: grandi e toccabili, valore leggibile per intero */
+  .azioni-contatto { display: flex; flex-direction: column; gap: 10px; }
+  .contatto { display: flex; align-items: center; gap: 14px; min-height: 64px; padding: 12px 16px;
+    border: 1px solid var(--line); border-radius: 12px; background: var(--ground); color: var(--ink);
+    transition: border-color .12s ease, transform .12s ease, box-shadow .14s ease; }
+  .contatto:hover { border-color: var(--accent); transform: translateY(-1px); box-shadow: var(--shadow); }
+  .contatto svg { flex: none; color: var(--accent); }
+  .contatto > span { display: flex; flex-direction: column; min-width: 0; }
+  .contatto-tipo { font-family: var(--font-display); text-transform: uppercase; letter-spacing: .05em;
+    font-size: .88rem; font-weight: 750; color: var(--ink-faint); }
+  .contatto-valore { font-weight: 650; font-size: 1.05rem; overflow-wrap: anywhere; }
+
+  /* 2. Voci per argomento */
+  .voci { list-style: none; margin: 0; padding: 0; }
+  /* Testo sopra e pulsanti sotto in ogni voce: affiancati, alcune voci
+     andavano a capo e altre no, e la lista sembrava disordinata. */
+  .voce { display: flex; flex-direction: column; align-items: flex-start; gap: 10px;
+    padding: 14px 0; border-top: 1px solid var(--line-soft); }
+  .voce:first-child { border-top: 0; padding-top: 0; }
+  .voce:last-child { padding-bottom: 0; }
+  .voce-titolo { margin: 0; font-size: 1.05rem; }
+  .voce-testo { margin: 2px 0 0; font-size: .92rem; }
+  .voce-azioni { display: flex; flex-wrap: wrap; gap: 8px; }
+  .voce-azioni .btn { min-height: 44px; }
+
+  /* 3. Palazzetto: testo a sinistra, mappa a destra; sotto i 1024px la mappa va sotto */
+  .palazzetto { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.6fr); gap: clamp(18px, 3vw, 32px); align-items: stretch; }
+  @media (max-width: 1023px) { .palazzetto { grid-template-columns: minmax(0, 1fr); } }
+  .pal-testo { display: flex; flex-direction: column; align-items: flex-start; }
+  .pal-nome { font-family: var(--font-display); text-transform: uppercase; font-size: 1.6rem; font-weight: 800; color: var(--ink); line-height: 1; }
+  .pal-nota { margin: 8px 0 0; font-size: .92rem; }
+  .pal-indirizzo { margin: 12px 0 18px; color: var(--ink); font-weight: 550; }
+  .pal-testo .btn { margin-top: auto; min-height: 44px; gap: .5rem; }
+  .pal-mappa { border-radius: 12px; overflow: hidden; border: 1px solid var(--line); min-height: 260px; line-height: 0; }
+  .pal-mappa iframe { width: 100%; height: 100%; min-height: 260px; border: 0; }
+
+  /* 4. Dati societari: in piccolo, etichetta sopra al valore */
+  .dati { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 14px 24px; margin: 0; }
+  .dati dt { font-family: var(--font-display); text-transform: uppercase; letter-spacing: .06em;
+    font-size: .88rem; font-weight: 700; color: var(--ink-faint); }
+  .dati dd { margin: 2px 0 0; font-size: .95rem; color: var(--ink-soft); overflow-wrap: anywhere; }
+  .dati dd a { color: var(--accent); }
+  .nota-pec { display: block; font-size: .82rem; color: var(--ink-faint); margin-top: 1px; }
 </style>

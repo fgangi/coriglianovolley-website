@@ -11,8 +11,13 @@ interface Props {
   logoUrl?: string | null;
   legaCredemLogo?: string | null;
   legaCredemUrl?: string;
+  /** Sezioni che compaiono solo quando hanno contenuto: la voce le segue */
+  risultati?: boolean;
+  diretta?: boolean;
+  gruppiGiovanili?: boolean;
 }
-const { nomeSquadra, bigliettiUrl, abbonamentiUrl, iscrizioniAperte, social, gallery = true, logoUrl, legaCredemLogo, legaCredemUrl } = Astro.props;
+const { nomeSquadra, bigliettiUrl, abbonamentiUrl, iscrizioniAperte, social, gallery = true, logoUrl, legaCredemLogo, legaCredemUrl,
+  risultati = false, diretta = false, gruppiGiovanili = false } = Astro.props;
 const path = Astro.url.pathname.replace(/\/$/, '') || '/';
 
 type Item = { href: string; label: string; children?: { href: string; label: string }[] };
@@ -32,9 +37,12 @@ const nav: Item[] = [
   },
   {
     href: '/partite/', label: 'Partite',
+    // Stesso ordine e stessi nomi delle sezioni della pagina. Diretta e
+    // Risultati esistono solo quando c'è qualcosa da mostrare.
     children: [
       { href: '/partite/#calendario', label: 'Calendario' },
-      { href: '/partite/#diretta', label: 'Diretta' },
+      ...(diretta ? [{ href: '/partite/#diretta', label: 'Diretta' }] : []),
+      ...(risultati ? [{ href: '/partite/#risultati', label: 'Risultati' }] : []),
       { href: '/partite/#classifica', label: 'Classifica' },
     ],
   },
@@ -45,7 +53,8 @@ const nav: Item[] = [
       // A campagna chiusa la sezione iscrizioni non esiste: la voce sparisce
       // invece di portare a un punto della pagina che non c'è più.
       ...(iscrizioniAperte ? [{ href: '/settore-giovanile/#iscrizioni', label: 'Iscrizioni' }] : []),
-      { href: '/settore-giovanile/#news-vivaio', label: 'News' },
+      ...(gruppiGiovanili ? [{ href: '/settore-giovanile/#gruppi', label: 'I nostri gruppi' }] : []),
+      { href: '/settore-giovanile/#news-vivaio', label: 'News del vivaio' },
     ],
   },
   ...(gallery ? [{ href: '/gallery/', label: 'Gallery' }] : []),
@@ -164,21 +173,21 @@ const iniziali = nomeSquadra.split(' ').map((w) => w[0]).join('').slice(0, 2).to
   </div>
 </header>
 <script>
-/* Intestazione compatta allo scorrimento.
+/* Allo scorrimento sparisce la striscia dei social in alto (data-compatta).
  *
  * Attenzione a come si scelgono le soglie. L'intestazione è "sticky", quindi
- * occupa spazio nel flusso: passando da estesa (160px) a compatta (70px) la
- * pagina si accorcia di 90px, e il browser sposta lo scorrimento della stessa
- * quantità per non far saltare il contenuto sotto gli occhi (scroll anchoring).
+ * occupa spazio nel flusso: togliendo la striscia la pagina si accorcia, e il
+ * browser sposta lo scorrimento della stessa quantità per non far saltare il
+ * contenuto sotto gli occhi (scroll anchoring).
  *
- * Con due soglie fisse (prima: 120 in giù, 60 in su) quel salto scavalcava la
- * soglia di ritorno: a 130 si compattava, l'ancoraggio portava a 40, 40 è sotto
- * 60 quindi si riapriva, l'ancoraggio riportava a 130, e via all'infinito.
- * Era il "sali e scendi" che si vedeva fermandosi proprio sul confine.
+ * Con due soglie fisse quel salto poteva scavalcare la soglia di ritorno: lo
+ * stato cambiava, l'ancoraggio spostava lo scorrimento oltre l'altra soglia,
+ * lo stato tornava indietro, e via all'infinito. Era il "sali e scendi" che si
+ * vedeva fermandosi proprio sul confine.
  *
  * La soglia qui è invece l'altezza attuale dell'intestazione, con un margine.
- * Così si sposta insieme al salto e non può essere scavalcata: in compatta si
- * confronta con 70, in estesa con 160, e i due stati non si rincorrono più. */
+ * Così si sposta insieme al salto e non può essere scavalcata, qualunque sia
+ * la differenza di altezza fra i due stati. */
 function initHeaderCompatto() {
   const header = document.querySelector('.site-header') as HTMLElement | null;
   if (!header || header.dataset.scrollBound === '1') return;

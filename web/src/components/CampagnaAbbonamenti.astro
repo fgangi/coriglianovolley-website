@@ -8,11 +8,13 @@ const c = campagna ?? {};
 const attiva = c.attiva === true && !!c.url;
 // Sfondo predefinito se non ne è stato caricato uno dal pannello
 const sfondo = c.immagine ? img(c.immagine, 2200) : '/sfondi/abbonamenti.jpg';
+// Versione leggera per tablet e telefono, dove la fascia è molto più stretta
+const sfondoPiccolo = c.immagine ? img(c.immagine, 1100) : '/sfondi/abbonamenti-1100.jpg';
 // Il sopratitolo va su due righe come nel mockup: il punto mediano fa da a capo
 const righeOcchiello = String(c.occhiello ?? '').split('·').map((t: string) => t.trim()).filter(Boolean);
 ---
 {attiva && (
-  <section class="campagna" style={`background-image:url('${sfondo}')`} aria-label="Campagna abbonamenti">
+  <section class="campagna" style={`--sfondo:url('${sfondo}');--sfondo-piccolo:url('${sfondoPiccolo}')`} aria-label="Campagna abbonamenti">
     <div class="container camp-testo">
       {righeOcchiello.length > 0 && (
         <span class="camp-occhiello">
@@ -30,7 +32,10 @@ const righeOcchiello = String(c.occhiello ?? '').split('·').map((t: string) => 
 
 <style>
   /* Proporzioni dello sfondo del mockup: 2172 x 724 */
+  /* Lo sfondo arriva come variabile e non come background-image in linea:
+     uno stile in linea batterebbe la media query della versione leggera. */
   .campagna { position: relative; background-color: #A5101A; background-size: cover;
+    background-image: var(--sfondo);
     background-position: top center; aspect-ratio: 2172 / 724; min-height: 300px;
     /* width:100% ancora la larghezza: senza, quando il minimo di altezza entra
        in gioco, aspect-ratio ricalcola la larghezza dall'altezza e la fascia
@@ -53,9 +58,15 @@ const righeOcchiello = String(c.occhiello ?? '').split('·').map((t: string) => 
 
   /* Su schermi stretti le tessere dello sfondo finirebbero sotto al testo:
      la fascia si alza e l'immagine si sposta a destra. */
+  @media (max-width: 1023px) { .campagna { background-image: var(--sfondo-piccolo, var(--sfondo)); } }
   @media (max-width: 760px) {
+    /* Qui le tessere dello sfondo finiscono dietro al titolo: un velo scuro,
+       più fitto sulla parte sinistra dove sta il testo, lo rende leggibile
+       lasciando intuire le tessere sotto. */
     .campagna { aspect-ratio: auto; min-height: 0; padding: clamp(34px, 9vw, 56px) 0;
-      background-position: 78% center; }
+      background-position: 78% center;
+      background-image: linear-gradient(90deg, rgba(40, 0, 4, .72) 0%, rgba(40, 0, 4, .55) 65%, rgba(40, 0, 4, .35) 100%),
+        var(--sfondo-piccolo, var(--sfondo)); }
     .camp-titolo { max-width: 100%; }
   }
 </style>

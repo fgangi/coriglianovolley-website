@@ -63,12 +63,11 @@ const { etichetta, direzione = 'avanti', altezza = '70px', altezzaMobile = '54px
   @media (max-width: 640px) {
     /* Su telefono si scala l'altezza calcolata e la larghezza segue le
        proporzioni. Il tetto alla larghezza è già dentro --lh, quindi resta. */
-    .str-pista :global(.sp-logo) { height: calc(var(--lh, var(--h-mob)) * .76); width: auto; }
-    .str-pista :global(.sp-logo img) { width: auto; }
+    .str-pista :global(.sp-logo) { height: var(--lh-mob, var(--h-mob)); width: var(--lw-mob, auto); }
     .str-pista { gap: 26px; }
-    /* Su telefono non esiste il passaggio del mouse: le frecce restano visibili */
-    .str-freccia { opacity: 1; pointer-events: auto; width: 32px; height: 32px; }
-    .striscia[data-ferma='si'] .str-freccia { display: none; }
+    /* Sul telefono niente frecce: coprivano i loghi ai bordi ed erano bersagli
+       piccoli (32px). La riga si scorre col dito, e si ferma col pulsante. */
+    .str-freccia { display: none; }
   }
 </style>
 
@@ -140,11 +139,17 @@ const { etichetta, direzione = 'avanti', altezza = '70px', altezzaMobile = '54px
          * perso a ogni giro e la fila restava ferma — è il motivo per cui certe
          * righe non partivano mai.
          */
+        // Pausa scelta dall'utente col pulsante della sezione (vedi home)
+        const contenitore = box.closest('[data-pausa-strisce]');
         const passo = (t) => {
           if (!box.isConnected) return;
           const dt = ultimo ? Math.min((t - ultimo) / 1000, 0.05) : 0;
           ultimo = t;
-          if (!fermo && periodo > 0) {
+          const inPausa = contenitore?.dataset.pausa === 'si';
+          // In pausa la riga si può comunque scorrere col dito: si segue la
+          // posizione, così alla ripresa riparte da lì senza scatti.
+          if (inPausa) pos = pista.scrollLeft;
+          if (!fermo && !inPausa && periodo > 0) {
             pos += verso * VELOCITA * dt;
             if (pos >= periodo) pos -= periodo;
             else if (pos < 0) pos += periodo;

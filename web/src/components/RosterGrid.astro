@@ -1,5 +1,5 @@
 ---
-import { img } from '../lib/sanity';
+import SchedaGiocatore from './SchedaGiocatore.astro';
 interface Props { roster: any[]; }
 const { roster } = Astro.props;
 
@@ -18,26 +18,8 @@ const gruppi = ordine
   gruppi.map((g) => (
     <div class="ruolo-group">
       <h3 class="ruolo-title">{g.label}</h3>
-      <div class="grid cols-4">
-        {g.giocatori.map((p) => {
-          const foto = img(p.foto, 480, 560);
-          return (
-            <div class="card player">
-              <div class="ph">
-                {foto ? <img src={foto} alt={`${p.nome} ${p.cognome}`} loading="lazy" /> : <div class="ph-empty" aria-hidden="true"></div>}
-                {p.numero != null && <span class="num">{p.numero}</span>}
-              </div>
-              <div class="pinfo">
-                <h4>{p.nome} <strong>{p.cognome}</strong></h4>
-                <dl class="pmeta">
-                  {p.annoNascita && <div><dt>Anno di nascita</dt><dd class="tabnums">{p.annoNascita}</dd></div>}
-                  {p.altezza && <div><dt>Altezza</dt><dd class="tabnums">{p.altezza} cm</dd></div>}
-                  {p.nazionalita && <div><dt>Nazionalità</dt><dd>{p.nazionalita}</dd></div>}
-                </dl>
-              </div>
-            </div>
-          );
-        })}
+      <div class="grid griglia-schede">
+        {g.giocatori.map((p) => <SchedaGiocatore p={p} dettagli />)}
       </div>
     </div>
   ))
@@ -46,37 +28,11 @@ const gruppi = ordine
   .ruolo-group + .ruolo-group { margin-top: clamp(30px, 5vw, 52px); }
   .ruolo-title { font-size: .95rem; text-transform: uppercase; letter-spacing: .12em; color: var(--ink-faint); font-weight: 700;
     margin: 0 0 20px; padding-bottom: 10px; border-bottom: 1px solid var(--line); }
-  .player { display: flex; flex-direction: column; }
-  /* Sfumatura dietro al giocatore, presa dal mockup. Il colore pieno resta
-     sotto come riserva. Si vede per intero solo con le foto scontornate:
-     con una foto su fondo bianco resta coperta, senza rompere nulla. */
-  .ph { position: relative; aspect-ratio: 4 / 5; background: linear-gradient(180deg, #000000 0%, #4A0505 100%), #F1EDED; overflow: hidden;
-    /* Riferimento per la misura del numero: così cresce con la scheda */
-    container-type: inline-size; }
-  .ph img { width: 100%; height: 100%; object-fit: cover; }
-  /* Foto mancante: segnaposto neutro. Lasciando vedere la sfumatura rossa
-     della scheda, accanto alle foto ancora su fondo bianco sembrerebbe un
-     errore invece di un posto vuoto. Da rivedere quando arriveranno gli
-     scontorni e tutte le schede avranno lo stesso fondo. */
-  .ph-empty { width: 100%; height: 100%; background: linear-gradient(180deg, var(--surface-2), var(--surface)); }
-  /* Nel mockup il numero non è una targhetta ma una cifra grande e cava, in
-     alto a destra, col solo contorno chiaro sopra allo sfondo scuro. La misura
-     è in cqw: resta la stessa frazione della scheda a ogni larghezza.
-     Il valore in rem prima serve ai browser senza unità di contenitore. */
-  .num { position: absolute; top: -3px; right: 5%; pointer-events: none;
-    font-family: var(--font-display); font-weight: 800; line-height: 1;
-    font-size: 3.4rem; font-size: 28cqw;
-    color: transparent; -webkit-text-stroke: 1.3px rgba(255, 255, 255, .5);
-    font-variant-numeric: tabular-nums; }
-  /* Senza il contorno del testo la cifra sparirebbe: lì torna piena, smorzata */
-  @supports not (-webkit-text-stroke: 1px #000) {
-    .num { color: rgba(255, 255, 255, .3); }
-  }
-  .pinfo { padding: 14px 16px 18px; }
-  .pinfo h4 { font-weight: 500; font-size: 1.05rem; margin: 0; letter-spacing: -.01em; }
-  .pinfo h4 strong { font-weight: 820; }
-  .pmeta { margin: 10px 0 0; display: flex; flex-direction: column; gap: 4px; font-size: .82rem; }
-  .pmeta > div { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; }
-  .pmeta dt { color: var(--ink-faint); }
-  .pmeta dd { margin: 0; color: var(--ink-soft); font-weight: 560; text-align: right; }
+  /* La scheda è la stessa della home: stile e misure stanno in SchedaGiocatore */
+  /* Tre standard: PC 4 colonne, tablet (640–1023px) 3, telefono 2. A una
+     colonna sul telefono ogni scheda era alta ~650px e la pagina superava i
+     16.000px; a due colonne resta leggibile, come i caroselli della home. */
+  .griglia-schede { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  @media (max-width: 1023px) { .griglia-schede { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+  @media (max-width: 639px) { .griglia-schede { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; } }
 </style>

@@ -27,24 +27,24 @@ const stagione = settings?.stagione;
     </div>
   )}
 
-  <section class="section" id="roster" style="scroll-margin-top: 110px;">
+  <section class="section">
     <div class="container">
-      <div class="section-head"><span class="eyebrow">In campo</span><h2>Roster</h2></div>
+      <div class="section-head" id="roster"><span class="eyebrow">In campo</span><h2>Roster</h2></div>
       <RosterGrid roster={roster} />
     </div>
   </section>
 
-  <section class="section" id="staff" style="scroll-margin-top: 110px;">
+  <section class="section">
     <div class="container">
-      <div class="section-head"><span class="eyebrow">Dietro le quinte</span><h2>Staff tecnico e medico</h2></div>
+      <div class="section-head" id="staff"><span class="eyebrow">Dietro le quinte</span><h2>Staff tecnico e medico</h2></div>
       <StaffGrid staff={staff} aree={['tecnico', 'medico']} vuoto="Staff non ancora inserito" />
     </div>
   </section>
 
   <!-- Presidenza e dirigenza sotto un unico titolo, con i due sottotitoli -->
-  <section class="section" id="societa" style="scroll-margin-top: 110px;">
+  <section class="section">
     <div class="container">
-      <div class="section-head"><span class="eyebrow">La società</span><h2>Organigramma</h2></div>
+      <div class="section-head" id="societa"><span class="eyebrow">La società</span><h2>Organigramma</h2></div>
       <StaffGrid staff={staff} aree={['presidenza', 'dirigenza']} vuoto="Organigramma non ancora inserito" />
     </div>
   </section>

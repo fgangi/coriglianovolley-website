@@ -21,9 +21,9 @@ const categorie: string[] = isc.categorie ?? [];
   <PageHero eyebrow="Il vivaio" title="Settore giovanile" lead="Le squadre del nostro vivaio, le iscrizioni ai corsi e le notizie che le riguardano." />
 
   {iscrizioniAttive && (
-    <section class="section iscrizioni-sezione" id="iscrizioni" style="scroll-margin-top: 90px;" data-sim="iscrizioni">
+    <section class="section iscrizioni-sezione" data-sim="iscrizioni">
       <div class="container">
-        <div class="iscrizioni card">
+        <div class="iscrizioni card" id="iscrizioni">
           <div class="isc-testo">
             <span class="pill">Iscrizioni aperte</span>
             <h2>{isc.titolo ?? 'Iscriviti al settore giovanile'}</h2>
@@ -47,9 +47,9 @@ const categorie: string[] = isc.categorie ?? [];
   {/* La sezione compare solo quando ci sono gruppi inseriti: senza squadre
       mostrava un segnaposto vuoto. Aggiungendole nel pannello ricompare. */}
   {squadre.length > 0 && (
-    <section class="section" id="gruppi" style="scroll-margin-top: 90px;">
+    <section class="section">
       <div class="container">
-        <div class="section-head"><span class="eyebrow">Le squadre</span><h2>I nostri gruppi</h2></div>
+        <div class="section-head" id="gruppi"><span class="eyebrow">Le squadre</span><h2>I nostri gruppi</h2></div>
         <div class="grid cols-3">
           {squadre.map((sq) => {
             const foto = img(sq.foto, 640, 400);
@@ -69,9 +69,9 @@ const categorie: string[] = isc.categorie ?? [];
     </section>
   )}
 
-  <section class="section" id="news-vivaio" style="scroll-margin-top: 90px;">
+  <section class="section">
     <div class="container">
-      <div class="section-head between">
+      <div class="section-head between" id="news-vivaio">
         <div><span class="eyebrow">Aggiornamenti</span><h2>News del vivaio</h2></div>
       </div>
       {news.length ? (

@@ -10,10 +10,20 @@ const voci = (slide ?? []).filter((s) => s?.immagine);
   <section class="hero" data-hero aria-label="In evidenza">
     <div class="hero-viewport">
       {voci.map((s, i) => {
-        const foto = img(s.immagine, 2400);
+        // Più misure della stessa immagine: il browser scarica quella adatta allo
+        // schermo invece di 2400px anche sul telefono. Sotto i 760px la hero è
+        // verticale (4:5): lì si chiede a Sanity il ritaglio già in verticale,
+        // centrato come faceva object-fit, così il file è piccolo davvero.
+        const larghe = [960, 1440, 1920, 2400].map((w) => `${img(s.immagine, w)} ${w}w`).join(', ');
+        const verticali = [600, 900, 1200].map((w) => `${img(s.immagine, w, Math.round(w * 1.25), 'center')} ${w}w`).join(', ');
         const corpo = (
           <>
-            <img class="hero-foto" src={foto} alt={s.evidenza ?? s.titolo ?? ''} loading={i === 0 ? 'eager' : 'lazy'} />
+            <picture>
+              <source media="(max-width: 760px)" srcset={verticali} sizes="100vw" />
+              <img class="hero-foto" src={img(s.immagine, 1920)} srcset={larghe} sizes="100vw"
+                alt={s.evidenza ?? s.titolo ?? ''}
+                loading={i === 0 ? 'eager' : 'lazy'} fetchpriority={i === 0 ? 'high' : undefined} />
+            </picture>
             <div class="container hero-testo">
               {s.titolo && <span class="hero-riga1">{s.titolo}</span>}
               {s.evidenza && <span class="hero-riga2">{s.evidenza}</span>}
@@ -34,6 +44,11 @@ const voci = (slide ?? []).filter((s) => s?.immagine);
           <button type="button" class="hero-punto" data-punto={i}
             aria-label={`Immagine ${i + 1} di ${voci.length}`} aria-selected={i === 0 ? 'true' : 'false'}></button>
         ))}
+        {/* WCAG 2.2.2: l'avanzamento automatico deve potersi fermare */}
+        <button type="button" class="hero-pausa" data-hero-pausa aria-pressed="false" aria-label="Ferma lo scorrimento delle immagini">
+          <svg class="ico-pausa" width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>
+          <svg class="ico-play" width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 4.5v15a1 1 0 0 0 1.5.86l12.5-7.5a1 1 0 0 0 0-1.72L8.5 3.64A1 1 0 0 0 7 4.5z"/></svg>
+        </button>
       </div>
     )}
   </section>
@@ -66,6 +81,14 @@ const voci = (slide ?? []).filter((s) => s?.immagine);
   .hero-punto { width: 34px; height: 4px; border-radius: 999px; border: 0; padding: 0;
     background: #D9D9D9; opacity: .55; cursor: pointer; transition: opacity .15s ease, background .15s ease; }
   .hero-punto[aria-selected='true'] { background: #A20505; opacity: 1; width: 46px; }
+  /* Area di tocco 44px, cerchio visibile più piccolo */
+  .hero-punti { align-items: center; }
+  .hero-pausa { width: 44px; height: 44px; margin-left: 6px; border: 0; padding: 0; background: none; cursor: pointer;
+    display: grid; place-items: center; color: #fff; }
+  .hero-pausa svg { box-sizing: content-box; padding: 8px; border-radius: 50%; background: rgba(0,0,0,.45); }
+  .hero-pausa .ico-play { display: none; }
+  .hero-pausa[aria-pressed='true'] .ico-pausa { display: none; }
+  .hero-pausa[aria-pressed='true'] .ico-play { display: block; }
 </style>
 
 <script is:inline>
@@ -88,12 +111,21 @@ const voci = (slide ?? []).filter((s) => s?.immagine);
 
       // Avanzamento automatico, sospeso se l'utente preferisce meno movimento
       let timer = null;
+      let inPausa = false;
       const ferma = () => { if (timer) { clearInterval(timer); timer = null; } };
       const parti = () => {
-        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+        if (inPausa || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
         ferma();
         timer = setInterval(() => mostra(attuale + 1), 6000);
       };
+      const pausa = hero.querySelector('[data-hero-pausa]');
+      pausa?.addEventListener('click', (e) => {
+        e.preventDefault();
+        inPausa = !inPausa;
+        pausa.setAttribute('aria-pressed', String(inPausa));
+        pausa.setAttribute('aria-label', inPausa ? 'Riprendi lo scorrimento delle immagini' : 'Ferma lo scorrimento delle immagini');
+        if (inPausa) ferma(); else parti();
+      });
       hero.addEventListener('mouseenter', ferma);
       hero.addEventListener('mouseleave', parti);
       document.addEventListener('astro:before-swap', ferma, { once: true });

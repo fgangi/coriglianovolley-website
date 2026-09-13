@@ -4,11 +4,13 @@ import PageHero from '../../components/PageHero.astro';
 import PartitaRow from '../../components/PartitaRow.astro';
 import { sfetch, img, formatData, youtubeEmbed, pezziData } from '../../lib/sanity';
 import { calendarioQuery, classificaQuery, settingsQuery } from '../../lib/queries';
+import { logoRifilato } from '../../lib/loghi';
 
-const [partite, classifica, settings] = await Promise.all([
+const [partite, classifica, settings, avversarie] = await Promise.all([
   sfetch<any[]>(calendarioQuery, {}, []),
   sfetch<any>(classificaQuery, {}, null),
   sfetch<any>(settingsQuery, {}, null),
+  sfetch<any[]>('*[_type == "squadraAvversaria" && defined(logo)]{nome, logo}', {}, []),
 ]);
 const prossime = partite.filter((m) => !m.giocata);
 const giocate = partite.filter((m) => m.giocata).reverse();
@@ -25,6 +27,24 @@ const nonIniziato = righeCl.length > 0 &&
 const righeOrdinate = nonIniziato
   ? [...righeCl].sort((a, b) => String(a.squadra ?? '').localeCompare(String(b.squadra ?? ''), 'it'))
   : righeCl;
+
+// Stemmi in classifica. Le righe sono testo libero, quindi lo stemma si trova
+// cercando la squadra avversaria con lo stesso nome (ignorando maiuscole,
+// accenti e spazi); per noi si usa il logo della società. I margini vuoti dei
+// file vengono tolti, altrimenti alcuni stemmi sembrerebbero la metà degli altri.
+const PID = import.meta.env.PUBLIC_SANITY_PROJECT_ID;
+const DS = import.meta.env.PUBLIC_SANITY_DATASET || 'production';
+const norm = (t: string) => String(t ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '');
+const logoSquadra = new Map<string, string>();
+for (const r of righeCl) {
+  const n = norm(r.squadra);
+  if (!n || logoSquadra.has(n)) continue;
+  const fonte = /corigliano/.test(n)
+    ? settings?.logo
+    : (avversarie.find((a) => norm(a.nome) === n) ?? avversarie.find((a) => n.includes(norm(a.nome)) || norm(a.nome).includes(n)))?.logo;
+  const pronto = fonte ? await logoRifilato(fonte, PID, DS, 96) : null;
+  if (pronto) logoSquadra.set(n, pronto.url);
+}
 
 // Diretta: priorità alla prossima partita con link YouTube, altrimenti canale generale
 const matchDiretta = prossime.find((m) => m.direttaUrl) ?? null;
@@ -51,10 +71,10 @@ const logoUrl = img(settings?.logo, 200);
 <Layout title="Partite e classifica">
   <PageHero eyebrow="Campo" title="Partite e classifica" lead="Calendario, risultati e classifica aggiornata del girone." />
 
-  <section class="section" id="calendario" style="scroll-margin-top: 90px;">
+  <section class="section">
     <div class="container">
       <!-- PROSSIME -->
-      <div class="section-head"><span class="eyebrow">In arrivo</span><h2>Prossime partite</h2></div>
+      <div class="section-head" id="calendario"><span class="eyebrow">In arrivo</span><h2>Calendario</h2></div>
       {prossime.length ? (
         prossimePerMese.map((g) => (
           <div class="mese-gruppo">
@@ -68,10 +88,12 @@ const logoUrl = img(settings?.logo, 200);
     </div>
   </section>
 
-  <!-- DIRETTA -->
-  <section class="section" id="diretta" style="scroll-margin-top: 90px;">
+  <!-- DIRETTA: la sezione esiste solo quando c'è un link alla diretta (di una
+       partita o del canale). Senza, era un riquadro vuoto raggiungibile dal menu. -->
+  {direttaLink && (
+  <section class="section">
     <div class="container">
-      <div class="section-head"><span class="eyebrow">Live</span><h2>Diretta</h2></div>
+      <div class="section-head" id="diretta"><span class="eyebrow">Live</span><h2>Diretta</h2></div>
       {direttaEmbed ? (
         <div class="diretta-grid">
           <div class="player">
@@ -90,7 +112,7 @@ const logoUrl = img(settings?.logo, 200);
             </aside>
           )}
         </div>
-      ) : direttaLink ? (
+      ) : (
         <div class="diretta-cta card">
           <div>
             <strong>Diretta streaming</strong>
@@ -98,33 +120,30 @@ const logoUrl = img(settings?.logo, 200);
           </div>
           <a class="btn primary" href={direttaLink} target="_blank" rel="noopener">Guarda la diretta →</a>
         </div>
-      ) : (
-        <div class="empty"><strong>Nessuna diretta programmata</strong>Quando una partita sarà trasmessa in streaming, il player comparirà qui.</div>
       )}
     </div>
   </section>
+  )}
+
+  <!-- RISULTATI: compare dalla prima partita giocata, come in home -->
+  {giocate.length > 0 && (
+  <section class="section">
+    <div class="container">
+      <div class="section-head" id="risultati"><span class="eyebrow">Archivio</span><h2>Risultati</h2></div>
+      {giocatePerMese.map((g) => (
+        <div class="mese-gruppo">
+          <h3 class="mese-titolo">{g.titolo}</h3>
+          <div class="grid cols-2">{g.partite.map((m) => <PartitaRow m={m} logoNostro={logoUrl} />)}</div>
+        </div>
+      ))}
+    </div>
+  </section>
+  )}
 
   <section class="section">
     <div class="container">
-      <!-- RISULTATI -->
-      <div class="section-head"><span class="eyebrow">Archivio</span><h2>Risultati</h2></div>
-      {giocate.length ? (
-        giocatePerMese.map((g) => (
-          <div class="mese-gruppo">
-            <h3 class="mese-titolo">{g.titolo}</h3>
-            <div class="grid cols-2">{g.partite.map((m) => <PartitaRow m={m} logoNostro={logoUrl} />)}</div>
-          </div>
-        ))
-      ) : (
-        <div class="empty"><strong>Ancora nessun risultato</strong>I risultati appariranno qui dopo le prime giornate.</div>
-      )}
-    </div>
-  </section>
-
-  <section class="section" id="classifica" style="scroll-margin-top: 90px;">
-    <div class="container">
       <!-- CLASSIFICA -->
-      <div class="section-head between">
+      <div class="section-head between" id="classifica">
         <div><span class="eyebrow">Girone</span><h2>Classifica</h2></div>
         {classifica?.aggiornataAl && <span class="tag">Aggiornata al {formatData(classifica.aggiornataAl)}</span>}
       </div>
@@ -145,7 +164,14 @@ const logoUrl = img(settings?.logo, 200);
               {righeOrdinate.map((r: any, i: number) => (
                 <tr class={/corigliano/i.test(r.squadra ?? '') ? 'ours' : ''}>
                   <td class="tabnums">{nonIniziato ? '—' : i + 1}</td>
-                  <td>{r.squadra}</td>
+                  <td>
+                    <span class="cl-squadra">
+                      {logoSquadra.get(norm(r.squadra))
+                        ? <img class="cl-stemma" src={logoSquadra.get(norm(r.squadra))} alt="" loading="lazy" />
+                        : <span class="cl-stemma" aria-hidden="true"></span>}
+                      {r.squadra}
+                    </span>
+                  </td>
                   <td class="tabnums"><strong>{r.punti ?? 0}</strong></td>
                   <td class="tabnums">{r.giocate ?? '—'}</td>
                   <td class="tabnums">{r.vinte ?? '—'}</td>
@@ -178,10 +204,38 @@ const logoUrl = img(settings?.logo, 200);
   .cl-img { margin: 0; border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; background: var(--surface); }
   .table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); }
   table { border-collapse: collapse; width: 100%; min-width: 480px; }
-  th, td { text-align: left; padding: 12px 16px; border-bottom: 1px solid var(--line-soft); }
-  thead th { font-size: .72rem; text-transform: uppercase; letter-spacing: .08em; color: var(--ink-faint); background: var(--surface-2); }
+  th, td { text-align: left; padding: 12px 16px; border-bottom: 1px solid var(--line-soft); vertical-align: middle; }
+  /* Intestazioni leggibili: a .72rem il condensato spariva. In maiuscolo
+     condensato un corpo appena sopra quello del testo delle righe regge
+     il confronto visivo con i nomi in Inter. */
+  thead th { font-size: 1.05rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--ink-soft); }
+  /* Stemma e nome sulla stessa riga; lo spazio dello stemma resta anche se
+     manca, così i nomi partono tutti allo stesso punto. */
+  .cl-squadra { display: inline-flex; align-items: center; gap: 12px; }
+  .cl-stemma { width: 32px; height: 32px; object-fit: contain; flex: none; display: block; }
   tbody tr:last-child td { border-bottom: none; }
   tr.ours { background: var(--accent-tint); }
+  /* Su schermi stretti la tabella scorre in orizzontale: posizione e squadra
+     restano ferme a sinistra, così si sa sempre di chi sono i numeri.
+     Le celle ferme hanno bisogno di un fondo pieno, altrimenti i numeri che
+     scorrono si vedrebbero sotto; lo prendono dalla riga. */
+  tbody tr { background: var(--surface); }
+  th:nth-child(1), td:nth-child(1) { position: sticky; left: 0; z-index: 1; width: 52px; min-width: 52px; background: inherit; }
+  th:nth-child(2), td:nth-child(2) { position: sticky; left: 52px; z-index: 1; background: inherit;
+    box-shadow: inset -1px 0 0 var(--line-soft); }
+  thead tr { background: var(--surface-2); }
+  @media (max-width: 639px) {
+    th, td { padding: 10px 12px; }
+    th:nth-child(1), td:nth-child(1) { width: 40px; min-width: 40px; }
+    th:nth-child(2), td:nth-child(2) { left: 40px; }
+    /* La tabella prende la larghezza del contenuto invece di allargare la
+       colonna squadra fino a riempire i 480px minimi: così la parte ferma
+       resta stretta e resta spazio per vedere punti e partite scorrendo.
+       I nomi lunghi vanno a capo. */
+    table { width: max-content; min-width: 100%; }
+    td:nth-child(2) .cl-squadra { width: 128px; line-height: 1.2; font-size: .92rem; gap: 8px; }
+    .cl-stemma { width: 26px; height: 26px; }
+  }
   tr.ours td { color: var(--accent-strong); font-weight: 650; }
 
   /* Diretta */

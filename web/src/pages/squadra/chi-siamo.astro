@@ -1,28 +1,17 @@
 ---
 import Layout from '../../layouts/Layout.astro';
 import PageHero from '../../components/PageHero.astro';
-import RosterGrid from '../../components/RosterGrid.astro';
-import StaffGrid from '../../components/StaffGrid.astro';
-import { sfetch, img, richText } from '../../lib/sanity';
-import { settingsQuery, rosterQuery, staffQuery } from '../../lib/queries';
+import { sfetch, richText } from '../../lib/sanity';
+import { settingsQuery } from '../../lib/queries';
 
-const [settings, roster, staff] = await Promise.all([
-  sfetch<any>(settingsQuery, {}, null),
-  sfetch<any[]>(rosterQuery, {}, []),
-  sfetch<any[]>(staffQuery, {}, []),
-]);
+// Pagina dedicata alla storia della società. Roster, staff, organigramma e
+// foto di squadra stanno nella pagina "La squadra" e non si ripetono qui.
+const settings = await sfetch<any>(settingsQuery, {}, null);
 const storiaHtml = richText(settings?.storia);
-const fotoSquadra = img(settings?.fotoSquadra, 1400);
 const nome = settings?.nomeSquadra ?? 'Corigliano Volley';
 ---
 <Layout title="Chi siamo" description={`La storia e i valori di ${nome}.`}>
-  <PageHero eyebrow="La società" title="Chi siamo" lead={`Storia, valori e persone di ${nome}.`} />
-
-  {fotoSquadra && (
-    <div class="container team-photo">
-      <img src={fotoSquadra} alt={`Foto di squadra ${nome}`} />
-    </div>
-  )}
+  <PageHero eyebrow="La società" title="Chi siamo" lead={`La storia e i valori di ${nome}.`} />
 
   <!-- LA NOSTRA STORIA -->
   <section class="section">
@@ -39,36 +28,14 @@ const nome = settings?.nomeSquadra ?? 'Corigliano Volley';
     </div>
   </section>
 
-  <!-- ROSTER -->
+  <!-- La squadra ha la sua pagina: qui solo un rimando, senza ripeterla -->
   <section class="section">
-    <div class="container">
-      <div class="section-head between">
-        <div><span class="eyebrow">In campo</span><h2>La squadra</h2></div>
-        <a class="btn" href="/squadra/">Vai alla sezione squadra</a>
-      </div>
-      <RosterGrid roster={roster} />
-    </div>
-  </section>
-
-  <!-- STAFF -->
-  <section class="section">
-    <div class="container">
-      <div class="section-head"><span class="eyebrow">Organigramma</span><h2>Staff tecnico e medico</h2></div>
-      <StaffGrid staff={staff} aree={['tecnico', 'medico']} vuoto="Staff non ancora inserito" />
-    </div>
-  </section>
-
-  <!-- PRESIDENZA E DIRIGENZA -->
-  <section class="section">
-    <div class="container">
-      <div class="section-head"><span class="eyebrow">La società</span><h2>Organigramma</h2></div>
-      <StaffGrid staff={staff} aree={['presidenza', 'dirigenza']} vuoto="Organigramma non ancora inserito" />
+    <div class="container narrow">
+      <a class="btn" href="/squadra/">Conosci la squadra →</a>
     </div>
   </section>
 </Layout>
 <style>
-  .team-photo { margin-top: clamp(24px, 4vw, 40px); }
-  .team-photo img { width: 100%; border-radius: var(--radius); border: 1px solid var(--line); }
   .prose { display: flex; flex-direction: column; gap: 1.05rem; font-size: 1.05rem; line-height: 1.75; }
   .prose :global(h2) { font-size: 1.5rem; margin-top: 1rem; }
   .prose :global(h3) { font-size: 1.2rem; margin-top: .6rem; }

@@ -1,0 +1,44 @@
+---
+import { img } from '../lib/sanity';
+
+/**
+ * Scheda di un membro dello staff: la stessa in home (carosello) e nella
+ * pagina squadra (griglia), per lo stesso motivo della scheda giocatore.
+ *
+ * In home il ruolo si accorcia alla prima voce e sta su una riga, così parte
+ * alla stessa altezza in tutte le schede del carosello. Nella pagina dedicata
+ * (`completo`) il ruolo si legge per intero e può andare a capo.
+ */
+interface Props { m: any; completo?: boolean }
+const { m, completo = false } = Astro.props;
+const foto = img(m.foto, 400, 400);
+const ruolo = completo ? (m.ruolo ?? '') : String(m.ruolo ?? '').split('·')[0].trim();
+---
+<div class:list={['scheda-s', { completo }]}>
+  <div class="ss-foto">{foto ? <img src={foto} alt={m.nome} loading="lazy" /> : <div class="ss-vuota" aria-hidden="true"></div>}</div>
+  <div class="ss-info">
+    <strong class="ss-nome">{m.nome}</strong>
+    <span class="tag" title={m.ruolo}>{ruolo}</span>
+  </div>
+</div>
+
+<style>
+  .scheda-s { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; overflow: hidden;
+    display: flex; flex-direction: column; height: 100%; }
+  /* Sfumatura dietro al membro dello staff, presa dal mockup */
+  .ss-foto { aspect-ratio: 1 / 1; overflow: hidden;
+    background: linear-gradient(180deg, #4A0505 0%, #F30404 100%), #F1EDED; }
+  .ss-foto img { width: 100%; height: 100%; object-fit: cover; }
+  .ss-vuota { width: 100%; height: 100%; background: linear-gradient(180deg, var(--surface-2), var(--surface)); }
+  .ss-info { padding: 10px 12px 12px; display: flex; flex-direction: column; gap: 1px; }
+  .ss-nome { font-weight: 750; letter-spacing: -.01em; }
+  /* In home il ruolo sta su una riga; il nome può andare su due, così i nomi
+     lunghi ("Natale Giuseppe Gallo") non finiscono troncati sul telefono. */
+  .scheda-s:not(.completo) .tag {
+    display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .scheda-s:not(.completo) .ss-nome {
+    display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; line-height: 1.25; }
+  /* Sul telefono lo spazio per due righe è riservato a tutti: il ruolo parte
+     alla stessa altezza in ogni scheda del carosello. */
+  @media (max-width: 639px) { .scheda-s:not(.completo) .ss-nome { min-height: 2.5em; } }
+</style>

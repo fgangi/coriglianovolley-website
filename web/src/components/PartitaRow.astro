@@ -51,8 +51,8 @@ const d = pezziData(m.data);
     {m.reportUrl && <a class="report" href={m.reportUrl} target="_blank" rel="noopener">Report ufficiale →</a>}
   </div>
 
-  {/* Fuori dal corpo: così si centra sulla scheda intera, non sulla parte
-      a destra della data. */}
+  {/* Seconda riga della griglia, nella colonna della partita: così si centra
+      sotto "squadra vs squadra" e resta in fondo anche se la data è più alta. */}
   {!giocata && m.luogo && (
     <div class="extra luogo">
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
@@ -76,12 +76,13 @@ const d = pezziData(m.data);
      grande. Senza la tessera resta più larghezza ai nomi delle squadre. */
   .data-tile { display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
     min-width: 58px; padding: 0; background: none; border: 0; }
-  .dt-giorno { font-size: 2.1rem; font-weight: 900; line-height: 1; letter-spacing: -.01em;
+  /* Misure standard indicate dalla designer: giorno 40px, mese 25px, ora 18px */
+  .dt-giorno { font-size: 2.5rem; font-weight: 900; line-height: 1; letter-spacing: -.01em;
     font-variant-numeric: tabular-nums; color: var(--accent-strong); }
   .match.played .dt-giorno { color: var(--ink); }
-  .dt-mese { font-size: 1rem; font-weight: 750; letter-spacing: .04em; color: var(--ink-faint);
-    margin-top: 1px; text-transform: uppercase; }
-  .dt-ora { font-size: .92rem; font-weight: 650; color: var(--ink-faint); margin-top: 6px;
+  .dt-mese { font-size: 1.5625rem; font-weight: 750; letter-spacing: .02em; color: var(--ink-faint);
+    line-height: 1; margin-top: 2px; text-transform: uppercase; }
+  .dt-ora { font-size: 1.125rem; font-weight: 650; color: var(--ink-faint); margin-top: 6px;
     font-variant-numeric: tabular-nums; }
 
   .corpo { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
@@ -109,9 +110,10 @@ const d = pezziData(m.data);
   .score.win { color: var(--accent); }
   .extra { font-size: .84rem; color: var(--ink-faint); }
   /* Riga del luogo: etichetta, quindi condensato maiuscolo con l'icona.
-     Nel mockup sta staccata in fondo alla scheda, non appiccicata ai nomi
-     delle squadre: quello stacco è ciò che la rende leggibile. */
-  .luogo { grid-column: 1 / -1; display: flex; align-items: center; justify-content: center; gap: 6px;
+     Sta staccata in fondo alla scheda, non appiccicata ai nomi delle squadre,
+     e centrata sulla colonna della partita (sotto "squadra vs squadra"), non
+     sull'intera scheda: la data a sinistra non conta per il centro. */
+  .luogo { grid-column: 2; display: flex; align-items: center; justify-content: center; gap: 6px;
     font-family: var(--font-display); text-transform: uppercase; letter-spacing: .05em;
     font-size: .88rem; font-weight: 700; text-align: center; margin-top: 18px; }
   .luogo svg { flex: none; }
@@ -120,7 +122,9 @@ const d = pezziData(m.data);
   @media (max-width: 420px) {
     .match { column-gap: 10px; row-gap: 2px; padding: 14px; }
     .data-tile { min-width: 54px; padding: 7px 8px; }
-    .dt-giorno { font-size: 1.35rem; }
+    .dt-giorno { font-size: 2rem; }
+    .dt-mese { font-size: 1.25rem; }
+    .dt-ora { font-size: 1rem; }
     .team { font-size: .92rem; }
   }
 </style>

@@ -1,0 +1,81 @@
+---
+import { img } from '../lib/sanity';
+
+/**
+ * Scheda di un giocatore: la stessa in home (carosello) e nella pagina squadra
+ * (griglia). Tenerla in un solo posto evita che le due versioni si scollino,
+ * com'era successo col numero rimasto nel riquadro bianco solo in pagina.
+ *
+ * Con `dettagli` sotto al nome compaiono anno, altezza e nazionalità: servono
+ * nella pagina dedicata, in home appesantirebbero il carosello.
+ */
+interface Props { p: any; href?: string; dettagli?: boolean }
+const { p, href, dettagli = false } = Astro.props;
+
+const RUOLI: Record<string, string> = {
+  palleggiatore: 'Palleggiatore', opposto: 'Opposto', schiacciatore: 'Schiacciatore',
+  centrale: 'Centrale', libero: 'Libero',
+};
+const foto = img(p.foto, 480, 600);
+const Tag = href ? 'a' : 'div';
+---
+<Tag class="scheda-g" href={href}>
+  <div class="sg-foto">
+    {foto ? <img src={foto} alt={`${p.nome ?? ''} ${p.cognome ?? ''}`.trim()} loading="lazy" /> : <div class="sg-vuota" aria-hidden="true"></div>}
+    {p.numero != null && <span class="sg-num">{p.numero}</span>}
+  </div>
+  <div class="sg-info">
+    <strong class="sg-nome">{dettagli && p.nome && <span class="sg-nome-proprio">{p.nome} </span>}{p.cognome}</strong>
+    <span class="tag">{RUOLI[p.ruolo] ?? ''}</span>
+    {dettagli && (p.annoNascita || p.altezza || p.nazionalita) && (
+      <dl class="sg-dati">
+        {p.annoNascita && <div><dt>Anno di nascita</dt><dd class="tabnums">{p.annoNascita}</dd></div>}
+        {p.altezza && <div><dt>Altezza</dt><dd class="tabnums">{p.altezza} cm</dd></div>}
+        {p.nazionalita && <div><dt>Nazionalità</dt><dd>{p.nazionalita}</dd></div>}
+      </dl>
+    )}
+  </div>
+</Tag>
+
+<style>
+  .scheda-g { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; overflow: hidden;
+    display: flex; flex-direction: column; color: inherit; height: 100%;
+    transition: transform .14s ease, border-color .14s ease; }
+  a.scheda-g:hover { transform: translateY(-3px); border-color: var(--ink-faint); }
+  /* Sfumatura dietro al giocatore, presa dal mockup. Il colore pieno resta
+     sotto come riserva. Si vede per intero solo con le foto scontornate:
+     con una foto su fondo bianco resta coperta, senza rompere nulla. */
+  .sg-foto { position: relative; aspect-ratio: 4 / 5; overflow: hidden;
+    background: linear-gradient(180deg, #000000 0%, #4A0505 100%), #F1EDED;
+    /* Riferimento per la misura del numero: così cresce con la scheda */
+    container-type: inline-size; }
+  .sg-foto img { width: 100%; height: 100%; object-fit: cover; }
+  /* Foto mancante: segnaposto neutro. Lasciando vedere la sfumatura rossa
+     della scheda, accanto alle foto ancora su fondo bianco sembrerebbe un
+     errore invece di un posto vuoto. */
+  .sg-vuota { width: 100%; height: 100%; background: linear-gradient(180deg, var(--surface-2), var(--surface)); }
+  /* Nel mockup il numero non è una targhetta ma una cifra grande e cava, in
+     alto a destra, col solo contorno chiaro sopra allo sfondo scuro. La misura
+     è in cqw: resta la stessa frazione della scheda a ogni larghezza.
+     Il valore in rem prima serve ai browser senza unità di contenitore. */
+  .sg-num { position: absolute; top: -3px; right: 5%; pointer-events: none;
+    font-family: var(--font-display); font-weight: 800; line-height: 1;
+    font-size: 3.3rem; font-size: 28cqw;
+    color: transparent; -webkit-text-stroke: 1.2px rgba(255, 255, 255, .5);
+    font-variant-numeric: tabular-nums; }
+  /* Senza il contorno del testo la cifra sparirebbe: lì torna piena, smorzata */
+  @supports not (-webkit-text-stroke: 1px #000) {
+    .sg-num { color: rgba(255, 255, 255, .3); }
+  }
+  .sg-info { padding: 10px 12px 12px; display: flex; flex-direction: column; gap: 1px; }
+  .sg-nome { font-weight: 750; letter-spacing: -.01em; }
+  .sg-nome-proprio { font-weight: 500; }
+  .sg-dati { margin: 10px 0 0; padding-top: 10px; border-top: 1px solid var(--line);
+    display: flex; flex-direction: column; gap: 4px; font-size: .82rem; }
+  .sg-dati > div { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; }
+  .sg-dati dt { color: var(--ink-faint); }
+  .sg-dati dd { margin: 0; color: var(--ink-soft); font-weight: 560; text-align: right; }
+  /* Sul telefono le schede sono a due colonne: anno, altezza e nazionalità
+     non ci stanno in modo leggibile e restano visibili da tablet in su. */
+  @media (max-width: 639px) { .sg-dati { display: none; } }
+</style>

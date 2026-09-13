@@ -1,5 +1,5 @@
 ---
-import { img } from '../lib/sanity';
+import SchedaStaff from './SchedaStaff.astro';
 interface Props {
   staff: any[];
   /** Aree da mostrare (in ordine). Se omesso, le mostra tutte. */
@@ -25,16 +25,8 @@ const gruppi = ordine
     <div class="area-group">
       {/* Con un solo gruppo il titolo ripeterebbe quello della sezione */}
       {gruppi.length > 1 && <h3 class="area-title">{g.label}</h3>}
-      <div class="grid cols-4">
-        {g.membri.map((m) => {
-          const foto = img(m.foto, 400, 400);
-          return (
-            <div class="card member">
-              <div class="ph">{foto ? <img src={foto} alt={m.nome} loading="lazy" /> : <div class="ph-empty" aria-hidden="true"></div>}</div>
-              <div class="minfo"><h4>{m.nome}</h4><span class="tag">{m.ruolo}</span></div>
-            </div>
-          );
-        })}
+      <div class="grid griglia-schede">
+        {g.membri.map((m) => <SchedaStaff m={m} completo />)}
       </div>
     </div>
   ))
@@ -43,17 +35,11 @@ const gruppi = ordine
   .area-group + .area-group { margin-top: clamp(30px, 5vw, 52px); }
   .area-title { font-size: .95rem; text-transform: uppercase; letter-spacing: .12em; color: var(--ink-faint); font-weight: 700;
     margin: 0 0 20px; padding-bottom: 10px; border-bottom: 1px solid var(--line); }
-  /* Sfumatura dietro al giocatore, presa dal mockup. Il colore pieno resta
-     sotto come riserva. Si vede per intero solo con le foto scontornate:
-     con una foto su fondo bianco resta coperta, senza rompere nulla. */
-  .ph { aspect-ratio: 1 / 1; background: linear-gradient(180deg, #4A0505 0%, #F30404 100%), #F1EDED; overflow: hidden; }
-  .ph img { width: 100%; height: 100%; object-fit: cover; }
-  /* Foto mancante: segnaposto neutro. Lasciando vedere la sfumatura rossa
-     della scheda, accanto alle foto ancora su fondo bianco sembrerebbe un
-     errore invece di un posto vuoto. Da rivedere quando arriveranno gli
-     scontorni e tutte le schede avranno lo stesso fondo. */
-  .ph-empty { width: 100%; height: 100%; background: linear-gradient(180deg, var(--surface-2), var(--surface)); }
-  .minfo { padding: 14px 16px 18px; }
-  .minfo h4 { margin: 0; font-size: 1.05rem; font-weight: 720; letter-spacing: -.01em; }
-  .minfo .tag { display: block; margin-top: 2px; }
+  /* La scheda è la stessa della home: stile e misure stanno in SchedaStaff */
+  /* Tre standard: PC 4 colonne, tablet (640–1023px) 3, telefono 2. A una
+     colonna sul telefono ogni scheda era alta ~650px e la pagina superava i
+     16.000px; a due colonne resta leggibile, come i caroselli della home. */
+  .griglia-schede { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  @media (max-width: 1023px) { .griglia-schede { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+  @media (max-width: 639px) { .griglia-schede { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; } }
 </style>

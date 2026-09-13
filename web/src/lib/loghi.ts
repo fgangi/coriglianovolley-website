@@ -107,11 +107,18 @@ export async function logoRifilato(source: any, pid: string, ds: string, larghez
  * Esce come variabili CSS e non come height/width diretti: uno stile in linea
  * batte qualunque foglio di stile, quindi scrivendo height qui le misure
  * ridotte per telefono non sarebbero mai entrate in vigore.
+ *
+ * Anche la misura da telefono (--lh-mob/--lw-mob) è esplicita, larghezza
+ * compresa. Con width:auto la larghezza dipendeva dal caricamento
+ * dell'immagine: all'avvio i loghi misuravano 0px, le righe che scorrono
+ * calcolavano un giro sbagliato e saltavano all'indietro ogni pochi secondi.
  */
+export const SCALA_TELEFONO = 0.76;
 export function misuraLogo(prop: number, altezza: number): string {
   let h = altezza;
   let w = prop * h;
   const wMax = altezza * 4.6;
   if (w > wMax) { w = wMax; h = w / prop; }
-  return `--lh:${Math.round(h)}px;--lw:${Math.round(w)}px`;
+  const k = SCALA_TELEFONO;
+  return `--lh:${Math.round(h)}px;--lw:${Math.round(w)}px;--lh-mob:${Math.round(h * k)}px;--lw-mob:${Math.round(w * k)}px`;
 }
