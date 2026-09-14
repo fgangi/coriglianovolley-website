@@ -339,6 +339,7 @@ main [id] { scroll-margin-top: calc(var(--altezza-intestazione) + 28px); }
 }
 /* Telefono: una colonna sola */
 @media (max-width: 639px) { .site-footer .foot-grid { grid-template-columns: minmax(0, 1fr); gap: 26px; } }
+
 /* Colonne laterali allineate a sinistra; solo quella centrale (senza testo) è centrata */
 .site-footer .foot-grid > div { display: flex; flex-direction: column; align-items: flex-start; text-align: left; }
 /* Nel mockup la colonna del marchio è allineata a sinistra come le altre.
@@ -422,6 +423,33 @@ main [id] { scroll-margin-top: calc(var(--altezza-intestazione) + 28px); }
   .site-footer .brand .mark-img { height: 64px; }
   .brand-partners { gap: 18px; }
   .brand-partners img { height: 56px; max-width: 150px; }
+}
+/* Versioni orizzontali di Lega e FIPAV: si vedono solo nel footer su tablet */
+.brand-partners .logo-oriz { display: none; }
+
+/* Footer su tablet (640–1023px): il blocco del marchio usa tutta la larghezza.
+   In alto il marchio a sinistra e i social a destra; sotto una linea e i tre
+   loghi istituzionali, con Lega e FIPAV nella versione orizzontale.
+   Prima il blocco era impilato e largo solo quanto la scritta (342px).
+   Sta dopo le regole generali del footer: prima le avrebbe sovrascritte. */
+@media (min-width: 640px) and (max-width: 1023px) {
+  .site-footer .foot-grid > .foot-brand { width: 100%; margin-inline: 0; display: grid; align-items: center;
+    grid-template-columns: max-content minmax(0, 1fr); column-gap: 32px; }
+  .site-footer .foot-brand > * { width: auto; }
+  .foot-brand .brand { grid-column: 1; grid-row: 1; }
+  .foot-brand .foot-social { grid-column: 2; grid-row: 1; margin: 0; padding: 0; border-top: 0; align-items: flex-end; }
+  /* Le quattro icone restano su una riga anche a 640px, dove la colonna è stretta */
+  .foot-social .social-icons { flex-wrap: nowrap; gap: 8px; }
+  /* Distanza fissa fra i loghi, quella che hanno a 640px: allargando la
+     finestra il gruppo resta compatto e centrato invece di sparpagliarsi. */
+  .foot-brand .brand-partners { grid-column: 1 / -1; grid-row: 2; margin-top: 28px; padding-top: 26px;
+    border-top: 1px solid rgba(255,255,255,.28);
+    display: flex; justify-content: center; align-items: center; gap: 108px; }
+  .brand-partners > * { width: auto; }
+  .brand-partners .logo-oriz { display: block; height: 58px; width: auto; max-width: none; }
+  .brand-partners img:not(.logo-oriz):has(+ .logo-oriz) { display: none; }
+  /* Credem non ha una versione orizzontale: più alto, per bilanciare gli altri due */
+  .brand-partners .logo-credem { height: 84px !important; width: auto !important; }
 }
 /* Riga con denominazione, sede e identificativi fiscali */
 .foot-legale { border-top: 1px solid rgba(255,255,255,.12); padding: 16px 0 4px;

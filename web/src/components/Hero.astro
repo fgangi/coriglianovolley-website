@@ -27,16 +27,7 @@ const voci = (slide ?? []).filter((s) => s?.immagine);
             <div class="container hero-testo">
               {s.titolo && <span class="hero-riga1">{s.titolo}</span>}
               {s.evidenza && <span class="hero-riga2">{s.evidenza}</span>}
-              {s.sottotitolo && (
-                <p class="hero-lead">
-                  {/* Una frase per span: sul telefono ognuna va su una riga sua
-                      ("Sport, territorio, persone." / "Insieme più lontano."),
-                      invece di andare a capo dove capita. */}
-                  {String(s.sottotitolo).split(/(?<=[.!?])\s+/).filter(Boolean).map((f: string, k: number) => (
-                    <>{k > 0 && ' '}<span class="hero-frase">{f}</span></>
-                  ))}
-                </p>
-              )}
+              {s.sottotitolo && <p class="hero-lead">{s.sottotitolo}</p>}
             </div>
           </>
         );
@@ -93,10 +84,13 @@ const voci = (slide ?? []).filter((s) => s?.immagine);
   /* Fino a 760px, cioè finché la hero è verticale (4:5): oltre torna orizzontale */
   @media (max-width: 760px) {
     .hero-riga1[data-adattata], .hero-riga2[data-adattata] { font-size: var(--adatta); }
-    .hero-frase { display: block; }
   }
   .hero-lead { color: #fff; margin: 14px 0 0; font-size: clamp(.98rem, 1.5vw, 1.32rem);
     font-weight: 500; text-shadow: 0 1px 12px rgba(0,0,0,.5); max-width: 40ch; }
+  /* Sugli schermi più stretti il sottotitolo si riduce appena, senza scendere
+     sotto i 14,5px, così resta su una riga fino a 360px. Più stretto ancora
+     va a capo da solo invece di diventare illeggibile. */
+  @media (max-width: 400px) { .hero-lead { font-size: max(14.5px, min(.98rem, 4.05vw)); } }
 
   .hero-punti { position: absolute; left: 0; right: 0; bottom: 18px;
     display: flex; justify-content: center; gap: 8px; }

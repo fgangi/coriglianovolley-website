@@ -84,18 +84,18 @@ const identificativi = [
           <div class="brand-partners">
             {legaLogo && (
               lega.legaUrl
-                ? <a href={lega.legaUrl} target="_blank" rel="noopener" aria-label="Lega Pallavolo Serie A"><img src={legaLogo} alt="Lega Pallavolo Serie A" style={misuraLogo(lega.legaLogo)} /></a>
-                : <img src={legaLogo} alt="Lega Pallavolo Serie A" style={misuraLogo(lega.legaLogo)} />
+                ? <a href={lega.legaUrl} target="_blank" rel="noopener" aria-label="Lega Pallavolo Serie A"><img src={legaLogo} alt="Lega Pallavolo Serie A" style={misuraLogo(lega.legaLogo)} /><img class="logo-oriz" src="/loghi/lega-orizzontale.png" alt="" width="480" height="209" /></a>
+                : <img src={legaLogo} alt="Lega Pallavolo Serie A" style={misuraLogo(lega.legaLogo)} /><img class="logo-oriz" src="/loghi/lega-orizzontale.png" alt="" width="480" height="209" />
             )}
             {legaCredemLogo && (
               lega.legaCredemUrl
-                ? <a href={lega.legaCredemUrl} target="_blank" rel="noopener" aria-label="Serie A Credem Banca"><img src={legaCredemLogo} alt="Serie A Credem Banca" style={misuraLogo(lega.legaCredemLogo)} /></a>
-                : <img src={legaCredemLogo} alt="Serie A Credem Banca" style={misuraLogo(lega.legaCredemLogo)} />
+                ? <a href={lega.legaCredemUrl} target="_blank" rel="noopener" aria-label="Serie A Credem Banca"><img src={legaCredemLogo} alt="Serie A Credem Banca" class="logo-credem" style={misuraLogo(lega.legaCredemLogo)} /></a>
+                : <img src={legaCredemLogo} alt="Serie A Credem Banca" class="logo-credem" style={misuraLogo(lega.legaCredemLogo)} />
             )}
             {fipavLogo && (
               lega.fipavUrl
-                ? <a href={lega.fipavUrl} target="_blank" rel="noopener" aria-label="FIPAV"><img src={fipavLogo} alt="FIPAV — Federazione Italiana Pallavolo" style={misuraLogo(lega.fipavLogo)} /></a>
-                : <img src={fipavLogo} alt="FIPAV — Federazione Italiana Pallavolo" style={misuraLogo(lega.fipavLogo)} />
+                ? <a href={lega.fipavUrl} target="_blank" rel="noopener" aria-label="FIPAV"><img src={fipavLogo} alt="FIPAV — Federazione Italiana Pallavolo" style={misuraLogo(lega.fipavLogo)} /><img class="logo-oriz" src="/loghi/fipav-orizzontale.png" alt="" width="480" height="193" /></a>
+                : <img src={fipavLogo} alt="FIPAV — Federazione Italiana Pallavolo" style={misuraLogo(lega.fipavLogo)} /><img class="logo-oriz" src="/loghi/fipav-orizzontale.png" alt="" width="480" height="193" />
             )}
           </div>
         )}

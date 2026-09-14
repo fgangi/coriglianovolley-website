@@ -28,9 +28,11 @@ export const siteSettings = defineType({
       fields: [
         { name: 'legaCredemLogo', title: 'Logo congiunto Lega / Credem Banca', type: 'image', options: { hotspot: true } },
         { name: 'legaCredemUrl', title: 'Link sito Main Sponsor (Credem Banca)', type: 'url' },
-        { name: 'legaLogo', title: 'Logo Lega Pallavolo Serie A (orizzontale)', type: 'image', options: { hotspot: true } },
+        { name: 'legaLogo', title: 'Logo Lega Pallavolo Serie A', type: 'image', options: { hotspot: true },
+          description: 'Se cambi questo logo, avvisa chi gestisce il sito: la versione orizzontale usata nel footer su tablet è nel codice (web/public/loghi) e va sostituita a parte.' },
         { name: 'legaUrl', title: 'Link sito Lega Pallavolo Serie A', type: 'url' },
-        { name: 'fipavLogo', title: 'Logo FIPAV', type: 'image', options: { hotspot: true } },
+        { name: 'fipavLogo', title: 'Logo FIPAV', type: 'image', options: { hotspot: true },
+          description: 'Se cambi questo logo, avvisa chi gestisce il sito: la versione orizzontale usata nel footer su tablet è nel codice (web/public/loghi) e va sostituita a parte.' },
         { name: 'fipavUrl', title: 'Link sito FIPAV', type: 'url' },
         { name: 'mikasaLogo', title: 'Logo Mikasa', type: 'image', options: { hotspot: true } },
         { name: 'mikasaUrl', title: 'Link sito Mikasa', type: 'url' },
