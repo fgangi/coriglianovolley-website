@@ -68,6 +68,10 @@ const voci = (slide ?? []).filter((s) => s?.immagine);
   /* Proporzioni del mockup: 1511 x 657. Su schermi stretti si alza un po'
      il rapporto, altrimenti resterebbe una striscia troppo bassa. */
   .hero-viewport { position: relative; aspect-ratio: 1511 / 657; min-height: 320px; overflow: hidden; }
+  /* width:100% ancora la larghezza: senza, quando scatta il limite di altezza
+     (74vh) aspect-ratio ricalcola la larghezza dall'altezza e la hero restava
+     larga 533px anche su schermi da 600-760px, con una fascia scura a destra. */
+  .hero-viewport { width: 100%; }
   @media (max-width: 760px) { .hero-viewport { aspect-ratio: 4 / 5; max-height: 74vh; } }
 
   .hero-slide { position: absolute; inset: 0; display: block; color: inherit; }
@@ -82,11 +86,12 @@ const voci = (slide ?? []).filter((s) => s?.immagine);
   .hero-riga2 { font-weight: 900; font-size: clamp(2.8rem, 11.65vw, 11rem);
     background: linear-gradient(90deg, #CB1B2B 0%, #981421 100%);
     -webkit-background-clip: text; background-clip: text; color: transparent; }
-  /* Telefono: le due righe del titolo occupano tutta la larghezza del testo,
+  /* Hero verticale: le due righe del titolo occupano tutta la larghezza del testo,
      tutte e due alla stessa misura. La dimensione la calcola lo script qui
      sotto sul testo reale (arriva dal pannello e può cambiare); senza script
      restano le misure in vw qui sopra. */
-  @media (max-width: 639px) {
+  /* Fino a 760px, cioè finché la hero è verticale (4:5): oltre torna orizzontale */
+  @media (max-width: 760px) {
     .hero-riga1[data-adattata], .hero-riga2[data-adattata] { font-size: var(--adatta); }
     .hero-frase { display: block; }
   }
@@ -111,14 +116,14 @@ const voci = (slide ?? []).filter((s) => s?.immagine);
 <script is:inline>
   (() => {
     /**
-     * Sul telefono ogni riga del titolo prende la dimensione che la fa arrivare
+     * Con la hero verticale ogni riga del titolo prende la dimensione che la fa arrivare
      * a tutta la larghezza del testo. Si misura la riga alla misura attuale e si
      * scala in proporzione: la larghezza di una riga è proporzionale al corpo.
      */
     const adattaTitolo = () => {
       const hero = document.querySelector('[data-hero]');
       if (!hero) return;
-      const telefono = window.matchMedia('(max-width: 639px)').matches;
+      const telefono = window.matchMedia('(max-width: 760px)').matches;
       hero.querySelectorAll('[data-slide]').forEach((slide) => {
         const righe = [...slide.querySelectorAll('.hero-riga1, .hero-riga2')];
         if (!telefono) { righe.forEach((r) => { r.removeAttribute('data-adattata'); r.style.removeProperty('--adatta'); }); return; }
