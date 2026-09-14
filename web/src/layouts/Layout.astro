@@ -17,8 +17,10 @@ interface Props {
   title?: string; description?: string;
   /** false sulle pagine che mostrano già la mappa (contatti): nel footer sarebbe doppia */
   mappaFooter?: boolean;
+  /** true sulle pagine da non indicizzare (404) */
+  noindex?: boolean;
 }
-const { title, description, mappaFooter = true } = Astro.props;
+const { title, description, mappaFooter = true, noindex = false } = Astro.props;
 
 // Stile della transizione fra pagine: 'zoom' | 'slide' | 'dissolvenza'
 const ANIMAZIONE = 'dissolvenza';
@@ -44,7 +46,30 @@ const campagna = settings?.campagnaAbbonamenti ?? {};
 const campagnaAttiva = campagna.attiva === true && !!campagna.url;
 const iscrizioniAperte = settings?.iscrizioni?.aperte !== false && !!settings?.iscrizioni?.moduloUrl;
 const pageTitle = title ? `${title} - ${nomeSquadra}` : `${nomeSquadra} - Serie A3`;
-const desc = description ?? `Sito ufficiale ${nomeSquadra}, Serie A3 maschile: news, calendario, risultati, roster e settore giovanile.`;
+// Descrizione mostrata sotto al titolo nei risultati di ricerca: sotto i 160
+// caratteri, altrimenti Google la taglia. Un estratto che è solo un link (capita
+// nelle news) non descrive nulla: in quel caso si usa quella generale.
+const DESCRIZIONE_SITO = `Sito ufficiale della ${nomeSquadra}, Serie A3 Credem Banca: calendario, risultati, classifica, roster, news e settore giovanile.`;
+const desc = description && !/^\s*https?:\/\//i.test(description) ? description : DESCRIZIONE_SITO;
+// Indirizzo canonico: sempre il dominio principale, senza www né parametri
+const canonico = new URL(Astro.url.pathname, Astro.site ?? 'https://coriglianovolley.it').href;
+const origine = new URL('/', Astro.site ?? 'https://coriglianovolley.it').href;
+// Immagine per le anteprime dei link condivisi (WhatsApp, Facebook…): la foto
+// della hero ritagliata al formato standard 1200x630, altrimenti lo stemma
+const ogImmagine = img(settings?.hero?.[0]?.immagine, 1200, 630) ?? img(settings?.logo, 600);
+const home = Astro.url.pathname === '/';
+// Dati strutturati: dicono a Google il nome del sito (la riga sopra al titolo
+// nei risultati) e che è la squadra, con logo e profili social.
+const social = Object.values(settings?.social ?? {}).filter((u) => typeof u === 'string' && u.startsWith('http'));
+const datiStrutturati = home ? JSON.stringify({
+  '@context': 'https://schema.org',
+  '@graph': [
+    { '@type': 'WebSite', '@id': `${origine}#sito`, name: nomeSquadra, url: origine, inLanguage: 'it-IT' },
+    { '@type': 'SportsTeam', '@id': `${origine}#squadra`, name: nomeSquadra, sport: 'Pallavolo', url: origine,
+      ...(img(settings?.logo, 512) ? { logo: img(settings?.logo, 512) } : {}),
+      ...(social.length ? { sameAs: social } : {}) },
+  ],
+}) : null;
 ---
 <!doctype html>
 <html lang="it" data-anim={ANIMAZIONE}>
@@ -54,15 +79,25 @@ const desc = description ?? `Sito ufficiale ${nomeSquadra}, Serie A3 maschile: n
     <meta name="generator" content={Astro.generator} />
     <title>{pageTitle}</title>
     <meta name="description" content={desc} />
+    {noindex ? <meta name="robots" content="noindex" /> : <link rel="canonical" href={canonico} />}
+    <meta property="og:site_name" content={nomeSquadra} />
+    <meta property="og:locale" content="it_IT" />
     <meta property="og:title" content={pageTitle} />
     <meta property="og:description" content={desc} />
     <meta property="og:type" content="website" />
+    <meta property="og:url" content={canonico} />
+    {ogImmagine && <meta property="og:image" content={ogImmagine} />}
+    <meta name="twitter:card" content="summary_large_image" />
+    {datiStrutturati && <script type="application/ld+json" set:html={datiStrutturati} />}
     {/* Stemma della società. Nell'.ico ci sono tre misure: a 16px lo
        stemma intero diventa una macchia, quindi quella misura contiene
-       solo il pallone centrale. */}
-    <link rel="icon" href="/favicon.ico" sizes="16x16 32x32 48x48" />
-    <link rel="icon" type="image/png" href="/favicon-96.png" sizes="96x96" />
-    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+       solo il pallone centrale.
+       Il ?v=2 cambia l'indirizzo delle icone: i browser (Safari soprattutto)
+       tengono in memoria a lungo la favicon di un sito e continuavano a
+       mostrare quella di Astro. Se si cambiano ancora le icone, va aumentato. */}
+    <link rel="icon" href="/favicon.ico?v=2" sizes="16x16 32x32 48x48" />
+    <link rel="icon" type="image/png" href="/favicon-96.png?v=2" sizes="96x96" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png?v=2" />
     {/* Transizioni fluide tra le pagine invece del ricaricamento secco */}
     <ClientRouter />
   </head>

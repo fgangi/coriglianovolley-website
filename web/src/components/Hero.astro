@@ -27,7 +27,16 @@ const voci = (slide ?? []).filter((s) => s?.immagine);
             <div class="container hero-testo">
               {s.titolo && <span class="hero-riga1">{s.titolo}</span>}
               {s.evidenza && <span class="hero-riga2">{s.evidenza}</span>}
-              {s.sottotitolo && <p class="hero-lead">{s.sottotitolo}</p>}
+              {s.sottotitolo && (
+                <p class="hero-lead">
+                  {/* Una frase per span: sul telefono ognuna va su una riga sua
+                      ("Sport, territorio, persone." / "Insieme più lontano."),
+                      invece di andare a capo dove capita. */}
+                  {String(s.sottotitolo).split(/(?<=[.!?])\s+/).filter(Boolean).map((f: string, k: number) => (
+                    <>{k > 0 && ' '}<span class="hero-frase">{f}</span></>
+                  ))}
+                </p>
+              )}
             </div>
           </>
         );
@@ -73,6 +82,14 @@ const voci = (slide ?? []).filter((s) => s?.immagine);
   .hero-riga2 { font-weight: 900; font-size: clamp(2.8rem, 11.65vw, 11rem);
     background: linear-gradient(90deg, #CB1B2B 0%, #981421 100%);
     -webkit-background-clip: text; background-clip: text; color: transparent; }
+  /* Telefono: le due righe del titolo occupano tutta la larghezza del testo,
+     tutte e due alla stessa misura. La dimensione la calcola lo script qui
+     sotto sul testo reale (arriva dal pannello e può cambiare); senza script
+     restano le misure in vw qui sopra. */
+  @media (max-width: 639px) {
+    .hero-riga1[data-adattata], .hero-riga2[data-adattata] { font-size: var(--adatta); }
+    .hero-frase { display: block; }
+  }
   .hero-lead { color: #fff; margin: 14px 0 0; font-size: clamp(.98rem, 1.5vw, 1.32rem);
     font-weight: 500; text-shadow: 0 1px 12px rgba(0,0,0,.5); max-width: 40ch; }
 
@@ -93,6 +110,45 @@ const voci = (slide ?? []).filter((s) => s?.immagine);
 
 <script is:inline>
   (() => {
+    /**
+     * Sul telefono ogni riga del titolo prende la dimensione che la fa arrivare
+     * a tutta la larghezza del testo. Si misura la riga alla misura attuale e si
+     * scala in proporzione: la larghezza di una riga è proporzionale al corpo.
+     */
+    const adattaTitolo = () => {
+      const hero = document.querySelector('[data-hero]');
+      if (!hero) return;
+      const telefono = window.matchMedia('(max-width: 639px)').matches;
+      hero.querySelectorAll('[data-slide]').forEach((slide) => {
+        const righe = [...slide.querySelectorAll('.hero-riga1, .hero-riga2')];
+        if (!telefono) { righe.forEach((r) => { r.removeAttribute('data-adattata'); r.style.removeProperty('--adatta'); }); return; }
+        // Le immagini nascoste non si possono misurare: si mostrano un istante
+        const nascosta = slide.hidden;
+        if (nascosta) { slide.style.visibility = 'hidden'; slide.hidden = false; }
+        const testo = slide.querySelector('.hero-testo');
+        const cs = getComputedStyle(testo);
+        const disponibile = testo.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+        righe.forEach((r) => {
+          r.removeAttribute('data-adattata');
+          const corpo = parseFloat(getComputedStyle(r).fontSize);
+          const range = document.createRange(); range.selectNodeContents(r);
+          const largo = range.getBoundingClientRect().width;
+          if (!largo) return;
+          // Un filo di margine: le lettere condensate hanno bordi netti
+          const nuovo = Math.min(corpo * (disponibile * 0.985) / largo, 140);
+          r.style.setProperty('--adatta', `${nuovo.toFixed(2)}px`);
+          r.setAttribute('data-adattata', '');
+        });
+        if (nascosta) { slide.hidden = true; slide.style.removeProperty('visibility'); }
+      });
+    };
+    let attesa = 0;
+    window.addEventListener('resize', () => { clearTimeout(attesa); attesa = setTimeout(adattaTitolo, 120); }, { passive: true });
+    // La misura dipende dal carattere: si rifà quando il font è caricato
+    if (document.fonts?.ready) document.fonts.ready.then(adattaTitolo);
+    adattaTitolo();
+    document.addEventListener('astro:page-load', adattaTitolo);
+
     const avvia = () => {
       const hero = document.querySelector('[data-hero]');
       if (!hero || hero.dataset.pronto) return;

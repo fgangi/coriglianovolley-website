@@ -1,6 +1,7 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import PageHero from '../components/PageHero.astro';
+import Indirizzo from '../components/Indirizzo.astro';
 import { sfetch, mapEmbedSrc } from '../lib/sanity';
 import { settingsQuery } from '../lib/queries';
 
@@ -21,11 +22,15 @@ const telHref = (n: string) => 'tel:' + n.replace(/[^\d+]/g, '');
 
 // Il nome del palazzetto non ha un campo nel pannello: se cambierà, va qui.
 const PALAZZETTO = 'Pala Brillia';
+// Indirizzo completo dal pannello: "Pala Brillia, Contrada Brillia, 87064 Corigliano-Rossano (CS)"
 const indirizzo = s?.indirizzo ? String(s.indirizzo).replace(/\s*\n\s*/g, ', ') : null;
+// Nel blocco "Dove giochiamo" il nome è già il titolo: sotto resta solo via e città
+const iniziaColNome = indirizzo?.toLowerCase().startsWith(PALAZZETTO.toLowerCase());
+const viaECitta = indirizzo && iniziaColNome ? indirizzo.slice(PALAZZETTO.length).replace(/^[\s,]+/, '') : indirizzo;
 const mapSrc = mapEmbedSrc(s?.mappaPosizione || s?.indirizzo);
 // Indicazioni stradali: apre il navigatore di Google Maps verso il palazzetto
 const indicazioni = indirizzo
-  ? `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(`${PALAZZETTO}, ${indirizzo}`)}`
+  ? `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(iniziaColNome ? indirizzo : `${PALAZZETTO}, ${indirizzo}`)}`
   : null;
 
 // "Per cosa ci cerchi": solo le voci che portano davvero da qualche parte
@@ -61,7 +66,7 @@ const identificativi = [
   s?.partitaIva ? { dt: 'Partita IVA', dd: s.partitaIva } : null,
 ].filter(Boolean) as { dt: string; dd: string }[];
 ---
-<Layout title="Contatti" description="Email, telefono, palazzetto e dati societari di Corigliano Volley." mappaFooter={false}>
+<Layout title="Contatti" description="Contatti della Corigliano Volley: email, telefono, indirizzo del Pala Brillia con indicazioni stradali e dati societari." mappaFooter={false}>
   <PageHero eyebrow="La società" title="Contatti" lead={`Scrivici, chiamaci o vieni a trovarci al ${PALAZZETTO}.`} />
 
   <section class="section">
@@ -117,7 +122,7 @@ const identificativi = [
             <h2 class="blocco-titolo">Dove giochiamo</h2>
             <p class="pal-nome">{PALAZZETTO}</p>
             <p class="pal-nota">Palazzetto delle partite in casa e sede operativa della società.</p>
-            {indirizzo && <p class="pal-indirizzo">{indirizzo}</p>}
+            {viaECitta && <p class="pal-indirizzo"><Indirizzo testo={viaECitta} /></p>}
             {indicazioni && (
               <a class="btn primary" href={indicazioni} target="_blank" rel="noopener">
                 Indicazioni stradali
@@ -139,7 +144,7 @@ const identificativi = [
           <h2 class="blocco-titolo piccolo">Dati societari</h2>
           <dl class="dati">
             {s?.denominazione && <div><dt>Denominazione</dt><dd>{s.denominazione}</dd></div>}
-            {indirizzo && <div><dt>Sede operativa</dt><dd>{indirizzo}</dd></div>}
+            {indirizzo && <div><dt>Sede operativa</dt><dd><Indirizzo testo={indirizzo} /></dd></div>}
             {s?.pec && (
               <div>
                 <dt>PEC</dt>

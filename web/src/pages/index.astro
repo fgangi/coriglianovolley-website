@@ -292,7 +292,9 @@ const logoUrl = img(settings?.logo, 200);
 
 <script is:inline>
   (() => {
-    const CHIAVE = 'cv-strisce-in-pausa';
+    // Lo scorrimento è il comportamento normale: a ogni apertura della pagina le
+    // righe ripartono. La pausa vale solo finché si resta sulla pagina (prima
+    // veniva ricordata e chi l'aveva premuta una volta trovava tutto fermo).
     const avvia = () => {
       const sezione = document.querySelector('[data-pausa-strisce]');
       const btn = sezione?.querySelector('[data-pausa-comando]');
@@ -301,11 +303,8 @@ const logoUrl = img(settings?.logo, 200);
       const imposta = (ferma) => {
         sezione.dataset.pausa = ferma ? 'si' : 'no';
         btn.setAttribute('aria-pressed', String(ferma));
-        try { localStorage.setItem(CHIAVE, ferma ? '1' : '0'); } catch {}
       };
-      let iniziale = false;
-      try { iniziale = localStorage.getItem(CHIAVE) === '1'; } catch {}
-      imposta(iniziale);
+      imposta(false);
       btn.addEventListener('click', () => imposta(sezione.dataset.pausa !== 'si'));
     };
     avvia();

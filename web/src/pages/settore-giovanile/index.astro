@@ -17,7 +17,7 @@ const isc = settings?.iscrizioni ?? {};
 const iscrizioniAttive = isc.aperte !== false && !!isc.moduloUrl;
 const categorie: string[] = isc.categorie ?? [];
 ---
-<Layout title="Settore giovanile">
+<Layout title="Settore giovanile" description="Il settore giovanile della Corigliano Volley: corsi di minivolley e pallavolo maschile e femminile, iscrizioni e notizie del vivaio.">
   <PageHero eyebrow="Il vivaio" title="Settore giovanile" lead="Le squadre del nostro vivaio, le iscrizioni ai corsi e le notizie che le riguardano." />
 
   {iscrizioniAttive && (

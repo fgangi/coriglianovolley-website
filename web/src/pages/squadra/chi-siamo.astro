@@ -10,7 +10,7 @@ const settings = await sfetch<any>(settingsQuery, {}, null);
 const storiaHtml = richText(settings?.storia);
 const nome = settings?.nomeSquadra ?? 'Corigliano Volley';
 ---
-<Layout title="Chi siamo" description={`La storia e i valori di ${nome}.`}>
+<Layout title="Chi siamo" description={`La storia della ${nome}: dalle origini alla Serie A2, fino al ritorno in Serie A3 Credem Banca.`}>
   <PageHero eyebrow="La società" title="Chi siamo" lead={`La storia e i valori di ${nome}.`} />
 
   <!-- LA NOSTRA STORIA -->

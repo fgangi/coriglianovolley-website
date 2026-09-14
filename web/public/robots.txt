@@ -1,0 +1,5 @@
+# Corigliano Volley: tutto il sito è indicizzabile, tranne il pannello redazione
+User-agent: *
+Disallow: /admin/
+
+Sitemap: https://coriglianovolley.it/sitemap.xml

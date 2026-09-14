@@ -1,0 +1,25 @@
+---
+import Layout from '../layouts/Layout.astro';
+import PageHero from '../components/PageHero.astro';
+
+/**
+ * Pagina per gli indirizzi che non esistono. Senza questo file Cloudflare Pages
+ * rispondeva a qualsiasi indirizzo sbagliato con la home e lo stato "200 OK":
+ * i motori di ricerca ricevevano la home anche al posto di robots.txt, della
+ * mappa del sito e della vecchia favicon di Astro. Con 404.html risponde
+ * "non trovato", come deve.
+ */
+---
+<Layout title="Pagina non trovata" noindex>
+  <PageHero eyebrow="Errore 404" title="Pagina non trovata" lead="L'indirizzo che hai aperto non esiste o è stato spostato." />
+  <section class="section">
+    <div class="container narrow azioni-404">
+      <a class="btn primary" href="/">Torna alla home</a>
+      <a class="btn" href="/partite/">Calendario</a>
+      <a class="btn" href="/news/">News</a>
+    </div>
+  </section>
+</Layout>
+<style>
+  .azioni-404 { display: flex; flex-wrap: wrap; gap: 10px; }
+</style>

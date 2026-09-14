@@ -6,7 +6,7 @@ import { albumListQuery } from '../../lib/queries';
 
 const album = await sfetch<any[]>(albumListQuery, {}, []);
 ---
-<Layout title="Gallery">
+<Layout title="Gallery" description="Le foto delle partite e degli eventi della Corigliano Volley.">
   <PageHero eyebrow="Immagini" title="Gallery" lead="Le foto delle partite e degli eventi della stagione." />
   <section class="section">
     <div class="container">

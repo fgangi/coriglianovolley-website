@@ -1,6 +1,7 @@
 ---
 import { img, mapEmbedSrc } from '../lib/sanity';
 import SocialIcons from './SocialIcons.astro';
+import Indirizzo from './Indirizzo.astro';
 // Marchio "Corigliano Volley" vettoriale, in linea per poterlo ricolorare
 import marchio from './marchio.svg?raw';
 interface Props { settings: any; gallery?: boolean; mappa?: boolean }
@@ -147,7 +148,7 @@ const identificativi = [
         {/* L'indirizzo sta accanto alla mappa, che illustra */}
         {(s.indirizzo || mapSrc) && (
           <div class="foot-sede">
-            {s.indirizzo && <span class="cvalue" style="white-space:pre-line;">{s.indirizzo}</span>}
+            {s.indirizzo && <span class="cvalue"><Indirizzo testo={s.indirizzo} nomeSuRiga /></span>}
             {mappa && mapSrc && (
               <div class="foot-map">
                 <iframe src={mapSrc} loading="lazy" title={`Mappa ${s.indirizzo ?? 'sede'}`} allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>
@@ -163,7 +164,7 @@ const identificativi = [
         <span>
           {s.denominazione && <strong>{s.denominazione}</strong>}
           {s.denominazione && sede && <span class="sep"> – </span>}
-          {sede && <><span class="etichetta">Sede operativa:</span> {sede}</>}
+          {sede && <><span class="etichetta">Sede operativa:</span> <Indirizzo testo={sede} /></>}
         </span>
       )}
       {identificativi && <span>{identificativi}</span>}

@@ -14,7 +14,7 @@ const [roster, staff, settings] = await Promise.all([
 const fotoSquadra = img(settings?.fotoSquadra, 1400);
 const stagione = settings?.stagione;
 ---
-<Layout title="La squadra" description="Il roster e lo staff della prima squadra.">
+<Layout title="La squadra" description={`Roster, staff tecnico e medico e organigramma della Corigliano Volley${stagione ? `, stagione ${stagione}` : ""} di Serie A3.`}>
   <PageHero
     eyebrow="Prima squadra"
     title="La squadra"
