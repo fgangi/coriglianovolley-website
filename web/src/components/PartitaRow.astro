@@ -17,6 +17,11 @@ const conLoghi = Boolean(logoSx || logoDx);
 const giocata = m.giocata && m.setCasa != null && m.setTrasferta != null;
 const win = giocata && ((casa && m.setCasa > m.setTrasferta) || (!casa && m.setTrasferta > m.setCasa));
 const d = pezziData(m.data);
+// Il luogo si divide all'ultima virgola: "Palasport di Galatone" e "Galatone (LE)".
+// Quando non sta su una riga va a capo solo lì, mai a metà del nome.
+const luogo = String(m.luogo ?? '').trim();
+const virgola = luogo.lastIndexOf(',');
+const luogoParti = virgola > 0 ? [luogo.slice(0, virgola + 1), luogo.slice(virgola + 1).trim()] : [luogo];
 ---
 <div class={`match ${giocata ? 'played' : 'upcoming'}`}>
   <!-- Tessera con la data, in evidenza a sinistra -->
@@ -55,8 +60,10 @@ const d = pezziData(m.data);
       sotto "squadra vs squadra" e resta in fondo anche se la data è più alta. */}
   {!giocata && m.luogo && (
     <div class="extra luogo">
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-      <span>{m.luogo}</span>
+      <span class="luogo-testo">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+        {luogoParti.map((parte, i) => <>{i > 0 && ' '}<span class={i > 0 ? 'luogo-citta' : 'luogo-nome'}>{parte}</span></>)}
+      </span>
     </div>
   )}
 </div>
@@ -113,10 +120,17 @@ const d = pezziData(m.data);
      Sta staccata in fondo alla scheda, non appiccicata ai nomi delle squadre,
      e centrata sulla colonna della partita (sotto "squadra vs squadra"), non
      sull'intera scheda: la data a sinistra non conta per il centro. */
-  .luogo { grid-column: 2; display: flex; align-items: center; justify-content: center; gap: 6px;
+  .luogo { grid-column: 2; display: block; text-align: center;
     font-family: var(--font-display); text-transform: uppercase; letter-spacing: .05em;
-    font-size: .88rem; font-weight: 700; text-align: center; margin-top: 18px; }
-  .luogo svg { flex: none; }
+    font-size: .88rem; font-weight: 700; line-height: 1.3; margin-top: 18px; }
+  /* Testo in linea con l'icona davanti: su due righe l'icona resta accanto
+     alla prima invece di galleggiare a metà fra le due. */
+  .luogo svg { display: inline-block; vertical-align: -2px; margin-right: 5px; }
+  /* La città ("Galatone (LE)") non si spezza mai: se non c'è posto passa
+     intera alla riga sotto, quindi la riga va a capo dopo la virgola. Il nome
+     del palazzetto va a capo al suo interno solo se da solo è più largo della
+     scheda, invece di uscirne. */
+  .luogo-citta { white-space: nowrap; }
   .report { font-size: .82rem; font-weight: 650; color: var(--accent); }
 
   @media (max-width: 420px) {

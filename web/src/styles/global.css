@@ -64,27 +64,32 @@ h2 { font-size: clamp(1.7rem, 3.8vw, 2.5rem); font-weight: 800; }
 h3 { font-family: var(--font-body); font-size: 1.16rem; font-weight: 750; letter-spacing: -.01em; line-height: 1.28; }
 p { margin: 0; color: var(--ink-soft); }
 .lead { font-size: clamp(1.05rem, 2.2vw, 1.25rem); color: var(--ink-soft); }
-/* Misura standard indicata dalla designer: 18px su desktop, 16px su telefono.
-   A .74rem con .15em di spaziatura il condensato diventava illeggibile. */
+/* Misure dal mockup: Sofia Sans Extra Condensed 700, 18px (16px su telefono),
+   spaziatura fra lettere 0. Interlinea 1: il riquadro segue la riga di testo
+   e la distanza dal titolo la decide solo --stacco-occhiello. */
 .eyebrow {
-  font-size: 1.125rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
+  font-size: 1.125rem; font-weight: 700; letter-spacing: 0; line-height: 1; text-transform: uppercase;
   color: var(--accent); margin: 0 0 .6rem;
 }
 @media (max-width: 640px) { .eyebrow { font-size: 1rem; } }
-/* Occhiello e titolo distanziati sempre di 10px, come nelle intestazioni di pagina:
-   l'occhiello azzera il proprio margine e la spaziatura la dà solo il contenitore. */
-.section-head { display: flex; flex-direction: column; gap: 10px; margin-bottom: clamp(24px, 4vw, 40px); }
+/* Occhiello e titolo: stessa distanza in tutto il sito (sezioni e intestazioni di
+   pagina). Nel mockup il gap è 5px fra i riquadri di Figma, che a schermo diventa
+   uno stacco visibile di 13px fra il fondo delle lettere dell'occhiello e la
+   cima di quelle del titolo. Nel browser i riquadri del testo hanno margini
+   interni diversi: per avere gli stessi 13px visibili il gap va a 3px.
+   L'occhiello azzera il proprio margine e la spaziatura la dà solo il contenitore. */
+.section-head { display: flex; flex-direction: column; gap: var(--stacco-occhiello); margin-bottom: clamp(24px, 4vw, 40px); }
 .section-head .eyebrow { margin: 0; }
 /* Link del menu alle sezioni (#roster, #classifica…): l'id sta sull'intestazione
    della sezione, e il titolo atterra sempre 28px sotto l'intestazione fissa del
    sito. Prima l'id era sulla sezione intera: dove la sezione aveva spazio sopra
    il titolo arrivava 100px più in basso, dove non l'aveva finiva incollato. */
-:root { --altezza-intestazione: 128px; }
+:root { --altezza-intestazione: 128px; --stacco-occhiello: 3px; }
 @media (max-width: 640px) { :root { --altezza-intestazione: 84px; } }
 @media (max-width: 420px) { :root { --altezza-intestazione: 76px; } }
 main [id] { scroll-margin-top: calc(var(--altezza-intestazione) + 28px); }
 .section-head.between { flex-direction: row; align-items: flex-end; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
-.section-head.between > div { display: flex; flex-direction: column; gap: 10px; }
+.section-head.between > div { display: flex; flex-direction: column; gap: var(--stacco-occhiello); }
 
 /* --- buttons --- */
 /* Nel mockup i pulsanti sono maiuscoli condensati, come le voci di menu */

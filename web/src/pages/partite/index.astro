@@ -79,7 +79,7 @@ const logoUrl = img(settings?.logo, 200);
         prossimePerMese.map((g) => (
           <div class="mese-gruppo">
             <h3 class="mese-titolo">{g.titolo}</h3>
-            <div class="grid cols-2">{g.partite.map((m) => <PartitaRow m={m} logoNostro={logoUrl} />)}</div>
+            <div class="grid cols-2 griglia-partite">{g.partite.map((m) => <PartitaRow m={m} logoNostro={logoUrl} />)}</div>
           </div>
         ))
       ) : (
@@ -133,7 +133,7 @@ const logoUrl = img(settings?.logo, 200);
       {giocatePerMese.map((g) => (
         <div class="mese-gruppo">
           <h3 class="mese-titolo">{g.titolo}</h3>
-          <div class="grid cols-2">{g.partite.map((m) => <PartitaRow m={m} logoNostro={logoUrl} />)}</div>
+          <div class="grid cols-2 griglia-partite">{g.partite.map((m) => <PartitaRow m={m} logoNostro={logoUrl} />)}</div>
         </div>
       ))}
     </div>
@@ -195,6 +195,10 @@ const logoUrl = img(settings?.logo, 200);
   </section>
 </Layout>
 <style>
+  /* Sotto i 900px le schede su due colonne erano larghe 290-370px: i nomi
+     lunghi ("BCC Tecbus Castellana Grotte") finivano su 3-4 righe e l'etichetta
+     Casa/Trasferta scendeva sotto la giornata. Una scheda per riga. */
+  @media (max-width: 899px) { .griglia-partite { grid-template-columns: minmax(0, 1fr); } }
   .mese-gruppo + .mese-gruppo { margin-top: clamp(24px, 3.5vw, 38px); }
   /* Etichetta minuscola tutta maiuscola e spaziata: resta nel carattere
      del testo, il condensato dei titoli qui diventa illeggibile. */

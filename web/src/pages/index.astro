@@ -242,7 +242,7 @@ const logoUrl = img(settings?.logo, 200);
           <button type="button" class="btn pausa-strisce" data-pausa-comando aria-pressed="false">
             <svg class="ico-pausa" width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>
             <svg class="ico-play" width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 4.5v15a1 1 0 0 0 1.5.86l12.5-7.5a1 1 0 0 0 0-1.72L8.5 3.64A1 1 0 0 0 7 4.5z"/></svg>
-            <span class="testo-pausa">Ferma lo scorrimento</span><span class="testo-play">Riprendi lo scorrimento</span>
+            <span class="etichette-pausa"><span class="testo-pausa">Pausa</span><span class="testo-play">Riprendi</span></span>
           </button>
         </div>
         {/* Ogni riga scorre nel verso opposto alla precedente */}
@@ -381,11 +381,20 @@ const logoUrl = img(settings?.logo, 200);
 
   /* Pallone ufficiale (Mikasa) */
   /* Gruppi di sponsor per categoria */
-  /* Pulsante pausa: mostra l'azione che farà, non lo stato attuale */
-  .pausa-strisce { gap: 8px; min-height: 44px; }
-  .pausa-strisce .ico-play, .pausa-strisce .testo-play { display: none; }
-  .pausa-strisce[aria-pressed='true'] .ico-pausa, .pausa-strisce[aria-pressed='true'] .testo-pausa { display: none; }
-  .pausa-strisce[aria-pressed='true'] .ico-play, .pausa-strisce[aria-pressed='true'] .testo-play { display: inline; }
+  /* Pulsante pausa: mostra l'azione che farà, non lo stato attuale.
+     Le due etichette stanno sovrapposte nella stessa cella e quella non in uso
+     è solo invisibile: il pulsante è sempre largo quanto "Riprendi" e premendolo
+     non cambia misura. Prima "Riprendi lo scorrimento", più lungo, lo mandava
+     a capo sotto al titolo sugli schermi stretti. */
+  .pausa-strisce { gap: 8px; min-height: 44px; flex: none; }
+  .etichette-pausa { display: inline-grid; }
+  .etichette-pausa > span { grid-area: 1 / 1; text-align: left; }
+  .pausa-strisce .ico-play, .pausa-strisce .testo-play { visibility: hidden; }
+  .pausa-strisce .ico-play { display: none; }
+  .pausa-strisce[aria-pressed='true'] .testo-pausa { visibility: hidden; }
+  .pausa-strisce[aria-pressed='true'] .testo-play { visibility: visible; }
+  .pausa-strisce[aria-pressed='true'] .ico-pausa { display: none; }
+  .pausa-strisce[aria-pressed='true'] .ico-play { display: inline; visibility: visible; }
 
   /* Righe che scorrono: serve aria fra una e l'altra, altrimenti i loghi di
      livelli diversi si leggono come un unico blocco in movimento. */
