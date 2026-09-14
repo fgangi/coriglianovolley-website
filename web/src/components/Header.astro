@@ -173,51 +173,6 @@ const iniziali = nomeSquadra.split(' ').map((w) => w[0]).join('').slice(0, 2).to
   </div>
 </header>
 <script>
-/* Allo scorrimento sparisce la striscia dei social in alto (data-compatta).
- *
- * Attenzione a come si scelgono le soglie. L'intestazione è "sticky", quindi
- * occupa spazio nel flusso: togliendo la striscia la pagina si accorcia, e il
- * browser sposta lo scorrimento della stessa quantità per non far saltare il
- * contenuto sotto gli occhi (scroll anchoring).
- *
- * Con due soglie fisse quel salto poteva scavalcare la soglia di ritorno: lo
- * stato cambiava, l'ancoraggio spostava lo scorrimento oltre l'altra soglia,
- * lo stato tornava indietro, e via all'infinito. Era il "sali e scendi" che si
- * vedeva fermandosi proprio sul confine.
- *
- * La soglia qui è invece l'altezza attuale dell'intestazione, con un margine.
- * Così si sposta insieme al salto e non può essere scavalcata, qualunque sia
- * la differenza di altezza fra i due stati. */
-function initHeaderCompatto() {
-  const header = document.querySelector('.site-header') as HTMLElement | null;
-  if (!header || header.dataset.scrollBound === '1') return;
-  header.dataset.scrollBound = '1';
-
-  const MARGINE = 16;
-  let inCoda = false;
-
-  const valuta = () => {
-    inCoda = false;
-    const y = window.scrollY;
-    const h = header.offsetHeight; // altezza di adesso, non quella piena
-    const ora = header.dataset.compatta === 'si';
-    if (!ora && y > h + MARGINE) header.dataset.compatta = 'si';
-    else if (ora && y < h - MARGINE) header.removeAttribute('data-compatta');
-  };
-
-  // offsetHeight obbliga il browser a ricalcolare l'impaginazione: una volta
-  // per fotogramma basta, a ogni evento di scorrimento sarebbe uno spreco.
-  const programma = () => {
-    if (inCoda) return;
-    inCoda = true;
-    requestAnimationFrame(valuta);
-  };
-
-  window.addEventListener('scroll', programma, { passive: true });
-  window.addEventListener('resize', programma, { passive: true });
-  valuta();
-}
-
 // Con le transizioni tra pagine lo script può rieseguirsi: il flag "bound"
 // evita di agganciare due volte gli stessi eventi.
 function initHeader() {
@@ -288,9 +243,8 @@ function initHeader() {
 }
 
 initHeader();
-initHeaderCompatto();
 // Rieseguito dopo ogni transizione di pagina
-document.addEventListener('astro:page-load', () => { initHeader(); initHeaderCompatto(); });
+document.addEventListener('astro:page-load', initHeader);
 // Cambiando pagina il menu mobile va richiuso
 document.addEventListener('astro:before-swap', () => {
   document.querySelector('[data-nav]')?.setAttribute('data-open', 'false');
