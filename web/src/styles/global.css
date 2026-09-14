@@ -500,8 +500,11 @@ main [id] { scroll-margin-top: calc(var(--altezza-intestazione) + 28px); }
 :root[data-anim="zoom"]::view-transition-old(root) { animation: pagOut .12s ease both; }
 :root[data-anim="zoom"]::view-transition-new(root) { animation: zoomIn .26s cubic-bezier(.16,.9,.28,1) both; }
 
-/* Feedback alla pressione anche su schede e voci di menu */
-.mainnav-link:active, .submenu a:active, .card:active, .rp-card:active, .sp:active { transform: scale(.985); }
+/* Feedback alla pressione su voci di menu e sulle schede che sono link
+   (news, notizia in evidenza, giocatori). Solo sui link: prima valeva per
+   ogni .card, anche per i riquadri informativi come contatti e iscrizioni,
+   che si rimpicciolivano a ogni clic, per esempio trascinando la mappa. */
+.mainnav-link:active, .submenu a:active, a.card:active, a.scheda-g:active { transform: scale(.985); }
 .nav-toggle:active, .car-btn:active { transform: scale(.92); }
 .social-icons a { transition: transform .12s ease, background .12s ease, border-color .12s ease; }
 .social-icons a:hover { transform: translateY(-2px); }
