@@ -74,7 +74,7 @@ const logoUrl = img(settings?.logo, 200);
   {/* Diretta: striscia subito sotto il titolo, dove la trova chi arriva dal menu */}
   {direttaLink && (
     <div id="diretta">
-      <StrisciaDiretta url={direttaLink} partite={prossime} nomeSquadra={settings?.nomeSquadra ?? 'Corigliano Volley'} />
+      <StrisciaDiretta url={direttaLink} partite={prossime} torneo={torneo} nomeSquadra={settings?.nomeSquadra ?? 'Corigliano Volley'} />
     </div>
   )}
 

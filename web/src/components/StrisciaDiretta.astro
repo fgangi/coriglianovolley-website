@@ -2,14 +2,16 @@
 /**
  * Striscia della diretta YouTube.
  *
- * Vengono trasmesse solo le partite di campionato in casa: la striscia si
- * accende (rossa) solo per quelle. Il sito è statico, quindi il momento lo
+ * Vengono trasmesse le partite di campionato in casa e, se nel pannello è
+ * attivo "Partite trasmesse in diretta", quelle del torneo in corso: la
+ * striscia si accende (rossa) solo per queste. Il sito è statico, quindi il momento lo
  * calcola il browser di chi visita, dagli orari del calendario:
  *  - giorno di partita, prima dell'inizio: "Oggi alle 18:00 · Corigliano – X"
  *  - dall'inizio a 3 ore dopo: "In diretta ora"
  *  - altrimenti: versione discreta (sulla pagina Partite) o nascosta (in home).
- * Le partite del torneo sono in un elenco a parte e non la accendono.
  */
+import { partiteTorneo } from '../lib/torneo';
+
 interface Props {
   url: string;
   /** Partite in programma (prossime): si usano solo quelle in casa */
@@ -17,13 +19,24 @@ interface Props {
   /** 'sempre' = visibile anche nei giorni senza partita; 'giorno-partita' = solo quel giorno */
   modo?: 'sempre' | 'giorno-partita';
   nomeSquadra?: string;
+  /** Torneo in corso: le sue partite contano solo con la diretta attiva nel pannello */
+  torneo?: any;
 }
-const { url, partite = [], modo = 'sempre', nomeSquadra = 'Corigliano Volley' } = Astro.props;
+const { url, partite = [], modo = 'sempre', nomeSquadra = 'Corigliano Volley', torneo = null } = Astro.props;
+
+// Elenco unico, in ordine di orario: per ognuna la riga da mostrare sotto il titolo
 const inCasa = partite
   .filter((m) => m?.dove === 'casa' && m?.data && !m?.giocata)
-  .map((m) => ({ data: m.data, avversario: m.avversaria?.nome ?? m.avversario ?? '' }));
+  .map((m) => ({ data: m.data, sfida: `${nomeSquadra} – ${m.avversaria?.nome ?? m.avversario ?? ''}` }));
+const delTorneo = torneo?.diretta
+  ? partiteTorneo(torneo).filter((p) => p.data).map((p) => ({
+      data: p.data,
+      sfida: `${torneo.nome} · ${p.titolo}${p.casa && p.ospite ? `: ${p.casa} – ${p.ospite}` : ''}`,
+    }))
+  : [];
+const trasmesse = [...inCasa, ...delTorneo].sort((a, b) => Date.parse(a.data) - Date.parse(b.data));
 ---
-<div class:list={['diretta', `modo-${modo}`]} data-diretta data-modo={modo} data-partite={JSON.stringify(inCasa)}
+<div class:list={['diretta', `modo-${modo}`]} data-diretta data-modo={modo} data-partite={JSON.stringify(trasmesse)}
   data-casa={nomeSquadra} hidden={modo === 'giorno-partita'}>
   <div class="container dir-riga">
     <span class="dir-icona" aria-hidden="true">
@@ -87,16 +100,21 @@ const inCasa = partite
       let partite = [];
       try { partite = JSON.parse(box.dataset.partite || '[]'); } catch {}
       const adesso = oraAttuale();
+      // In diretta vince la partita iniziata più di recente (nei tornei due
+      // partite si seguono a due ore di distanza); altrimenti la prossima di oggi.
       let stato = 'normale', partita = null;
       for (const p of partite) {
         const inizio = new Date(p.data);
-        if (adesso >= inizio && adesso - inizio < DURATA) { stato = 'live'; partita = p; break; }
-        if (adesso < inizio && giorno(adesso) === giorno(inizio)) { stato = 'oggi'; partita = p; break; }
+        if (adesso >= inizio && adesso - inizio < DURATA) { stato = 'live'; partita = p; }
+      }
+      if (!partita) {
+        partita = partite.find((p) => { const inizio = new Date(p.data); return adesso < inizio && giorno(adesso) === giorno(inizio); }) ?? null;
+        if (partita) stato = 'oggi';
       }
       box.dataset.stato = stato;
       const titolo = box.querySelector('[data-dir-titolo]');
       const sotto = box.querySelector('[data-dir-sotto]');
-      const sfida = partita ? `${box.dataset.casa} – ${partita.avversario}` : '';
+      const sfida = partita ? partita.sfida : '';
       if (stato === 'live') { titolo.textContent = 'In diretta ora'; sotto.textContent = sfida; sotto.hidden = false; }
       else if (stato === 'oggi') { titolo.textContent = `Oggi alle ${ora(new Date(partita.data))}`; sotto.textContent = `${sfida} · in diretta su YouTube`; sotto.hidden = false; }
       else { titolo.textContent = 'Le partite casalinghe del Corigliano in diretta su YouTube'; sotto.hidden = true; }

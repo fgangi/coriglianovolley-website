@@ -46,6 +46,13 @@ export const torneo = defineType({
       initialValue: true,
       description: 'Spegnilo a torneo concluso: la sezione sparisce dal sito ma resta qui.',
     }),
+    defineField({
+      name: 'diretta',
+      title: 'Partite trasmesse in diretta',
+      type: 'boolean',
+      initialValue: false,
+      description: 'Se attivo, nei giorni del torneo la striscia della diretta (home e pagina Partite) si accende anche per queste partite.',
+    }),
     defineField({ name: 'luogo', title: 'Palazzetto', type: 'string' }),
     defineField({ name: 'nota', title: 'Nota', type: 'string', description: 'Es. "Ingresso libero".' }),
     defineField({ name: 'articolo', title: 'Link all\'articolo o al volantino', type: 'url' }),

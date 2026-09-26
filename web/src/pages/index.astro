@@ -10,15 +10,16 @@ import { logoRifilato, misuraLogo } from '../lib/loghi';
 import NewsInEvidenza from '../components/NewsInEvidenza.astro';
 import HeroVideo from '../components/HeroVideo.astro';
 import StrisciaDiretta from '../components/StrisciaDiretta.astro';
+import TabelloneTorneo from '../components/TabelloneTorneo.astro';
 import CampagnaAbbonamenti from '../components/CampagnaAbbonamenti.astro';
 import { sfetch, img, formatData } from '../lib/sanity';
 import {
   settingsQuery, risultatiQuery, prossimePartiteQuery,
-  newsInEvidenzaQuery, newsUltimeQuery, sponsorQuery, rosterQuery, staffQuery,
+  newsInEvidenzaQuery, newsUltimeQuery, sponsorQuery, rosterQuery, staffQuery, torneoQuery,
 } from '../lib/queries';
 
 const settings = await sfetch<any>(settingsQuery, {}, null);
-const [risultati, prossime, evidenza, ultime, sponsor, roster, staff] = await Promise.all([
+const [risultati, prossime, evidenza, ultime, sponsor, roster, staff, torneo] = await Promise.all([
   sfetch<any[]>(risultatiQuery, { limit: 3 }, []),
   sfetch<any[]>(prossimePartiteQuery, { limit: 3 }, []),
   sfetch<any[]>(newsInEvidenzaQuery, {}, []),
@@ -28,6 +29,7 @@ const [risultati, prossime, evidenza, ultime, sponsor, roster, staff] = await Pr
   sfetch<any[]>(sponsorQuery, {}, []),
   sfetch<any[]>(rosterQuery, {}, []),
   sfetch<any[]>(staffQuery, {}, []),
+  sfetch<any>(torneoQuery, {}, null),
 ]);
 const featured = evidenza[0] ?? null;
 // L'elenco "Ultime news" esclude la notizia già mostrata in evidenza.
@@ -120,7 +122,23 @@ const logoUrl = img(settings?.logo, 200);
   <HeroVideo />
   {/* Solo nei giorni delle partite in casa: sul telefono il pulsante della
       diretta nel riquadro "Prossima partita" non si vede */}
-  {direttaLink && <StrisciaDiretta url={direttaLink} partite={prossime} modo="giorno-partita" nomeSquadra={nome} />}
+  {direttaLink && <StrisciaDiretta url={direttaLink} partite={prossime} torneo={torneo} modo="giorno-partita" nomeSquadra={nome} />}
+
+  <!-- TORNEO: in evidenza in home finché è attivo nel pannello (sezione temporanea) -->
+  {torneo && (
+    <section class="section torneo-home">
+      <div class="container">
+        <div class="section-head between">
+          <div>
+            <span class="eyebrow">{torneo.edizione ? `Precampionato · ${torneo.edizione}` : 'Precampionato'}</span>
+            <h2>{torneo.nome}</h2>
+          </div>
+          <a class="btn" href="/partite/#torneo">Vai al torneo</a>
+        </div>
+        <TabelloneTorneo torneo={torneo} logoNostro={logoUrl} />
+      </div>
+    </section>
+  )}
 
   <!-- APERTURA: la notizia in evidenza, con la prossima partita di fianco -->
   <section class="section apertura-sezione">
@@ -352,6 +370,9 @@ const logoUrl = img(settings?.logo, 200);
   /* Apertura: notizia in evidenza a sinistra, prossima partita a destra */
   /* Stesso respiro di tutte le altre sezioni: il ritmo verticale è unico */
   .apertura-sezione { padding-top: clamp(40px, 7vw, 84px); }
+  /* Il torneo apre la home subito sotto il video: la sezione dopo non azzera
+     lo spazio sopra, altrimenti "Da non perdere" resterebbe attaccato. */
+  .torneo-home { padding-top: clamp(40px, 7vw, 84px); }
   /* Due colonne solo se c'è la prossima partita: altrimenti la notizia
      occuperebbe 2/3 lasciando un vuoto a destra. */
   .apertura { display: grid; grid-template-columns: minmax(0, 1fr); gap: 20px; align-items: start; }

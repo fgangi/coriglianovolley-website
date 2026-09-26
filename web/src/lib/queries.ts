@@ -65,7 +65,7 @@ export const giovaniliQuery = groq`*[_type == "squadraGiovanile"] | order(ordine
 
 // Torneo breve in corso (precampionato): uno solo, quello attivo più recente
 export const torneoQuery = groq`*[_type == "torneo" && attivo == true] | order(_updatedAt desc)[0]{
-  nome, edizione, luogo, nota, articolo,
+  nome, edizione, diretta, luogo, nota, articolo,
   partite[]{ _key, fase, data, casaNome, ospiteNome, setCasa, setOspite, parziali,
     casa->{nome, logo}, ospite->{nome, logo} }
 }`;
