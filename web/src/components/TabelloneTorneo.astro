@@ -1,0 +1,135 @@
+---
+import { img, pezziData } from '../lib/sanity';
+
+/**
+ * Tabellone di un torneo a 4 squadre: due semifinali, poi finale 3°/4° e
+ * finale 1°/2°. Le squadre delle finali si ricavano dai risultati delle
+ * semifinali: in redazione basta inserire i set.
+ */
+interface Props { torneo: any; logoNostro?: string | null }
+const { torneo, logoNostro = null } = Astro.props;
+
+type Squadra = { nome: string; logo: string | null; nostra: boolean } | null;
+const squadra = (ref: any, nome?: string): Squadra => {
+  const n = (nome || ref?.nome || '').trim();
+  if (!n) return null;
+  const nostra = /corigliano/i.test(n);
+  return { nome: n, logo: nostra ? logoNostro : (ref?.logo ? img(ref.logo, 160) : null), nostra };
+};
+
+const perFase = new Map<string, any>((torneo?.partite ?? []).map((p: any) => [p.fase, p]));
+const giocata = (p: any) => p && p.setCasa != null && p.setOspite != null && p.setCasa !== p.setOspite;
+
+const semi = ['sf1', 'sf2'].map((f) => {
+  const p = perFase.get(f) ?? {};
+  const a = squadra(p.casa, p.casaNome), b = squadra(p.ospite, p.ospiteNome);
+  const g = giocata(p);
+  const vince = g ? (p.setCasa > p.setOspite ? 'a' : 'b') : null;
+  return { p, a, b, vince, vincente: vince === 'a' ? a : vince === 'b' ? b : null, perdente: vince === 'a' ? b : vince === 'b' ? a : null };
+});
+
+const finale = (fase: string, chi: 'vincente' | 'perdente') => {
+  const p = perFase.get(fase) ?? {};
+  // Squadre inserite a mano hanno la precedenza, altrimenti dalle semifinali
+  const a = squadra(p.casa, p.casaNome) ?? semi[0][chi];
+  const b = squadra(p.ospite, p.ospiteNome) ?? semi[1][chi];
+  const vince = giocata(p) ? (p.setCasa > p.setOspite ? 'a' : 'b') : null;
+  const segnaposto = chi === 'vincente' ? 'Vincente semifinale' : 'Perdente semifinale';
+  return { p, a, b, vince, segnaposto };
+};
+
+const partite = [
+  { titolo: 'Semifinale 1', ...semi[0], segnaposto: 'Da definire' },
+  { titolo: 'Semifinale 2', ...semi[1], segnaposto: 'Da definire' },
+  { titolo: 'Finale 3°/4° posto', ...finale('f34', 'perdente') },
+  { titolo: 'Finale', ...finale('f12', 'vincente') },
+];
+const giornate = [
+  { etichetta: 'Semifinali', partite: partite.slice(0, 2) },
+  { etichetta: 'Finali', partite: partite.slice(2) },
+];
+const f12 = partite[3];
+const vincitore = f12.vince === 'a' ? f12.a : f12.vince === 'b' ? f12.b : null;
+
+// L'articolo si apre in una scheda nuova, così il tabellone resta aperto.
+// Se è del nostro sito si usa l'indirizzo interno (funziona anche in sviluppo).
+const articolo = (() => {
+  try {
+    const u = new URL(torneo?.articolo ?? '');
+    const nostro = u.hostname.replace(/^www\./, '') === 'coriglianovolley.it';
+    return { href: nostro ? u.pathname + u.search + u.hash : u.href };
+  } catch { return { href: torneo?.articolo ?? '' }; }
+})();
+
+const quando = (iso?: string) => {
+  const d = pezziData(iso);
+  return d ? `${iso ? new Date(iso).toLocaleDateString('it-IT', { weekday: 'long', timeZone: 'Europe/Rome' }) : ''} ${Number(d.giorno)} ${d.mese.toLowerCase()} · ore ${d.ora}` : '';
+};
+---
+<div class="torneo">
+  {vincitore && (
+    <div class="vincitore">
+      <span class="v-etichetta">Vincitore del torneo</span>
+      <span class="v-nome">{vincitore.logo && <img src={vincitore.logo} alt="" />}{vincitore.nome}</span>
+    </div>
+  )}
+  <div class="giornate">
+    {giornate.map((g) => (
+      <div class="giornata-t">
+        <h3 class="g-titolo">{g.etichetta}</h3>
+        {g.partite.map((m, k) => (
+          <div class:list={['incontro', { finale: m.titolo === 'Finale' }]}>
+            <div class="i-testa">
+              <span class="i-fase">{m.titolo}</span>
+              <span class="i-quando">{quando(m.p?.data)}</span>
+            </div>
+            {[['a', m.a, m.p?.setCasa], ['b', m.b, m.p?.setOspite]].map(([lato, sq, set]: any) => (
+              <div class:list={['riga', { vince: m.vince === lato, perde: m.vince && m.vince !== lato, nostra: sq?.nostra }]}>
+                <span class="stemma">{sq?.logo ? <img src={sq.logo} alt="" loading="lazy" /> : <span class="vuoto" aria-hidden="true"></span>}</span>
+                <span class="nome">{sq?.nome ?? m.segnaposto}</span>
+                <span class="set tabnums">{m.vince ? set : ''}</span>
+              </div>
+            ))}
+            {m.p?.parziali && <div class="parziali tabnums">{m.p.parziali}</div>}
+          </div>
+        ))}
+      </div>
+    ))}
+  </div>
+  {(torneo.luogo || torneo.nota || torneo.articolo) && (
+    <p class="t-info">
+      {[torneo.luogo, torneo.nota].filter(Boolean).join(' · ')}
+      {torneo.articolo && <> · <a href={articolo.href} target="_blank" rel="noopener">Leggi l'articolo</a></>}
+    </p>
+  )}
+</div>
+
+<style>
+  .giornate { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: clamp(16px, 3vw, 32px); }
+  @media (max-width: 767px) { .giornate { grid-template-columns: minmax(0, 1fr); } }
+  .giornata-t { display: flex; flex-direction: column; gap: 14px; }
+  .g-titolo { font-family: var(--font-display); text-transform: uppercase; font-size: .95rem; letter-spacing: .12em;
+    color: var(--ink-faint); font-weight: 700; margin: 0; padding-bottom: 10px; border-bottom: 1px solid var(--line); }
+  .incontro { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px 16px; }
+  .incontro.finale { border: 1px solid var(--black); border-left-width: 4px; }
+  .i-testa { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
+  .i-fase { font-family: var(--font-display); text-transform: uppercase; font-weight: 800; font-size: 1rem; color: var(--accent-strong); }
+  .i-quando { font-family: var(--font-display); text-transform: uppercase; font-weight: 700; font-size: .88rem; color: var(--ink-faint); letter-spacing: .03em; }
+  .riga { display: grid; grid-template-columns: 34px minmax(0, 1fr) auto; align-items: center; gap: 12px; padding: 6px 0; }
+  .riga + .riga { border-top: 1px solid var(--line-soft); }
+  .stemma img, .stemma .vuoto { width: 34px; height: 34px; object-fit: contain; display: block; }
+  .stemma .vuoto { border-radius: 50%; background: var(--surface-2); }
+  .nome { font-weight: 650; line-height: 1.25; }
+  .riga.nostra .nome { color: var(--accent); }
+  .set { font-family: var(--font-display); font-weight: 900; font-size: 1.5rem; min-width: 1ch; text-align: right; }
+  .riga.vince .nome { font-weight: 800; }
+  .riga.perde { opacity: .55; }
+  .parziali { margin-top: 8px; font-size: .84rem; color: var(--ink-faint); }
+  .vincitore { display: flex; flex-direction: column; gap: 4px; align-items: flex-start; margin-bottom: 20px;
+    padding: 16px 20px; border-radius: var(--radius); background: var(--accent); color: #fff; }
+  .v-etichetta { font-family: var(--font-display); text-transform: uppercase; font-weight: 700; font-size: 1rem; }
+  .v-nome { display: flex; align-items: center; gap: 12px; font-family: var(--font-display); text-transform: uppercase; font-weight: 900; font-size: 1.8rem; line-height: 1; }
+  .v-nome img { width: 44px; height: 44px; object-fit: contain; }
+  .t-info { margin-top: 16px; font-size: .92rem; }
+  .t-info a { color: var(--accent); text-decoration: underline; }
+</style>

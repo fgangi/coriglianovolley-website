@@ -1,0 +1,75 @@
+---
+/**
+ * Apertura della home: il video di presentazione, a tutta larghezza e senza
+ * testo sopra (titolo e stemma sono già dentro il video).
+ *
+ * - Proporzioni del video (16:9) finché lo schermo lo permette; sugli schermi
+ *   larghi e bassi si abbassa (vedi sotto) per lasciar intravedere la pagina.
+ * - Muto e in loop; parte da solo, tranne con "Riduci movimento" o con il
+ *   risparmio dati attivi: lì resta il fotogramma fermo e si avvia col pulsante.
+ * - Sul telefono si scarica una versione più leggera (640px, 1 MB).
+ * - Il pulsante pausa è richiesto dalle regole di accessibilità (WCAG 2.2.2).
+ */
+---
+<section class="hero-video" data-hero-video aria-label="Video di presentazione">
+  <h1 class="sr-only">Corigliano Volley, in Serie A3</h1>
+  <video muted loop playsinline preload="metadata" poster="/video/hero-poster.jpg" aria-hidden="true">
+    <source src="/video/hero-360.mp4" type="video/mp4" media="(max-width: 639px)" />
+    <source src="/video/hero-720.mp4" type="video/mp4" />
+  </video>
+  <button type="button" class="hv-pausa" data-hv-pausa aria-pressed="true" aria-label="Avvia il video">
+    <svg class="ico-pausa" width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>
+    <svg class="ico-play" width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 4.5v15a1 1 0 0 0 1.5.86l12.5-7.5a1 1 0 0 0 0-1.72L8.5 3.64A1 1 0 0 0 7 4.5z"/></svg>
+  </button>
+</section>
+
+<style>
+  .hero-video { position: relative; background: #fff; }
+  /* Altezza: quella piena del video (16:9) finché ci sta; sugli schermi dove
+     riempirebbe tutta la finestra si ferma prima, in modo che all'apertura si
+     vedano anche il pulsante pausa e l'inizio della sezione sotto (circa 120px).
+     Il video è ritagliato al centro, sopra e sotto: scritte e stemma del video
+     sono centrati e restano interi. Il ritaglio però non va oltre il formato
+     2,4:1 (altezza minima 41,67vw): più stretto lo stemma finale del video
+     verrebbe tagliato. Mai sotto i 300px. */
+  .hero-video video { display: block; width: 100%; object-fit: cover; object-position: center;
+    height: min(56.25vw, max(41.67vw, 300px, calc(100svh - var(--altezza-intestazione) - var(--altezza-striscia) - 120px))); }
+  /* Area di tocco 44px, cerchio visibile più piccolo */
+  .hv-pausa { position: absolute; right: clamp(8px, 2vw, 20px); bottom: clamp(8px, 2vw, 20px);
+    width: 44px; height: 44px; border: 0; padding: 0; background: none; cursor: pointer;
+    display: grid; place-items: center; color: #fff; }
+  .hv-pausa svg { box-sizing: content-box; padding: 9px; border-radius: 50%; background: rgba(0,0,0,.5); }
+  /* aria-pressed = "in pausa": si mostra l'azione che farà il pulsante */
+  .hv-pausa .ico-play { display: none; }
+  .hv-pausa[aria-pressed='true'] .ico-pausa { display: none; }
+  .hv-pausa[aria-pressed='true'] .ico-play { display: block; }
+</style>
+
+<script is:inline>
+  (() => {
+    const avvia = () => {
+      const box = document.querySelector('[data-hero-video]');
+      if (!box || box.dataset.pronto) return;
+      box.dataset.pronto = '1';
+      const video = box.querySelector('video');
+      const btn = box.querySelector('[data-hv-pausa]');
+
+      const stato = (inPausa) => {
+        btn.setAttribute('aria-pressed', String(inPausa));
+        btn.setAttribute('aria-label', inPausa ? 'Avvia il video' : 'Metti in pausa il video');
+      };
+      const play = () => { video.play().then(() => stato(false)).catch(() => stato(true)); };
+
+      btn.addEventListener('click', () => {
+        if (video.paused) play(); else { video.pause(); stato(true); }
+      });
+
+      // Parte da solo, salvo che chi guarda abbia chiesto meno movimento o meno dati
+      const menoMovimento = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const risparmioDati = navigator.connection?.saveData === true;
+      if (!menoMovimento && !risparmioDati) { video.preload = 'auto'; play(); }
+    };
+    avvia();
+    document.addEventListener('astro:page-load', avvia);
+  })();
+</script>

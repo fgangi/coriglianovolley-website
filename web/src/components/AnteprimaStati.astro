@@ -3,8 +3,8 @@
  * Barra di anteprima — SOLO IN SVILUPPO (esclusa dalla build di produzione).
  *
  * Mostra come apparirà il sito in situazioni che nel pannello non sono ancora
- * vere: campagna abbonamenti aperta, iscrizioni chiuse. Non tocca i dati:
- * le varianti sono già nella pagina, la barra ne mostra una alla volta.
+ * vere: iscrizioni chiuse, giorno di partita in casa, diretta in corso.
+ * Non tocca i dati: cambia solo ciò che si vede in questo browser.
  */
 ---
 <div class="anteprima" data-anteprima>
@@ -13,19 +13,18 @@
   </button>
 
   <div class="ap-corpo" hidden>
-    <div class="ap-riga" data-gruppo="acq">
-      <span class="ap-tit">Pulsante acquista</span>
-      <button type="button" data-v="reale" aria-pressed="true">Reale</button>
-      <button type="button" data-v="entrambi" aria-pressed="false">Biglietti + abbonamenti</button>
-      <button type="button" data-v="biglietti" aria-pressed="false">Solo biglietti</button>
-      <button type="button" data-v="abbonamenti" aria-pressed="false">Solo abbonamenti</button>
-      <button type="button" data-v="nessuno" aria-pressed="false">Nessuno</button>
-    </div>
-
     <div class="ap-riga" data-gruppo="isc" data-solo="/settore-giovanile">
       <span class="ap-tit">Iscrizioni giovanili</span>
       <button type="button" data-v="reale" aria-pressed="true">Reale</button>
       <button type="button" data-v="chiuse" aria-pressed="false">Chiuse</button>
+    </div>
+
+    <div class="ap-riga" data-gruppo="dir">
+      <span class="ap-tit">Diretta (prossima partita in casa)</span>
+      <button type="button" data-v="reale" aria-pressed="true">Ora reale</button>
+      <button type="button" data-v="giorno" aria-pressed="false">Giorno della partita</button>
+      <button type="button" data-v="live" aria-pressed="false">In diretta ora</button>
+      <button type="button" data-v="finita" aria-pressed="false">Partita finita</button>
     </div>
 
     <p class="ap-nota">Solo in sviluppo: i dati del pannello non vengono modificati.</p>
@@ -76,17 +75,25 @@
         localStorage.setItem('anteprimaAperta', v ? '1' : '0');
       };
 
-      /** Pulsante acquista: mostra una sola delle varianti presenti nell'header. */
-      const applicaAcq = (v) => {
-        document.querySelectorAll('[data-acq]').forEach((el) => {
-          el.hidden = v === 'nessuno' ? true : el.dataset.acq !== v;
-        });
-      };
-
       /** Iscrizioni: nasconde la sezione, come a campagna chiusa. */
       const applicaIsc = (v) => {
         const sez = document.querySelector('[data-sim="iscrizioni"]');
         if (sez) sez.hidden = v === 'chiuse';
+      };
+
+      /**
+       * Diretta: finge un'ora rispetto alla prossima partita in casa letta dalla
+       * striscia. "Giorno" = 6 ore prima dell'inizio; "In diretta" = 40 minuti
+       * dopo; "Finita" = 3 ore e 10 minuti dopo (la striscia torna normale).
+       */
+      const applicaDir = (v) => {
+        const box = document.querySelector('[data-diretta]');
+        let prossima = null;
+        try { prossima = JSON.parse(box?.dataset.partite || '[]')[0]; } catch {}
+        const scarto = { giorno: -6 * 60, live: 40, finita: 190 }[v];
+        if (!prossima || scarto === undefined) delete document.documentElement.dataset.apOra;
+        else document.documentElement.dataset.apOra = new Date(new Date(prossima.data).getTime() + scarto * 60000).toISOString();
+        document.dispatchEvent(new Event('anteprima-ora'));
       };
 
       const applica = (gruppo, v) => {
@@ -94,8 +101,8 @@
         box.querySelectorAll(`[data-gruppo="${gruppo}"] button`).forEach((b) => {
           b.setAttribute('aria-pressed', String(b.dataset.v === v));
         });
-        if (gruppo === 'acq') applicaAcq(v);
         if (gruppo === 'isc') applicaIsc(v);
+        if (gruppo === 'dir') applicaDir(v);
       };
 
       box.querySelectorAll('[data-gruppo]').forEach((riga) => {

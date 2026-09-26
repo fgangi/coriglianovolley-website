@@ -166,7 +166,10 @@ main [id] { scroll-margin-top: calc(var(--altezza-intestazione) + 28px); }
 .site-header .social-icons a { width: 32px; height: 32px; border: 0; border-radius: 0; opacity: .9; }
 .site-header .social-icons a:hover { background: transparent; opacity: 1; }
 .site-header .social-icons svg { width: 19px; height: 19px; }
-.site-header .bar { display: flex; align-items: center; justify-content: space-between; min-height: 122px; gap: 16px; padding-top: 0; padding-bottom: 10px; }
+/* Nessun margine sopra o sotto: loghi e menu stanno esattamente al centro della
+   barra. Prima 10px in basso li spingevano 5px sopra il centro, e si notava
+   quando la striscia dei social esce scorrendo. L'altezza resta la stessa. */
+.site-header .bar { display: flex; align-items: center; justify-content: space-between; min-height: 122px; gap: 16px; padding-top: 0; padding-bottom: 0; }
 
 /* Testo nascosto ma leggibile dai lettori di schermo */
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;

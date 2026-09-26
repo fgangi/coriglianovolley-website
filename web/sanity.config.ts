@@ -17,6 +17,7 @@ const structure = (S: any) =>
       S.divider(),
       S.documentTypeListItem('news').title('Notizie'),
       S.documentTypeListItem('partita').title('Partite'),
+      S.documentTypeListItem('torneo').title('Tornei'),
       S.documentTypeListItem('classifica').title('Classifica'),
       S.divider(),
       S.documentTypeListItem('giocatore').title('Roster'),

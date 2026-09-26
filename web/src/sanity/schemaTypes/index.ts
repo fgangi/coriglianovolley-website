@@ -5,6 +5,7 @@ import { giocatore } from './giocatore';
 import { staff } from './staff';
 import { news } from './news';
 import { partita } from './partita';
+import { torneo } from './torneo';
 import { classifica } from './classifica';
 import { sponsor } from './sponsor';
 import { galleryAlbum } from './galleryAlbum';
@@ -16,6 +17,7 @@ export const schemaTypes = [
   siteSettings,
   news,
   partita,
+  torneo,
   classifica,
   giocatore,
   staff,

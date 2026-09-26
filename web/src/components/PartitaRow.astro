@@ -17,12 +17,15 @@ const conLoghi = Boolean(logoSx || logoDx);
 const giocata = m.giocata && m.setCasa != null && m.setTrasferta != null;
 const win = giocata && ((casa && m.setCasa > m.setTrasferta) || (!casa && m.setTrasferta > m.setCasa));
 const d = pezziData(m.data);
+// Versione corta della giornata per le schede strette: "1ª giornata (andata)" -> "1ª andata"
+const giornataCorta = String(m.giornata ?? '').replace(/^(\S+)\s+giornata\s*\((\w+)\)\s*$/i, '$1 $2');
 // Il luogo si divide all'ultima virgola: "Palasport di Galatone" e "Galatone (LE)".
 // Quando non sta su una riga va a capo solo lì, mai a metà del nome.
 const luogo = String(m.luogo ?? '').trim();
 const virgola = luogo.lastIndexOf(',');
 const luogoParti = virgola > 0 ? [luogo.slice(0, virgola + 1), luogo.slice(virgola + 1).trim()] : [luogo];
 ---
+<div class="match-box">
 <div class={`match ${giocata ? 'played' : 'upcoming'}`}>
   <!-- Tessera con la data, in evidenza a sinistra -->
   <div class="data-tile" aria-hidden="true">
@@ -33,7 +36,9 @@ const luogoParti = virgola > 0 ? [luogo.slice(0, virgola + 1), luogo.slice(virgo
 
   <div class="corpo">
     <div class="meta">
-      {m.giornata && <span class="giornata">{m.giornata}</span>}
+      {m.giornata && (
+        <span class="giornata"><span class="g-lunga">{m.giornata}</span><span class="g-corta" aria-hidden="true">{giornataCorta}</span></span>
+      )}
       <span class={`dove ${casa ? 'in-casa' : 'fuori'}`}>{casa ? 'Casa' : 'Trasferta'}</span>
     </div>
 
@@ -66,6 +71,7 @@ const luogoParti = virgola > 0 ? [luogo.slice(0, virgola + 1), luogo.slice(virgo
       </span>
     </div>
   )}
+</div>
 </div>
 
 <style>
@@ -131,6 +137,29 @@ const luogoParti = virgola > 0 ? [luogo.slice(0, virgola + 1), luogo.slice(virgo
      del palazzetto va a capo al suo interno solo se da solo è più largo della
      scheda, invece di uscirne. */
   .luogo-citta { white-space: nowrap; }
+
+  /* Schede strette (sotto i 330px: telefoni fino a 375px, carosello su PC a
+     1024px): la colonna della data si stringe e la giornata si accorcia
+     ("1ª andata"). Senza, "Trasferta" andava a capo sotto la giornata e i nomi
+     come "Green Volley Galatone" finivano su tre righe, allungando la scheda. */
+  /* La scheda sta in un contenitore che ne misura la larghezza: le regole qui
+     sotto dipendono dallo spazio della scheda, non dalla finestra. */
+  .match-box { container-type: inline-size; min-width: 0; }
+  .match-box > .match { height: 100%; }
+  .g-corta { display: none; }
+  @container (max-width: 329px) {
+    .match { column-gap: 8px; padding: 13px 12px; }
+    .data-tile { min-width: 44px; }
+    .dt-giorno { font-size: 2rem; }
+    .dt-mese { font-size: 1.2rem; }
+    .dt-ora { font-size: .95rem; }
+    .g-lunga { display: none; }
+    .g-corta { display: inline; }
+    .meta { gap: 6px; flex-wrap: nowrap; }
+    .teams { gap: 2px; }
+    .team { font-size: .84rem; letter-spacing: -.01em; }
+    .stemma { height: 44px; }
+  }
   .report { font-size: .82rem; font-weight: 650; color: var(--accent); }
 
   @media (max-width: 420px) {

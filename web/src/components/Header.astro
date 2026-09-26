@@ -15,9 +15,11 @@ interface Props {
   risultati?: boolean;
   diretta?: boolean;
   gruppiGiovanili?: boolean;
+  /** Torneo precampionato in corso: voce temporanea nel menu Partite */
+  torneo?: boolean;
 }
 const { nomeSquadra, bigliettiUrl, abbonamentiUrl, iscrizioniAperte, social, gallery = true, logoUrl, legaCredemLogo, legaCredemUrl,
-  risultati = false, diretta = false, gruppiGiovanili = false } = Astro.props;
+  risultati = false, diretta = false, gruppiGiovanili = false, torneo = false } = Astro.props;
 const path = Astro.url.pathname.replace(/\/$/, '') || '/';
 
 type Item = { href: string; label: string; children?: { href: string; label: string }[] };
@@ -37,11 +39,13 @@ const nav: Item[] = [
   },
   {
     href: '/partite/', label: 'Partite',
-    // Stesso ordine e stessi nomi delle sezioni della pagina. Diretta e
-    // Risultati esistono solo quando c'è qualcosa da mostrare.
+    // Stesso ordine e stessi nomi delle sezioni della pagina: la striscia
+    // della diretta è in cima, poi torneo, calendario, risultati, classifica.
+    // Diretta, Torneo e Risultati esistono solo quando c'è qualcosa da mostrare.
     children: [
-      { href: '/partite/#calendario', label: 'Calendario' },
       ...(diretta ? [{ href: '/partite/#diretta', label: 'Diretta' }] : []),
+      ...(torneo ? [{ href: '/partite/#torneo', label: 'Torneo' }] : []),
+      { href: '/partite/#calendario', label: 'Calendario' },
       ...(risultati ? [{ href: '/partite/#risultati', label: 'Risultati' }] : []),
       { href: '/partite/#classifica', label: 'Classifica' },
     ],
@@ -62,11 +66,6 @@ const nav: Item[] = [
   { href: '/contatti/', label: 'Contatti' },
 ];
 
-// In sviluppo il pulsante viene reso in tutte le sue varianti (nascoste):
-// la barra di anteprima ne mostra una alla volta, per vedere come apparirà
-// il sito quando la campagna abbonamenti sarà aperta o chiusa.
-const ESEMPIO = 'https://www.liveticket.it/';
-
 // Acquisto: la tendina esiste solo se ci sono davvero due destinazioni.
 // Fuori dalla campagna abbonamenti ne resta una e il pulsante torna diretto,
 // così non si apre mai una tendina con una voce sola.
@@ -75,19 +74,8 @@ const acquisto = [
   abbonamentiUrl ? { href: abbonamentiUrl, label: 'Abbonamenti' } : null,
 ].filter(Boolean) as { href: string; label: string }[];
 
-// Le varianti servono solo allo sviluppo: in produzione resta la sola reale.
 type Variante = { id: string; links: { href: string; label: string }[] };
-const varianti: Variante[] = import.meta.env.DEV
-  ? [
-      { id: 'reale', links: acquisto },
-      { id: 'entrambi', links: [
-        { href: bigliettiUrl || ESEMPIO, label: 'Biglietti' },
-        { href: abbonamentiUrl || ESEMPIO, label: 'Abbonamenti' },
-      ] },
-      { id: 'biglietti', links: [{ href: bigliettiUrl || ESEMPIO, label: 'Biglietti' }] },
-      { id: 'abbonamenti', links: [{ href: abbonamentiUrl || ESEMPIO, label: 'Abbonamenti' }] },
-    ]
-  : [{ id: 'reale', links: acquisto }];
+const varianti: Variante[] = [{ id: 'reale', links: acquisto }];
 
 const isActive = (href: string) => {
   // I link hanno lo slash finale, il pathname lo abbiamo tolto: normalizzo entrambi
@@ -150,9 +138,7 @@ const iniziali = nomeSquadra.split(' ').map((w) => w[0]).join('').slice(0, 2).to
         <a class="mainnav-link" href={item.href} aria-current={isActive(item.href) ? 'page' : undefined}>{item.label}</a>
       ))}
       {varianti.map((v) => {
-        const extra = import.meta.env.DEV
-          ? { 'data-acq': v.id, hidden: v.id !== 'reale' }
-          : {};
+        const extra = {};
         if (v.links.length === 1) return (
           <a class="mainnav-link cta" href={v.links[0].href} target="_blank" rel="noopener" {...extra}>{v.links[0].label}</a>
         );

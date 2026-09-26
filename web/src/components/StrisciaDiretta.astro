@@ -1,0 +1,118 @@
+---
+/**
+ * Striscia della diretta YouTube.
+ *
+ * Vengono trasmesse solo le partite di campionato in casa: la striscia si
+ * accende (rossa) solo per quelle. Il sito è statico, quindi il momento lo
+ * calcola il browser di chi visita, dagli orari del calendario:
+ *  - giorno di partita, prima dell'inizio: "Oggi alle 18:00 · Corigliano – X"
+ *  - dall'inizio a 3 ore dopo: "In diretta ora"
+ *  - altrimenti: versione discreta (sulla pagina Partite) o nascosta (in home).
+ * Le partite del torneo sono in un elenco a parte e non la accendono.
+ */
+interface Props {
+  url: string;
+  /** Partite in programma (prossime): si usano solo quelle in casa */
+  partite: any[];
+  /** 'sempre' = visibile anche nei giorni senza partita; 'giorno-partita' = solo quel giorno */
+  modo?: 'sempre' | 'giorno-partita';
+  nomeSquadra?: string;
+}
+const { url, partite = [], modo = 'sempre', nomeSquadra = 'Corigliano Volley' } = Astro.props;
+const inCasa = partite
+  .filter((m) => m?.dove === 'casa' && m?.data && !m?.giocata)
+  .map((m) => ({ data: m.data, avversario: m.avversaria?.nome ?? m.avversario ?? '' }));
+---
+<div class:list={['diretta', `modo-${modo}`]} data-diretta data-modo={modo} data-partite={JSON.stringify(inCasa)}
+  data-casa={nomeSquadra} hidden={modo === 'giorno-partita'}>
+  <div class="container dir-riga">
+    <span class="dir-icona" aria-hidden="true">
+      <span class="live-dot"></span>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.5-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5z"/></svg>
+    </span>
+    <span class="dir-testo">
+      <strong class="dir-titolo" data-dir-titolo>Le partite casalinghe del Corigliano in diretta su YouTube</strong>
+      <span class="dir-sotto" data-dir-sotto hidden></span>
+    </span>
+    <a class="dir-btn" href={url} target="_blank" rel="noopener">Guarda la diretta</a>
+  </div>
+</div>
+
+<style>
+  .diretta { background: var(--surface-2); border-bottom: 1px solid var(--line); }
+  .dir-riga { display: flex; align-items: center; gap: 14px; padding-block: 12px; flex-wrap: wrap; }
+  .dir-icona { display: grid; place-items: center; width: 36px; height: 36px; flex: none; border-radius: 50%;
+    background: #ff0033; color: #fff; }
+  .dir-icona .live-dot { display: none; }
+  .dir-testo { display: flex; flex-direction: column; flex: 1 1 220px; min-width: 0; line-height: 1.25; }
+  .dir-titolo { font-family: var(--font-display); text-transform: uppercase; font-weight: 800; font-size: 1.1rem; }
+  .dir-sotto { font-size: .92rem; }
+  .dir-btn { display: inline-flex; align-items: center; min-height: 44px; padding: 0 1.1rem; border-radius: 999px;
+    font-family: var(--font-display); text-transform: uppercase; font-weight: 800; font-size: 1rem; letter-spacing: .02em;
+    background: var(--ink); color: #fff; transition: transform .12s ease; }
+  .dir-btn:hover { transform: translateY(-1px); }
+
+  /* Giorno di partita in casa: in evidenza */
+  .diretta[data-stato='oggi'], .diretta[data-stato='live'] { background: var(--accent); border-color: transparent; color: #fff; }
+  .diretta[data-stato='oggi'] .dir-sotto, .diretta[data-stato='live'] .dir-sotto { color: rgba(255,255,255,.9); }
+  .diretta[data-stato='oggi'] .dir-icona, .diretta[data-stato='live'] .dir-icona { background: #fff; color: var(--accent); }
+  .diretta[data-stato='oggi'] .dir-btn, .diretta[data-stato='live'] .dir-btn { background: #fff; color: var(--accent-deep); }
+  /* In diretta: pallino che pulsa al posto del triangolo */
+  .diretta[data-stato='live'] .dir-icona svg { display: none; }
+  .diretta[data-stato='live'] .dir-icona .live-dot { display: block; width: 12px; height: 12px; border-radius: 50%;
+    background: var(--accent); animation: dir-pulsa 1.6s ease-out infinite; }
+  @keyframes dir-pulsa { 0% { box-shadow: 0 0 0 0 rgba(206,27,44,.6); } 100% { box-shadow: 0 0 0 10px rgba(206,27,44,0); } }
+  @media (prefers-reduced-motion: reduce) { .diretta[data-stato='live'] .dir-icona .live-dot { animation: none; } }
+  @media (max-width: 639px) {
+    .dir-riga { gap: 10px 12px; }
+    .dir-btn { width: 100%; justify-content: center; }
+  }
+</style>
+
+<script is:inline>
+  (() => {
+    const FUSO = 'Europe/Rome';
+    const DURATA = 3 * 60 * 60 * 1000; // la diretta si considera in corso per 3 ore
+    const giorno = (d) => d.toLocaleDateString('it-IT', { timeZone: FUSO });
+    const ora = (d) => d.toLocaleTimeString('it-IT', { timeZone: FUSO, hour: '2-digit', minute: '2-digit' });
+
+    // In sviluppo la barra "Anteprima stati" può fingere un'altra ora
+    // (attributo data-ap-ora su <html>); online non viene mai impostato.
+    const oraAttuale = () => {
+      const finta = document.documentElement.dataset.apOra;
+      return finta ? new Date(finta) : new Date();
+    };
+
+    const aggiorna = (box) => {
+      let partite = [];
+      try { partite = JSON.parse(box.dataset.partite || '[]'); } catch {}
+      const adesso = oraAttuale();
+      let stato = 'normale', partita = null;
+      for (const p of partite) {
+        const inizio = new Date(p.data);
+        if (adesso >= inizio && adesso - inizio < DURATA) { stato = 'live'; partita = p; break; }
+        if (adesso < inizio && giorno(adesso) === giorno(inizio)) { stato = 'oggi'; partita = p; break; }
+      }
+      box.dataset.stato = stato;
+      const titolo = box.querySelector('[data-dir-titolo]');
+      const sotto = box.querySelector('[data-dir-sotto]');
+      const sfida = partita ? `${box.dataset.casa} – ${partita.avversario}` : '';
+      if (stato === 'live') { titolo.textContent = 'In diretta ora'; sotto.textContent = sfida; sotto.hidden = false; }
+      else if (stato === 'oggi') { titolo.textContent = `Oggi alle ${ora(new Date(partita.data))}`; sotto.textContent = `${sfida} · in diretta su YouTube`; sotto.hidden = false; }
+      else { titolo.textContent = 'Le partite casalinghe del Corigliano in diretta su YouTube'; sotto.hidden = true; }
+      if (box.dataset.modo === 'giorno-partita') box.hidden = stato === 'normale';
+    };
+
+    const avvia = () => {
+      document.querySelectorAll('[data-diretta]').forEach((box) => {
+        aggiorna(box);
+        if (box.dataset.pronto) return;
+        box.dataset.pronto = '1';
+        setInterval(() => box.isConnected && aggiorna(box), 60 * 1000);
+      });
+    };
+    avvia();
+    document.addEventListener('astro:page-load', avvia);
+    document.addEventListener('anteprima-ora', () => document.querySelectorAll('[data-diretta]').forEach(aggiorna));
+  })();
+</script>

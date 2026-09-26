@@ -8,7 +8,8 @@ import SchedaStaff from '../components/SchedaStaff.astro';
 import StrisciaSponsor from '../components/StrisciaSponsor.astro';
 import { logoRifilato, misuraLogo } from '../lib/loghi';
 import NewsInEvidenza from '../components/NewsInEvidenza.astro';
-import Hero from '../components/Hero.astro';
+import HeroVideo from '../components/HeroVideo.astro';
+import StrisciaDiretta from '../components/StrisciaDiretta.astro';
 import CampagnaAbbonamenti from '../components/CampagnaAbbonamenti.astro';
 import { sfetch, img, formatData } from '../lib/sanity';
 import {
@@ -116,7 +117,10 @@ const staffPreview = [...staff].sort(
 const logoUrl = img(settings?.logo, 200);
 ---
 <Layout>
-  <Hero slide={settings?.hero} />
+  <HeroVideo />
+  {/* Solo nei giorni delle partite in casa: sul telefono il pulsante della
+      diretta nel riquadro "Prossima partita" non si vede */}
+  {direttaLink && <StrisciaDiretta url={direttaLink} partite={prossime} modo="giorno-partita" nomeSquadra={nome} />}
 
   <!-- APERTURA: la notizia in evidenza, con la prossima partita di fianco -->
   <section class="section apertura-sezione">
@@ -176,7 +180,7 @@ const logoUrl = img(settings?.logo, 200);
           <a class="btn chiaro" href="/partite/">Calendario completo</a>
         </div>
         <Carousel etichetta="Prossime partite" grigliaPc={3} allinea="stretch"
-          larghezza="340px" larghezzaTablet="min(340px, 46vw)" larghezzaMobile="88%">
+          larghezza="340px" larghezzaTablet="340px" larghezzaMobile="92%">
           {prossimeList.map((m) => <PartitaRow m={m} logoNostro={logoUrl} />)}
         </Carousel>
       </div>
@@ -193,7 +197,7 @@ const logoUrl = img(settings?.logo, 200);
           <a class="btn" href="/partite/">Tutte le partite</a>
         </div>
         <Carousel etichetta="Ultimi risultati" grigliaPc={3} allinea="stretch"
-          larghezza="340px" larghezzaTablet="min(340px, 46vw)" larghezzaMobile="88%">
+          larghezza="340px" larghezzaTablet="340px" larghezzaMobile="92%">
           {risultati.map((m) => <PartitaRow m={m} logoNostro={logoUrl} />)}
         </Carousel>
       </div>
