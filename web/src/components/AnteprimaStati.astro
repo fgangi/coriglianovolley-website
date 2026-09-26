@@ -19,6 +19,12 @@
       <button type="button" data-v="chiuse" aria-pressed="false">Chiuse</button>
     </div>
 
+    <div class="ap-riga" data-gruppo="vid" data-solo="/" data-esatto>
+      <span class="ap-tit">Video in home</span>
+      <button type="button" data-v="reale" aria-pressed="true">Reale</button>
+      <button type="button" data-v="bloccato" aria-pressed="false">Bloccato dal browser</button>
+    </div>
+
     <div class="ap-riga" data-gruppo="dir">
       <span class="ap-tit">Diretta (prossima partita in casa)</span>
       <button type="button" data-v="reale" aria-pressed="true">Ora reale</button>
@@ -66,7 +72,7 @@
 
       // Le righe che riguardano una sola pagina spariscono altrove
       box.querySelectorAll('[data-solo]').forEach((r) => {
-        r.hidden = !location.pathname.startsWith(r.dataset.solo);
+        r.hidden = 'esatto' in r.dataset ? location.pathname !== r.dataset.solo : !location.pathname.startsWith(r.dataset.solo);
       });
 
       const mostraPannello = (v) => {
@@ -103,6 +109,7 @@
         });
         if (gruppo === 'isc') applicaIsc(v);
         if (gruppo === 'dir') applicaDir(v);
+        if (gruppo === 'vid') document.dispatchEvent(new CustomEvent('anteprima-video', { detail: v }));
       };
 
       box.querySelectorAll('[data-gruppo]').forEach((riga) => {

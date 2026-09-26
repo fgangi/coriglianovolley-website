@@ -5,18 +5,30 @@
  *
  * - Proporzioni del video (16:9) finché lo schermo lo permette; sugli schermi
  *   larghi e bassi si abbassa (vedi sotto) per lasciar intravedere la pagina.
- * - Muto e in loop; parte da solo, tranne con "Riduci movimento" o con il
- *   risparmio dati attivi: lì resta il fotogramma fermo e si avvia col pulsante.
+ * - Muto e in loop; parte da solo, tranne con "Riduci movimento" attivo.
+ *   Alcuni dispositivi lo bloccano comunque (iPhone in risparmio energetico,
+ *   browser impostati per non avviare i video): in tutti questi casi si vede
+ *   una copertina con lo stemma e un pulsante play grande al centro, così
+ *   sembra un video da avviare e non un'immagine ferma per errore.
  * - Sul telefono si scarica una versione più leggera (640px, 1 MB).
  * - Il pulsante pausa è richiesto dalle regole di accessibilità (WCAG 2.2.2).
  */
 ---
-<section class="hero-video" data-hero-video aria-label="Video di presentazione">
+<section class="hero-video" data-hero-video data-avviato="no" aria-label="Video di presentazione">
   <h1 class="sr-only">Corigliano Volley, in Serie A3</h1>
-  <video muted loop playsinline preload="metadata" poster="/video/hero-poster.jpg" aria-hidden="true">
+  <video muted loop playsinline preload="metadata" poster="/video/hero-copertina.jpg" aria-hidden="true">
     <source src="/video/hero-360.mp4" type="video/mp4" media="(max-width: 639px)" />
     <source src="/video/hero-720.mp4" type="video/mp4" />
   </video>
+  <!-- Copertina cliccabile con pillola "Guarda il video", finché il video non è mai partito -->
+  <button type="button" class="hv-avvia" data-hv-avvia>
+    <span class="hv-pillola">
+      <span class="hv-avvia-cerchio" aria-hidden="true">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.5-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5z"/></svg>
+      </span>
+      <span class="hv-avvia-testo">Guarda il video</span>
+    </span>
+  </button>
   <button type="button" class="hv-pausa" data-hv-pausa aria-pressed="true" aria-label="Avvia il video">
     <svg class="ico-pausa" width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>
     <svg class="ico-play" width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 4.5v15a1 1 0 0 0 1.5.86l12.5-7.5a1 1 0 0 0 0-1.72L8.5 3.64A1 1 0 0 0 7 4.5z"/></svg>
@@ -41,6 +53,25 @@
   .hv-pausa svg { box-sizing: content-box; padding: 9px; border-radius: 50%; background: rgba(0,0,0,.5); }
   /* aria-pressed = "in pausa": si mostra l'azione che farà il pulsante */
   .hv-pausa .ico-play { display: none; }
+  /* Copertina: tutta cliccabile, con una pillola rossa in basso a destra.
+     Al centro il pulsante finiva sopra il pallone dello stemma e lo confondeva.
+     C'è solo finché il video non è partito; dopo basta il pulsante piccolo. */
+  .hv-avvia { position: absolute; inset: 0; display: flex; align-items: flex-end; justify-content: flex-end;
+    padding: clamp(10px, 2.2vw, 24px); border: 0; background: none; cursor: pointer; }
+  .hv-avvia-cerchio { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%;
+    background: #fff; color: var(--accent); flex: none; }
+  .hv-avvia-cerchio svg { width: 16px; height: 16px; margin-left: 2px; }
+  .hv-pillola { display: inline-flex; align-items: center; gap: 10px; padding: 7px 16px 7px 7px; border-radius: 999px;
+    background: var(--accent); color: #fff; box-shadow: 0 8px 24px rgba(0,0,0,.22); transition: transform .15s ease; }
+  .hv-avvia:hover .hv-pillola { transform: translateY(-2px); }
+  .hv-avvia-testo { font-family: var(--font-display); text-transform: uppercase; font-weight: 800; font-size: 1.05rem; letter-spacing: .03em; }
+  .hero-video[data-avviato='si'] .hv-avvia, .hero-video[data-avviato='no'] .hv-pausa { display: none; }
+  @media (max-width: 639px) {
+    .hv-avvia-cerchio { width: 28px; height: 28px; }
+    .hv-avvia-cerchio svg { width: 13px; height: 13px; }
+    .hv-pillola { gap: 8px; padding: 5px 12px 5px 5px; }
+    .hv-avvia-testo { font-size: .9rem; }
+  }
   .hv-pausa[aria-pressed='true'] .ico-pausa { display: none; }
   .hv-pausa[aria-pressed='true'] .ico-play { display: block; }
 </style>
@@ -53,21 +84,37 @@
       box.dataset.pronto = '1';
       const video = box.querySelector('video');
       const btn = box.querySelector('[data-hv-pausa]');
+      const grande = box.querySelector('[data-hv-avvia]');
+      // Appena il video parte davvero, via la copertina col pulsante grande
+      video.addEventListener('playing', () => { box.dataset.avviato = 'si'; stato(false); });
 
       const stato = (inPausa) => {
         btn.setAttribute('aria-pressed', String(inPausa));
         btn.setAttribute('aria-label', inPausa ? 'Avvia il video' : 'Metti in pausa il video');
       };
       const play = () => { video.play().then(() => stato(false)).catch(() => stato(true)); };
+      grande.addEventListener('click', () => { video.preload = 'auto'; play(); });
 
       btn.addEventListener('click', () => {
         if (video.paused) play(); else { video.pause(); stato(true); }
       });
 
-      // Parte da solo, salvo che chi guarda abbia chiesto meno movimento o meno dati
+      // Parte da solo, salvo che chi guarda abbia chiesto meno movimento. Il
+      // risparmio dati non lo ferma: sul telefono il video pesa 1 MB.
       const menoMovimento = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-      const risparmioDati = navigator.connection?.saveData === true;
-      if (!menoMovimento && !risparmioDati) { video.preload = 'auto'; play(); }
+      if (!menoMovimento) { video.preload = 'auto'; play(); }
+
+      // Solo in sviluppo: la barra "Anteprima stati" simula il video bloccato
+      document.addEventListener('anteprima-video', (e) => {
+        if (e.detail === 'bloccato') {
+          box.dataset.simulato = 'si';
+          video.pause(); video.currentTime = 0; box.dataset.avviato = 'no'; stato(true); video.load();
+        } else if (box.dataset.simulato === 'si') {
+          // Si torna al comportamento reale solo se prima si era simulato il blocco
+          delete box.dataset.simulato;
+          if (!menoMovimento) { video.preload = 'auto'; play(); }
+        }
+      });
     };
     avvia();
     document.addEventListener('astro:page-load', avvia);
