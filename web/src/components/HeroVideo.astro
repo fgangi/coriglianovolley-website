@@ -5,7 +5,9 @@
  *
  * - Proporzioni del video (16:9) finché lo schermo lo permette; sugli schermi
  *   larghi e bassi si abbassa (vedi sotto) per lasciar intravedere la pagina.
- * - Muto e in loop; parte da solo, tranne con "Riduci movimento" attivo.
+ * - Muto e in loop; parte da solo su tutti i dispositivi, telefono compreso,
+ *   anche con "Riduci movimento" attivo (scelta della società): resta il
+ *   pulsante pausa per fermarlo.
  *   Alcuni dispositivi lo bloccano comunque (iPhone in risparmio energetico,
  *   browser impostati per non avviare i video): in tutti questi casi si vede
  *   una copertina con lo stemma e un pulsante play grande al centro, così
@@ -16,7 +18,7 @@
 ---
 <section class="hero-video" data-hero-video data-avviato="no" aria-label="Video di presentazione">
   <h1 class="sr-only">Corigliano Volley, in Serie A3</h1>
-  <video muted loop playsinline preload="metadata" poster="/video/hero-copertina.jpg" aria-hidden="true">
+  <video autoplay muted loop playsinline preload="auto" poster="/video/hero-copertina.jpg" aria-hidden="true">
     <source src="/video/hero-360.mp4" type="video/mp4" media="(max-width: 639px)" />
     <source src="/video/hero-720.mp4" type="video/mp4" />
   </video>
@@ -99,20 +101,22 @@
         if (video.paused) play(); else { video.pause(); stato(true); }
       });
 
-      // Parte da solo, salvo che chi guarda abbia chiesto meno movimento. Il
-      // risparmio dati non lo ferma: sul telefono il video pesa 1 MB.
-      const menoMovimento = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-      if (!menoMovimento) { video.preload = 'auto'; play(); }
+      // L'attributo autoplay basta quasi ovunque; la chiamata serve dove il
+      // browser lo ignora finché la pagina non ha finito di caricare.
+      play();
 
       // Solo in sviluppo: la barra "Anteprima stati" simula il video bloccato
       document.addEventListener('anteprima-video', (e) => {
         if (e.detail === 'bloccato') {
           box.dataset.simulato = 'si';
+          // Senza autoplay, altrimenti ricaricando il video ripartirebbe da solo
+          video.removeAttribute('autoplay');
           video.pause(); video.currentTime = 0; box.dataset.avviato = 'no'; stato(true); video.load();
         } else if (box.dataset.simulato === 'si') {
           // Si torna al comportamento reale solo se prima si era simulato il blocco
           delete box.dataset.simulato;
-          if (!menoMovimento) { video.preload = 'auto'; play(); }
+          video.setAttribute('autoplay', '');
+          play();
         }
       });
     };
