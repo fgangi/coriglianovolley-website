@@ -7,7 +7,7 @@ import { settingsQuery } from '../lib/queries';
 
 /**
  * Pagina contatti in quattro blocchi, dal più usato al meno usato:
- *  1. Contattaci: email e telefono come pulsanti, comodi da toccare
+ *  1. Contattaci: email e telefono come pulsanti, comodi da toccare (affiancati su PC)
  *  2. Per cosa ci cerchi: a chi rivolgersi per biglietti, iscrizioni, stampa
  *  3. Dove giochiamo: palazzetto (che è anche la sede operativa) con mappa
  *  4. Dati societari: PEC e identificativi, in piccolo
@@ -66,7 +66,7 @@ const identificativi = [
   s?.partitaIva ? { dt: 'Partita IVA', dd: s.partitaIva } : null,
 ].filter(Boolean) as { dt: string; dd: string }[];
 ---
-<Layout title="Contatti" description="Contatti della Corigliano Volley: email, telefono, indirizzo del Pala Brillia con indicazioni stradali e dati societari." mappaFooter={false}>
+<Layout title="Contatti" description="Contatti della Corigliano Volley: email, telefono, indirizzo del Pala Brillia con indicazioni stradali e dati societari.">
   <PageHero eyebrow="La società" title="Contatti" lead={`Scrivici, chiamaci o vieni a trovarci al ${PALAZZETTO}.`} />
 
   <section class="section">
@@ -74,7 +74,7 @@ const identificativi = [
 
       <!-- 1. Contattaci -->
       {(s?.email || telefoni.length > 0) && (
-        <div class="card blocco">
+        <div class="card blocco contattaci">
           <h2 class="blocco-titolo">Contattaci</h2>
           <div class="azioni-contatto">
             {s?.email && (
@@ -95,7 +95,7 @@ const identificativi = [
 
       <!-- 2. Per cosa ci cerchi -->
       {voci.length > 0 && (
-        <div class="card blocco">
+        <div class="card blocco cerca">
           <h2 class="blocco-titolo">Per cosa ci cerchi?</h2>
           <ul class="voci">
             {voci.map((v) => (
@@ -164,11 +164,11 @@ const identificativi = [
 </Layout>
 
 <style>
-  /* PC: contattaci e "per cosa ci cerchi" affiancati, poi palazzetto e dati a
-     tutta larghezza. Tablet e telefono: un blocco sotto l'altro. */
-  .contatti { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr); gap: clamp(14px, 2.4vw, 22px); align-items: start; }
-  .palazzetto, .societa { grid-column: 1 / -1; }
-  @media (max-width: 1023px) { .contatti { grid-template-columns: minmax(0, 1fr); } }
+  /* Un blocco sotto l'altro, tutti a tutta larghezza. Prima su PC Contattaci e
+     "Per cosa ci cerchi" erano affiancati: di altezza diversa, sotto
+     Contattaci restava un vuoto. Ora su PC il contenuto dei blocchi si
+     dispone in orizzontale (vedi sotto). */
+  .contatti { display: grid; grid-template-columns: minmax(0, 1fr); gap: clamp(14px, 2.4vw, 22px); }
 
   .blocco { padding: clamp(20px, 3vw, 30px); }
   /* Titoli dei blocchi: sotto al titolo di pagina, sopra alle voci */
@@ -199,6 +199,17 @@ const identificativi = [
   .voce-testo { margin: 2px 0 0; font-size: .92rem; }
   .voce-azioni { display: flex; flex-wrap: wrap; gap: 8px; }
   .voce-azioni .btn { min-height: 44px; }
+
+  /* PC: email e telefono affiancati; le voci di "Per cosa ci cerchi" in tre
+     colonne separate da una linea, con i pulsanti uno sotto l'altro così
+     nessuno va a capo da solo nelle colonne strette. */
+  @media (min-width: 1024px) {
+    .contattaci .azioni-contatto { display: grid; grid-template-columns: repeat(auto-fit, minmax(0, 1fr)); gap: 14px; }
+    .cerca .voci { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0 28px; }
+    .cerca .voce { border-top: 0; padding: 0; }
+    .cerca .voce + .voce { border-left: 1px solid var(--line-soft); padding-left: 28px; }
+    .cerca .voce-azioni { flex-direction: column; align-items: flex-start; }
+  }
 
   /* 3. Palazzetto: testo a sinistra, mappa a destra; sotto i 1024px la mappa va sotto */
   .palazzetto { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.6fr); gap: clamp(18px, 3vw, 32px); align-items: stretch; }

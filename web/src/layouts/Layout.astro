@@ -15,12 +15,10 @@ import AnteprimaStati from '../components/AnteprimaStati.astro';
 
 interface Props {
   title?: string; description?: string;
-  /** false sulle pagine che mostrano già la mappa (contatti): nel footer sarebbe doppia */
-  mappaFooter?: boolean;
   /** true sulle pagine da non indicizzare (404) */
   noindex?: boolean;
 }
-const { title, description, mappaFooter = true, noindex = false } = Astro.props;
+const { title, description, noindex = false } = Astro.props;
 
 // Stile della transizione fra pagine: 'zoom' | 'slide' | 'dissolvenza'
 const ANIMAZIONE = 'dissolvenza';
@@ -107,7 +105,7 @@ const datiStrutturati = home ? JSON.stringify({
     <main>
       <slot />
     </main>
-    <Footer settings={settings} gallery={albumPubblicati > 0} mappa={mappaFooter} />
+    <Footer settings={settings} gallery={albumPubblicati > 0} />
     {import.meta.env.DEV && <AnteprimaStati />}
 
   </body>
