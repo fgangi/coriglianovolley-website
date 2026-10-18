@@ -18,6 +18,13 @@ export const classifica = defineType({
       validation: (r) => r.required(),
     }),
     defineField({
+      name: 'soloManuale',
+      title: 'Usa solo la classifica inserita qui',
+      type: 'boolean',
+      initialValue: false,
+      description: 'Normalmente il sito prende la classifica da Legavolley a ogni pubblicazione (in automatico la domenica sera) e usa questa solo se la lettura non riesce. Attivalo per mostrare sempre quella inserita qui.',
+    }),
+    defineField({
       name: 'modalita',
       title: 'Modalità',
       type: 'string',

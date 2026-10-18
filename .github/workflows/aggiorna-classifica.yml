@@ -1,0 +1,30 @@
+# Ripubblica il sito una volta a settimana, a giornata di campionato conclusa,
+# così la classifica letta da Legavolley (e la data "Aggiornata al") si
+# aggiorna senza toccare né il codice né il pannello.
+#
+# Serve un "deploy hook" di Cloudflare Pages salvato come segreto del
+# repository con il nome CLOUDFLARE_DEPLOY_HOOK (vedi README).
+#
+# Orario: domenica alle 22:00 UTC, cioè mezzanotte in estate e le 23:00 in
+# inverno (ora italiana). Si può anche lanciare a mano dalla scheda Actions.
+name: Aggiorna classifica
+
+on:
+  schedule:
+    - cron: '0 22 * * 0'
+  workflow_dispatch:
+
+jobs:
+  ripubblica:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Avvia la pubblicazione su Cloudflare Pages
+        env:
+          HOOK: ${{ secrets.CLOUDFLARE_DEPLOY_HOOK }}
+        run: |
+          if [ -z "$HOOK" ]; then
+            echo "::error::Manca il segreto CLOUDFLARE_DEPLOY_HOOK"
+            exit 1
+          fi
+          curl --fail --silent --show-error -X POST "$HOOK"
+          echo "Pubblicazione avviata: la classifica si aggiornerà in un paio di minuti."

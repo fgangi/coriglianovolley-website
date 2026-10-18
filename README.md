@@ -61,8 +61,12 @@ PUBLIC_SANITY_DATASET=production
 2. Compila i moduli: **Notizie · Partite · Classifica · Roster · Staff · Settore giovanile · Sponsor · Gallery** e **⚙️ Impostazioni sito** (nome, social, contatti, biglietteria).
 3. Salva: in produzione il sito si rigenera e va online in pochi minuti.
 
-**Classifica e risultati** si inseriscono a mano (tabella o screenshot da legavolley.it,
-con link ufficiale) — la Lega non offre un widget pubblico da incorporare.
+**Classifica**: a ogni pubblicazione il sito la legge da legavolley.it
+(`web/src/lib/classificaLega.ts`). Se la lettura non riesce, per esempio perché la Lega ha
+cambiato la pagina, usa quella inserita a mano nel pannello (tabella o screenshot) e lo scrive
+nel registro della pubblicazione su Cloudflare: cercare `[classifica]`. Nel pannello,
+"Usa solo la classifica inserita qui" forza sempre quella manuale.
+**Risultati**: si inseriscono a mano nelle partite.
 
 ## Deploy
 
@@ -70,3 +74,14 @@ Pensato per **Cloudflare Pages**. Build di produzione: cartella radice `web/`, c
 `npm run build`, output `dist`. Impostare le variabili `PUBLIC_SANITY_PROJECT_ID` e
 `PUBLIC_SANITY_DATASET`, e aggiungere l'origine del sito di produzione tra i **CORS origins**
 del progetto Sanity.
+
+### Aggiornamento settimanale della classifica
+
+La GitHub Action `.github/workflows/aggiorna-classifica.yml` ripubblica il sito ogni
+domenica sera (mezzanotte in estate, 23:00 in inverno), a giornata conclusa. Per attivarla:
+
+1. Cloudflare → progetto Pages → **Settings → Builds → Deploy hooks** → crea un hook
+   (ramo `main`) e copia l'URL.
+2. GitHub → repository → **Settings → Secrets and variables → Actions** → nuovo segreto
+   `CLOUDFLARE_DEPLOY_HOOK` con quell'URL.
+3. Per provarla subito: scheda **Actions → Aggiorna classifica → Run workflow**.

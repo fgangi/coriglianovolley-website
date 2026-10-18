@@ -2,9 +2,11 @@
 /**
  * Striscia della diretta YouTube.
  *
- * Vengono trasmesse le partite di campionato in casa e, se nel pannello è
- * attivo "Partite trasmesse in diretta", quelle del torneo in corso: la
- * striscia si accende (rossa) solo per queste. Il sito è statico, quindi il momento lo
+ * Tutte le partite di campionato, in casa e in trasferta, sono trasmesse
+ * dalla Lega sul suo canale YouTube; in più quelle del torneo in corso, se nel
+ * pannello è attivo "Partite trasmesse in diretta". La striscia si accende
+ * (rossa) per queste. Il pulsante apre il link della singola partita, se è
+ * inserito nella partita, altrimenti quello generale delle impostazioni. Il sito è statico, quindi il momento lo
  * calcola il browser di chi visita, dagli orari del calendario:
  *  - giorno di partita, prima dell'inizio: "Oggi alle 18:00 · Corigliano – X"
  *  - dall'inizio a 3 ore dopo: "In diretta ora"
@@ -24,17 +26,36 @@ interface Props {
 }
 const { url, partite = [], modo = 'sempre', nomeSquadra = 'Corigliano Volley', torneo = null } = Astro.props;
 
-// Elenco unico, in ordine di orario: per ognuna la riga da mostrare sotto il titolo
-const inCasa = partite
-  .filter((m) => m?.dove === 'casa' && m?.data && !m?.giocata)
-  .map((m) => ({ data: m.data, sfida: `${nomeSquadra} – ${m.avversaria?.nome ?? m.avversario ?? ''}` }));
+// Elenco unico, in ordine di orario: per ognuna la riga da mostrare sotto il
+// titolo e il link della sua diretta (se la partita ne ha uno suo)
+const campionato = partite
+  .filter((m) => m?.data && !m?.giocata)
+  .map((m) => {
+    const avv = m.avversaria?.nome ?? m.avversario ?? '';
+    return { data: m.data, url: m.direttaUrl || url, sfida: m.dove === 'casa' ? `${nomeSquadra} – ${avv}` : `${avv} – ${nomeSquadra}` };
+  });
 const delTorneo = torneo?.diretta
   ? partiteTorneo(torneo).filter((p) => p.data).map((p) => ({
       data: p.data,
+      url,
       sfida: `${torneo.nome} · ${p.titolo}${p.casa && p.ospite ? `: ${p.casa} – ${p.ospite}` : ''}`,
     }))
   : [];
-const trasmesse = [...inCasa, ...delTorneo].sort((a, b) => Date.parse(a.data) - Date.parse(b.data));
+const trasmesse = [...campionato, ...delTorneo].sort((a, b) => Date.parse(a.data) - Date.parse(b.data));
+
+// La striscia ha sempre la stessa forma: una riga di titolo corta e una riga
+// sotto che, se non ci sta, si accorcia con "…". Così non cambia altezza quando,
+// il giorno della partita, lo script cambia i testi: prima sul telefono si
+// allungava e spingeva giù la sezione aperta dal menu.
+// Nei giorni normali la riga sotto dice qual è la prossima diretta.
+const breve = (iso: string) => {
+  const d = new Date(iso);
+  const giorno = d.toLocaleDateString('it-IT', { timeZone: 'Europe/Rome', weekday: 'short', day: 'numeric', month: 'short' }).replace(/\./g, '');
+  const ora = d.toLocaleTimeString('it-IT', { timeZone: 'Europe/Rome', hour: '2-digit', minute: '2-digit' });
+  return `${giorno}, ${ora}`;
+};
+const prossima = trasmesse.find((p) => Date.parse(p.data) > Date.now()) ?? null;
+const rigaProssima = prossima ? `Prossima: ${breve(prossima.data)} · ${prossima.sfida}` : 'In diretta sul canale della Lega';
 ---
 <div class:list={['diretta', `modo-${modo}`]} data-diretta data-modo={modo} data-partite={JSON.stringify(trasmesse)}
   data-casa={nomeSquadra} hidden={modo === 'giorno-partita'}>
@@ -44,10 +65,10 @@ const trasmesse = [...inCasa, ...delTorneo].sort((a, b) => Date.parse(a.data) - 
       <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.5-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5z"/></svg>
     </span>
     <span class="dir-testo">
-      <strong class="dir-titolo" data-dir-titolo>Le partite casalinghe del Corigliano in diretta su YouTube</strong>
-      <span class="dir-sotto" data-dir-sotto hidden></span>
+      <strong class="dir-titolo" data-dir-titolo>Partite in diretta su YouTube</strong>
+      <span class="dir-sotto" data-dir-sotto>{rigaProssima}</span>
     </span>
-    <a class="dir-btn" href={url} target="_blank" rel="noopener">Guarda la diretta</a>
+    <a class="dir-btn" href={url} data-dir-link data-generale={url} target="_blank" rel="noopener">Guarda la diretta</a>
   </div>
 </div>
 
@@ -59,6 +80,8 @@ const trasmesse = [...inCasa, ...delTorneo].sort((a, b) => Date.parse(a.data) - 
   .dir-icona .live-dot { display: none; }
   .dir-testo { display: flex; flex-direction: column; flex: 1 1 220px; min-width: 0; line-height: 1.25; }
   .dir-titolo { font-family: var(--font-display); text-transform: uppercase; font-weight: 800; font-size: 1.1rem; }
+  /* Sempre su una riga: se il testo è lungo finisce con "…" invece di andare a capo */
+  .dir-titolo, .dir-sotto { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .dir-sotto { font-size: .92rem; }
   .dir-btn { display: inline-flex; align-items: center; min-height: 44px; padding: 0 1.1rem; border-radius: 999px;
     font-family: var(--font-display); text-transform: uppercase; font-weight: 800; font-size: 1rem; letter-spacing: .02em;
@@ -115,9 +138,18 @@ const trasmesse = [...inCasa, ...delTorneo].sort((a, b) => Date.parse(a.data) - 
       const titolo = box.querySelector('[data-dir-titolo]');
       const sotto = box.querySelector('[data-dir-sotto]');
       const sfida = partita ? partita.sfida : '';
-      if (stato === 'live') { titolo.textContent = 'In diretta ora'; sotto.textContent = sfida; sotto.hidden = false; }
-      else if (stato === 'oggi') { titolo.textContent = `Oggi alle ${ora(new Date(partita.data))}`; sotto.textContent = `${sfida} · in diretta su YouTube`; sotto.hidden = false; }
-      else { titolo.textContent = 'Le partite casalinghe del Corigliano in diretta su YouTube'; sotto.hidden = true; }
+      const breve = (d) => `${d.toLocaleDateString('it-IT', { timeZone: FUSO, weekday: 'short', day: 'numeric', month: 'short' }).replace(/\./g, '')}, ${ora(d)}`;
+      if (stato === 'live') { titolo.textContent = 'In diretta ora'; sotto.textContent = sfida; }
+      else if (stato === 'oggi') { titolo.textContent = `Oggi alle ${ora(new Date(partita.data))}`; sotto.textContent = sfida; }
+      else {
+        titolo.textContent = 'Partite in diretta su YouTube';
+        // La prossima si ricalcola qui: quella scritta alla pubblicazione può essere già passata
+        const prossima = partite.find((p) => new Date(p.data) > adesso);
+        sotto.textContent = prossima ? `Prossima: ${breve(new Date(prossima.data))} · ${prossima.sfida}` : 'In diretta sul canale della Lega';
+      }
+      // Il giorno della partita il pulsante porta alla sua diretta
+      const link = box.querySelector('[data-dir-link]');
+      link.href = (partita && partita.url) || link.dataset.generale;
       if (box.dataset.modo === 'giorno-partita') box.hidden = stato === 'normale';
     };
 

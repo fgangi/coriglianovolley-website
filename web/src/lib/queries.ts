@@ -40,7 +40,7 @@ export const calendarioQuery = groq`*[_type == "partita"] | order(data asc){
 }`;
 
 export const classificaQuery = groq`*[_type == "classifica"] | order(aggiornataAl desc)[0]{
-  titolo, aggiornataAl, modalita, immagine, righe, linkUfficiale
+  titolo, aggiornataAl, soloManuale, modalita, immagine, righe, linkUfficiale
 }`;
 
 export const rosterQuery = groq`*[_type == "giocatore"] | order(ordine asc, numero asc){

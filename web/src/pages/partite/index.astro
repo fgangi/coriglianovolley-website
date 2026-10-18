@@ -7,6 +7,7 @@ import StrisciaDiretta from '../../components/StrisciaDiretta.astro';
 import { sfetch, img, formatData, pezziData } from '../../lib/sanity';
 import { calendarioQuery, classificaQuery, settingsQuery, torneoQuery } from '../../lib/queries';
 import { logoRifilato } from '../../lib/loghi';
+import { classificaDallaLega } from '../../lib/classificaLega';
 
 const [partite, classifica, settings, avversarie, torneo] = await Promise.all([
   sfetch<any[]>(calendarioQuery, {}, []),
@@ -17,12 +18,17 @@ const [partite, classifica, settings, avversarie, torneo] = await Promise.all([
 ]);
 const prossime = partite.filter((m) => !m.giocata);
 const giocate = partite.filter((m) => m.giocata).reverse();
-const clImg = classifica?.modalita === 'immagine' ? img(classifica.immagine, 1000) : null;
+// Classifica: prima quella letta da Legavolley al momento della pubblicazione;
+// se la lettura non riesce (o nel pannello è chiesto di non usarla) si usa
+// quella inserita a mano, immagine o tabella.
+const lega = classifica?.soloManuale ? null : await classificaDallaLega();
+const clImg = !lega && classifica?.modalita === 'immagine' ? img(classifica.immagine, 1000) : null;
+const aggiornataAl = lega ? lega.aggiornataAl : classifica?.aggiornataAl;
 
 // Prima della 1ª giornata non esiste una classifica: numerare le squadre
 // suggerirebbe un ordine reale (e ci mostrerebbe ultimi senza aver giocato).
 // In quel caso: elenco alfabetico, posizione sostituita da un trattino.
-const righeCl: any[] = classifica?.righe ?? [];
+const righeCl: any[] = lega ? lega.righe : (classifica?.righe ?? []);
 // Basta un valore diverso da zero in una qualsiasi riga: così la nota sparisce
 // anche se in redazione aggiornano solo i punti e dimenticano "Giocate".
 const nonIniziato = righeCl.length > 0 &&
@@ -39,12 +45,19 @@ const PID = import.meta.env.PUBLIC_SANITY_PROJECT_ID;
 const DS = import.meta.env.PUBLIC_SANITY_DATASET || 'production';
 const norm = (t: string) => String(t ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '');
 const logoSquadra = new Map<string, string>();
+// Ultima risorsa: la parte iniziale del nome in comune. La Lega a volte usa un
+// nome diverso dal nostro elenco ("Plus Volleyball Agro Pontino" e "Plus
+// Volleyball Sabaudia"): basta un inizio comune lungo per riconoscerla.
+const inizioComune = (a: string, b: string) => { let i = 0; while (i < a.length && a[i] === b[i]) i++; return i; };
 for (const r of righeCl) {
   const n = norm(r.squadra);
   if (!n || logoSquadra.has(n)) continue;
+  const somiglianza = [...avversarie].sort((a, b) => inizioComune(norm(b.nome), n) - inizioComune(norm(a.nome), n))[0];
   const fonte = /corigliano/.test(n)
     ? settings?.logo
-    : (avversarie.find((a) => norm(a.nome) === n) ?? avversarie.find((a) => n.includes(norm(a.nome)) || norm(a.nome).includes(n)))?.logo;
+    : (avversarie.find((a) => norm(a.nome) === n)
+      ?? avversarie.find((a) => n.includes(norm(a.nome)) || norm(a.nome).includes(n))
+      ?? (somiglianza && inizioComune(norm(somiglianza.nome), n) >= 10 ? somiglianza : null))?.logo;
   const pronto = fonte ? await logoRifilato(fonte, PID, DS, 96) : null;
   if (pronto) logoSquadra.set(n, pronto.url);
 }
@@ -73,7 +86,7 @@ const logoUrl = img(settings?.logo, 200);
 
   {/* Diretta: striscia subito sotto il titolo, dove la trova chi arriva dal menu */}
   {direttaLink && (
-    <div id="diretta">
+    <div id="diretta" class="ancora-diretta">
       <StrisciaDiretta url={direttaLink} partite={prossime} torneo={torneo} nomeSquadra={settings?.nomeSquadra ?? 'Corigliano Volley'} />
     </div>
   )}
@@ -128,10 +141,10 @@ const logoUrl = img(settings?.logo, 200);
       <!-- CLASSIFICA -->
       <div class="section-head between" id="classifica">
         <div><span class="eyebrow">Girone</span><h2>Classifica</h2></div>
-        {classifica?.aggiornataAl && <span class="tag">Aggiornata al {formatData(classifica.aggiornataAl)}</span>}
+        {aggiornataAl && <span class="tag">Aggiornata al {formatData(aggiornataAl)}</span>}
       </div>
 
-      {!classifica ? (
+      {!lega && !classifica ? (
         <div class="empty"><strong>Classifica non ancora pubblicata</strong>Verrà aggiornata dalla redazione (immagine o tabella) con il link ufficiale della Lega.</div>
       ) : clImg ? (
         <figure class="cl-img"><img src={clImg} alt="Classifica Serie A3" /></figure>
@@ -146,7 +159,7 @@ const logoUrl = img(settings?.logo, 200);
             <tbody>
               {righeOrdinate.map((r: any, i: number) => (
                 <tr class={/corigliano/i.test(r.squadra ?? '') ? 'ours' : ''}>
-                  <td class="tabnums">{nonIniziato ? '—' : i + 1}</td>
+                  <td class="tabnums">{nonIniziato ? '—' : (r.posizione ?? i + 1)}</td>
                   <td>
                     <span class="cl-squadra">
                       {logoSquadra.get(norm(r.squadra))
@@ -169,8 +182,9 @@ const logoUrl = img(settings?.logo, 200);
         <div class="empty"><strong>Classifica in aggiornamento</strong></div>
       )}
 
-      {classifica?.linkUfficiale && (
-        <a class="btn" style="margin-top:16px;" href={classifica.linkUfficiale} target="_blank" rel="noopener">
+      {lega && <p class="cl-fonte">Dati: Lega Pallavolo Serie A</p>}
+      {(classifica?.linkUfficiale || lega) && (
+        <a class="btn" style="margin-top:16px;" href={classifica?.linkUfficiale || lega?.fonte} target="_blank" rel="noopener">
           Classifica ufficiale su Legavolley →
         </a>
       )}
@@ -188,6 +202,11 @@ const logoUrl = img(settings?.logo, 200);
   .mese-titolo { font-size: .95rem; text-transform: uppercase; letter-spacing: .12em; color: var(--ink-faint); font-weight: 700;
     margin: 0 0 20px; padding-bottom: 10px; border-bottom: 1px solid var(--line); }
   .cl-nota { font-size: .86rem; color: var(--ink-faint); margin: 0 0 14px; }
+  .cl-fonte { font-size: .82rem; color: var(--ink-faint); margin: 10px 0 0; }
+  /* Arrivando dal menu ("Diretta") la striscia si appoggia subito sotto
+     l'intestazione: i 28px di respiro delle altre sezioni servono ai titoli,
+     qui lascerebbero solo una fascia bianca sopra la striscia. */
+  #diretta.ancora-diretta { scroll-margin-top: var(--altezza-intestazione); }
   .cl-img { margin: 0; border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; background: var(--surface); }
   .table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); }
   table { border-collapse: collapse; width: 100%; min-width: 480px; }
