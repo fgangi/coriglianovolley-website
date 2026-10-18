@@ -60,21 +60,37 @@ function verifica(righe: RigaClassifica[]) {
   }
 }
 
+// La data "aggiornata al" va cercata dopo l'intestazione, con l'HTML in mezzo.
+// Di solito "17/10/2026"; si accettano anche "-" o "." e l'anno a due cifre.
+function leggiData(html: string): string | null {
+  const inizio = html.indexOf('Classifica aggiornata al');
+  const intestazione = testo(html.slice(inizio, inizio + 1000));
+  const d = intestazione.match(/Classifica aggiornata al\D{0,40}?(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{2,4})\b/);
+  if (!d) return null;
+  const due = (x: string) => x.padStart(2, '0');
+  return `${d[3].length === 2 ? `20${d[3]}` : d[3]}-${due(d[2])}-${due(d[1])}`;
+}
+
 export async function classificaDallaLega(url = URL_CLASSIFICA_LEGA): Promise<ClassificaLega | null> {
   try {
-    const risposta = await fetch(url, { signal: AbortSignal.timeout(10_000), headers: { 'User-Agent': 'coriglianovolley.it (aggiornamento classifica)' } });
-    if (!risposta.ok) throw new Error(`risposta ${risposta.status}`);
-    const html = await risposta.text();
-    const righe = leggiClassifica(html);
-    verifica(righe);
-    // La data sta subito dopo l'intestazione, ma in mezzo può esserci HTML
-    const intestazione = testo(html.slice(html.indexOf('Classifica aggiornata al'), html.indexOf('Classifica aggiornata al') + 1000));
-    const data = intestazione.match(/Classifica aggiornata al\D{0,40}?(\d{1,2})\/(\d{1,2})\/(\d{4})/);
-    const due = (x: string) => x.padStart(2, '0');
-    // Se la data non si trova, vale quella di oggi: la classifica è stata appena letta
-    if (!data) console.warn('[classifica] data della Lega non trovata, uso quella di oggi');
-    const oggi = new Date().toLocaleDateString('sv-SE', { timeZone: 'Europe/Rome' });
-    return { righe, aggiornataAl: data ? `${data[3]}-${due(data[2])}-${due(data[1])}` : oggi, fonte: url };
+    // La Lega a volte manda la pagina con la data vuota ("aggiornata al" e
+    // basta): si riprova fino a 3 volte, poi si tiene la classifica senza data.
+    let righe: RigaClassifica[] = [];
+    let aggiornataAl: string | null = null;
+    for (let tentativo = 1; tentativo <= 3 && !aggiornataAl; tentativo++) {
+      const risposta = await fetch(url, { signal: AbortSignal.timeout(10_000), headers: { 'User-Agent': 'coriglianovolley.it (aggiornamento classifica)' } });
+      if (!risposta.ok) throw new Error(`risposta ${risposta.status}`);
+      const html = await risposta.text();
+      righe = leggiClassifica(html);
+      verifica(righe);
+      aggiornataAl = leggiData(html);
+    }
+    // Senza data vale quella di oggi: la classifica è stata appena letta
+    if (!aggiornataAl) {
+      console.warn('[classifica] la Lega non riporta la data dopo 3 tentativi, uso quella di oggi');
+      aggiornataAl = new Date().toLocaleDateString('sv-SE', { timeZone: 'Europe/Rome' });
+    }
+    return { righe, aggiornataAl, fonte: url };
   } catch (e) {
     console.warn(`[classifica] lettura da Legavolley non riuscita, uso quella del pannello: ${(e as Error).message}`);
     return null;
