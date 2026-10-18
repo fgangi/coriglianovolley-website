@@ -106,7 +106,8 @@ const sponsorFinali = await Promise.all(grezziFinali.map(async (f) => {
 
 // Anteprime che rimandano alle sezioni dedicate
 const prossimeList = prossime.slice(0, 3);
-const direttaLink = prossime.find((m) => m.direttaUrl)?.direttaUrl ?? settings?.direttaUrl ?? null;
+// Link generale (canale della Lega, dal pannello); quello della singola partita lo sceglie la striscia
+const direttaLink = settings?.direttaUrl ?? prossime.find((m) => m.direttaUrl)?.direttaUrl ?? null;
 const rosterPreview = roster;
 // Nei caroselli in home scorre tutto: roster completo e staff ordinato per area
 const RANK_AREA: Record<string, number> = { tecnico: 0, medico: 1, presidenza: 2, dirigenza: 3 };

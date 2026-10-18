@@ -68,10 +68,13 @@ export async function classificaDallaLega(url = URL_CLASSIFICA_LEGA): Promise<Cl
     const righe = leggiClassifica(html);
     verifica(righe);
     // La data sta subito dopo l'intestazione, ma in mezzo può esserci HTML
-    const intestazione = testo(html.slice(html.indexOf('Classifica aggiornata al'), html.indexOf('Classifica aggiornata al') + 400));
-    const data = intestazione.match(/Classifica aggiornata al\s*(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+    const intestazione = testo(html.slice(html.indexOf('Classifica aggiornata al'), html.indexOf('Classifica aggiornata al') + 1000));
+    const data = intestazione.match(/Classifica aggiornata al\D{0,40}?(\d{1,2})\/(\d{1,2})\/(\d{4})/);
     const due = (x: string) => x.padStart(2, '0');
-    return { righe, aggiornataAl: data ? `${data[3]}-${due(data[2])}-${due(data[1])}` : null, fonte: url };
+    // Se la data non si trova, vale quella di oggi: la classifica è stata appena letta
+    if (!data) console.warn('[classifica] data della Lega non trovata, uso quella di oggi');
+    const oggi = new Date().toLocaleDateString('sv-SE', { timeZone: 'Europe/Rome' });
+    return { righe, aggiornataAl: data ? `${data[3]}-${due(data[2])}-${due(data[1])}` : oggi, fonte: url };
   } catch (e) {
     console.warn(`[classifica] lettura da Legavolley non riuscita, uso quella del pannello: ${(e as Error).message}`);
     return null;

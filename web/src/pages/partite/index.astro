@@ -63,7 +63,8 @@ for (const r of righeCl) {
 }
 
 // Diretta: il link del canale YouTube (una partita può averne uno suo)
-const direttaLink = prossime.find((m) => m.direttaUrl)?.direttaUrl ?? settings?.direttaUrl ?? null;
+// Link generale (canale della Lega, dal pannello); quello della singola partita lo sceglie la striscia
+const direttaLink = settings?.direttaUrl ?? prossime.find((m) => m.direttaUrl)?.direttaUrl ?? null;
 
 /** Raggruppa le partite per mese, mantenendo l'ordine ricevuto. */
 function perMese(elenco: any[]) {
