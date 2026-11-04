@@ -13,10 +13,12 @@ interface Props {
   altezzaMobile?: string;
   /** Riga che non scorre da sola: resta ferma anche se i loghi ci stanno */
   fissa?: boolean;
+  /** Loghi al centro della riga (il main sponsor, da solo) */
+  centrata?: boolean;
 }
-const { etichetta, direzione = 'avanti', altezza = '70px', altezzaMobile = '54px', fissa = false } = Astro.props;
+const { etichetta, direzione = 'avanti', altezza = '70px', altezzaMobile = '54px', fissa = false, centrata = false } = Astro.props;
 ---
-<div class="striscia" data-striscia data-direzione={direzione} data-fissa={fissa ? 'si' : undefined}
+<div class="striscia" data-striscia data-direzione={direzione} data-fissa={fissa ? 'si' : undefined} data-centrata={centrata ? 'si' : undefined}
   style={`--h:${altezza};--h-mob:${altezzaMobile}`}>
   <div class="str-pista" data-pista role="list" aria-label={etichetta}>
     <slot />
@@ -34,6 +36,7 @@ const { etichetta, direzione = 'avanti', altezza = '70px', altezzaMobile = '54px
   .str-pista { display: flex; align-items: center; gap: clamp(28px, 4vw, 64px);
     overflow-x: auto; scrollbar-width: none; -ms-overflow-style: none; padding: 6px 0; }
   .str-pista::-webkit-scrollbar { display: none; }
+  .striscia[data-centrata='si'] .str-pista { justify-content: center; }
 
   /* I loghi stanno nudi sullo sfondo: nessun riquadro, come nel mockup.
      Altezza e larghezza arrivano dalla pagina come --lh/--lw, calcolate sul

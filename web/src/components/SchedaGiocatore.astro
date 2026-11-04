@@ -8,9 +8,12 @@ import { img } from '../lib/sanity';
  *
  * Con `dettagli` sotto al nome compaiono anno, altezza e nazionalità: servono
  * nella pagina dedicata, in home appesantirebbero il carosello.
+ *
+ * Con `esterno` il link porta fuori dal sito (la scheda ufficiale sulla Lega):
+ * si apre in una nuova finestra e sotto al ruolo lo dice, per non sorprendere.
  */
-interface Props { p: any; href?: string; dettagli?: boolean }
-const { p, href, dettagli = false } = Astro.props;
+interface Props { p: any; href?: string; dettagli?: boolean; esterno?: boolean }
+const { p, href, dettagli = false, esterno = false } = Astro.props;
 
 const RUOLI: Record<string, string> = {
   palleggiatore: 'Palleggiatore', opposto: 'Opposto', schiacciatore: 'Schiacciatore',
@@ -19,7 +22,7 @@ const RUOLI: Record<string, string> = {
 const foto = img(p.foto, 480, 600);
 const Tag = href ? 'a' : 'div';
 ---
-<Tag class="scheda-g" href={href}>
+<Tag class="scheda-g" href={href} {...(href && esterno ? { target: '_blank', rel: 'noopener' } : {})}>
   <div class="sg-foto">
     {foto ? <img src={foto} alt={`${p.nome ?? ''} ${p.cognome ?? ''}`.trim()} loading="lazy" /> : <div class="sg-vuota" aria-hidden="true"></div>}
     {p.numero != null && <span class="sg-num">{p.numero}</span>}
@@ -34,12 +37,16 @@ const Tag = href ? 'a' : 'div';
         {p.nazionalita && <div><dt>Nazionalità</dt><dd>{p.nazionalita}</dd></div>}
       </dl>
     )}
+    {href && esterno && <span class="sg-esterno">Scheda Lega <span aria-hidden="true">↗</span><span class="sr-only"> (si apre in una nuova finestra)</span></span>}
   </div>
 </Tag>
 
 <style>
   .scheda-g { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; overflow: hidden;
     display: flex; flex-direction: column; color: inherit; height: 100%;
+    /* Contiene il testo per i lettori di schermo (posizione assoluta): senza,
+       nel carosello della home finiva fuori pagina e la faceva scorrere di lato */
+    position: relative;
     transition: transform .14s ease, border-color .14s ease; }
   a.scheda-g:hover { transform: translateY(-3px); border-color: var(--ink-faint); }
   /* Sfumatura dietro al giocatore, presa dal mockup. Il colore pieno resta
@@ -78,4 +85,7 @@ const Tag = href ? 'a' : 'div';
   /* Sul telefono le schede sono a due colonne: anno, altezza e nazionalità
      non ci stanno in modo leggibile e restano visibili da tablet in su. */
   @media (max-width: 639px) { .sg-dati { display: none; } }
+  /* Rimanda alla scheda ufficiale: in fondo, discreto, rosso al passaggio */
+  .sg-esterno { margin-top: 8px; font-size: .8rem; font-weight: 700; color: var(--ink-faint); }
+  a.scheda-g:hover .sg-esterno { color: var(--accent-strong); }
 </style>

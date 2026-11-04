@@ -19,7 +19,7 @@ const gruppi = ordine
     <div class="ruolo-group">
       <h3 class="ruolo-title">{g.label}</h3>
       <div class="grid griglia-schede">
-        {g.giocatori.map((p) => <SchedaGiocatore p={p} dettagli />)}
+        {g.giocatori.map((p) => <SchedaGiocatore p={p} dettagli href={p.schedaUfficiale} esterno />)}
       </div>
     </div>
   ))

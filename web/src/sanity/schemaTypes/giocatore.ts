@@ -51,6 +51,12 @@ export const giocatore = defineType({
     }),
     defineField({ name: 'bio', title: 'Nota biografica', type: 'text', rows: 4 }),
     defineField({
+      name: 'schedaUfficiale',
+      title: 'Scheda ufficiale (Legavolley)',
+      type: 'url',
+      description: 'Pagina del giocatore sul sito della Lega, es. https://www.legavolley.it/player/IUR-SIM-05. Nella pagina Squadra la scheda del giocatore la apre in una nuova finestra.',
+    }),
+    defineField({
       name: 'ordine',
       title: 'Ordine di visualizzazione',
       type: 'number',

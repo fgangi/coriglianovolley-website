@@ -2,7 +2,7 @@
 const groq = String.raw;
 
 export const settingsQuery = groq`*[_type == "siteSettings"][0]{
-  nomeSquadra, stagione, hero, logo, fotoSquadra, storia, bigliettiUrl, campagnaAbbonamenti, iscrizioni, newsletterUrl, direttaUrl, email, pec, telefono, telefoni, denominazione, codiceFipav, partitaIva, indirizzo, mappaPosizione, social,
+  nomeSquadra, nomeCampionato, stagione, hero, logo, fotoSquadra, storia, bigliettiUrl, campagnaAbbonamenti, iscrizioni, newsletterUrl, direttaUrl, email, pec, telefono, telefoni, denominazione, codiceFipav, partitaIva, indirizzo, mappaPosizione, social,
   loghiLega,
   prossimaPartita->{data, avversario, avversaria->{nome, logo}, dove, competizione, luogo, giornata}
 }`;
@@ -44,7 +44,7 @@ export const classificaQuery = groq`*[_type == "classifica"] | order(aggiornataA
 }`;
 
 export const rosterQuery = groq`*[_type == "giocatore"] | order(ordine asc, numero asc){
-  _id, nome, cognome, numero, ruolo, foto, annoNascita, altezza, nazionalita, bio
+  _id, nome, cognome, numero, ruolo, foto, annoNascita, altezza, nazionalita, bio, schedaUfficiale
 }`;
 
 export const staffQuery = groq`*[_type == "staff"] | order(ordine asc, nome asc){
@@ -60,7 +60,7 @@ export const albumListQuery = groq`*[_type == "galleryAlbum"] | order(data desc)
 }`;
 
 export const giovaniliQuery = groq`*[_type == "squadraGiovanile"] | order(ordine asc, nome asc){
-  _id, nome, campionato, foto, descrizione
+  _id, nome, settore, campionato, foto, descrizione
 }`;
 
 // Torneo breve in corso (precampionato): uno solo, quello attivo più recente

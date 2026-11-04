@@ -10,7 +10,14 @@ export const siteSettings = defineType({
       name: 'nomeSquadra',
       title: 'Nome squadra',
       type: 'string',
+      description: 'Nome della società: titolo del sito, intestazione, piè di pagina.',
       validation: (r) => r.required(),
+    }),
+    defineField({
+      name: 'nomeCampionato',
+      title: 'Nome in campionato',
+      type: 'string',
+      description: 'Nome della prima squadra come lo scrive la Lega (es. "Maricor Corigliano"), con lo sponsor. Usato in calendario, risultati, prossima partita e diretta. Vuoto = Nome squadra.',
     }),
     defineField({
       name: 'logo',

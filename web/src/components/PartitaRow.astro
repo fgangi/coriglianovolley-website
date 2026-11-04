@@ -1,11 +1,10 @@
 ---
 import { pezziData, img } from '../lib/sanity';
 
-interface Props { m: any; logoNostro?: string | null }
-const { m, logoNostro = null } = Astro.props;
+interface Props { m: any; logoNostro?: string | null; nostra?: string }
+const { m, logoNostro = null, nostra = 'Corigliano Volley' } = Astro.props;
 
 const casa = m.dove === 'casa';
-const nostra = 'Corigliano Volley';
 // Il nome viene dalla squadra collegata; il testo libero resta come riserva
 const avversaria = m.avversaria?.nome ?? m.avversario ?? '';
 const logoAvv = m.avversaria?.logo ? img(m.avversaria.logo, 220) : null;

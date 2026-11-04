@@ -4,7 +4,7 @@ import PageHero from '../../components/PageHero.astro';
 import PartitaRow from '../../components/PartitaRow.astro';
 import TabelloneTorneo from '../../components/TabelloneTorneo.astro';
 import StrisciaDiretta from '../../components/StrisciaDiretta.astro';
-import { sfetch, img, formatData, pezziData } from '../../lib/sanity';
+import { sfetch, img, formatData, pezziData, nomeInCampionato } from '../../lib/sanity';
 import { calendarioQuery, classificaQuery, settingsQuery, torneoQuery } from '../../lib/queries';
 import { logoRifilato } from '../../lib/loghi';
 import { classificaDallaLega } from '../../lib/classificaLega';
@@ -13,9 +13,10 @@ const [partite, classifica, settings, avversarie, torneo] = await Promise.all([
   sfetch<any[]>(calendarioQuery, {}, []),
   sfetch<any>(classificaQuery, {}, null),
   sfetch<any>(settingsQuery, {}, null),
-  sfetch<any[]>('*[_type == "squadraAvversaria" && defined(logo)]{nome, logo}', {}, []),
+  sfetch<any[]>('*[_type == "squadraAvversaria" && defined(logo)]{nome, altriNomi, logo}', {}, []),
   sfetch<any>(torneoQuery, {}, null),
 ]);
+const nostra = nomeInCampionato(settings);
 const prossime = partite.filter((m) => !m.giocata);
 const giocate = partite.filter((m) => m.giocata).reverse();
 // Classifica: prima quella letta da Legavolley al momento della pubblicazione;
@@ -37,30 +38,32 @@ const righeOrdinate = nonIniziato
   ? [...righeCl].sort((a, b) => String(a.squadra ?? '').localeCompare(String(b.squadra ?? ''), 'it'))
   : righeCl;
 
-// Stemmi in classifica. Le righe sono testo libero, quindi lo stemma si trova
-// cercando la squadra avversaria con lo stesso nome (ignorando maiuscole,
-// accenti e spazi); per noi si usa il logo della società. I margini vuoti dei
-// file vengono tolti, altrimenti alcuni stemmi sembrerebbero la metà degli altri.
+// Stemmi in classifica. Le righe arrivano dalla Lega come testo, quindi lo
+// stemma si trova cercando la squadra del pannello con lo stesso nome
+// (ignorando maiuscole, accenti e spazi), o con uno dei suoi "Altri nomi":
+// le squadre cambiano nome quando cambiano sponsor. Per noi si usa il logo
+// della società. I margini vuoti dei file vengono tolti, altrimenti alcuni
+// stemmi sembrerebbero la metà degli altri.
 const PID = import.meta.env.PUBLIC_SANITY_PROJECT_ID;
 const DS = import.meta.env.PUBLIC_SANITY_DATASET || 'production';
 const norm = (t: string) => String(t ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '');
+const nomiDi = (a: any) => [a.nome, ...(a.altriNomi ?? [])].map(norm).filter(Boolean);
 const logoSquadra = new Map<string, string>();
-// Ultima risorsa: la parte iniziale del nome in comune. La Lega a volte usa un
-// nome diverso dal nostro elenco ("Plus Volleyball Agro Pontino" e "Plus
-// Volleyball Sabaudia"): basta un inizio comune lungo per riconoscerla.
-const inizioComune = (a: string, b: string) => { let i = 0; while (i < a.length && a[i] === b[i]) i++; return i; };
+const senzaStemma: string[] = [];
 for (const r of righeCl) {
   const n = norm(r.squadra);
   if (!n || logoSquadra.has(n)) continue;
-  const somiglianza = [...avversarie].sort((a, b) => inizioComune(norm(b.nome), n) - inizioComune(norm(a.nome), n))[0];
   const fonte = /corigliano/.test(n)
     ? settings?.logo
-    : (avversarie.find((a) => norm(a.nome) === n)
-      ?? avversarie.find((a) => n.includes(norm(a.nome)) || norm(a.nome).includes(n))
-      ?? (somiglianza && inizioComune(norm(somiglianza.nome), n) >= 10 ? somiglianza : null))?.logo;
+    : (avversarie.find((a) => nomiDi(a).includes(n))
+      ?? avversarie.find((a) => nomiDi(a).some((x) => n.includes(x) || x.includes(n))))?.logo;
   const pronto = fonte ? await logoRifilato(fonte, PID, DS, 96) : null;
   if (pronto) logoSquadra.set(n, pronto.url);
+  else senzaStemma.push(r.squadra);
 }
+// Nel registro della pubblicazione su Cloudflare: segnala il nome da
+// aggiungere in "Altri nomi" (o da correggere) nelle Squadre del girone.
+if (senzaStemma.length) console.warn(`[classifica] squadre senza stemma, nome non trovato fra le Squadre del girone: ${senzaStemma.join(', ')}`);
 
 // Diretta: il link del canale YouTube (una partita può averne uno suo)
 // Link generale (canale della Lega, dal pannello); quello della singola partita lo sceglie la striscia
@@ -88,7 +91,7 @@ const logoUrl = img(settings?.logo, 200);
   {/* Diretta: striscia subito sotto il titolo, dove la trova chi arriva dal menu */}
   {direttaLink && (
     <div id="diretta" class="ancora-diretta">
-      <StrisciaDiretta url={direttaLink} partite={prossime} torneo={torneo} nomeSquadra={settings?.nomeSquadra ?? 'Corigliano Volley'} />
+      <StrisciaDiretta url={direttaLink} partite={prossime} torneo={torneo} nomeSquadra={nostra} />
     </div>
   )}
 
@@ -113,7 +116,7 @@ const logoUrl = img(settings?.logo, 200);
         prossimePerMese.map((g) => (
           <div class="mese-gruppo">
             <h3 class="mese-titolo">{g.titolo}</h3>
-            <div class="grid cols-2 griglia-partite">{g.partite.map((m) => <PartitaRow m={m} logoNostro={logoUrl} />)}</div>
+            <div class="grid cols-2 griglia-partite">{g.partite.map((m) => <PartitaRow m={m} logoNostro={logoUrl} nostra={nostra} />)}</div>
           </div>
         ))
       ) : (
@@ -130,7 +133,7 @@ const logoUrl = img(settings?.logo, 200);
       {giocatePerMese.map((g) => (
         <div class="mese-gruppo">
           <h3 class="mese-titolo">{g.titolo}</h3>
-          <div class="grid cols-2 griglia-partite">{g.partite.map((m) => <PartitaRow m={m} logoNostro={logoUrl} />)}</div>
+          <div class="grid cols-2 griglia-partite">{g.partite.map((m) => <PartitaRow m={m} logoNostro={logoUrl} nostra={nostra} />)}</div>
         </div>
       ))}
     </div>

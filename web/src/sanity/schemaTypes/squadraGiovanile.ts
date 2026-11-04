@@ -7,12 +7,27 @@ export const squadraGiovanile = defineType({
   type: 'document',
   fields: [
     defineField({ name: 'nome', title: 'Nome / categoria', type: 'string', validation: (r) => r.required() }),
+    defineField({
+      name: 'settore',
+      title: 'Settore',
+      type: 'string',
+      description: 'Sul sito i gruppi sono divisi in tre blocchi: Minivolley - S3, Femminile, Maschile.',
+      options: {
+        list: [
+          { title: 'Minivolley - S3', value: 'minivolley' },
+          { title: 'Femminile', value: 'femminile' },
+          { title: 'Maschile', value: 'maschile' },
+        ],
+        layout: 'radio',
+      },
+      validation: (r) => r.required(),
+    }),
     defineField({ name: 'campionato', title: 'Campionato', type: 'string' }),
     defineField({ name: 'foto', title: 'Foto squadra', type: 'image', options: { hotspot: true } }),
     defineField({ name: 'descrizione', title: 'Descrizione', type: 'text', rows: 4 }),
     defineField({ name: 'ordine', title: 'Ordine di visualizzazione', type: 'number' }),
   ],
   preview: {
-    select: { title: 'nome', subtitle: 'campionato', media: 'foto' },
+    select: { title: 'nome', subtitle: 'settore', media: 'foto' },
   },
 });

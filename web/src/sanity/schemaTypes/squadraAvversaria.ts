@@ -20,6 +20,14 @@ export const squadraAvversaria = defineType({
       validation: validaLogo,
     }),
     defineField({ name: 'citta', title: 'Città', type: 'string' }),
+    defineField({
+      name: 'altriNomi',
+      title: 'Altri nomi',
+      type: 'array',
+      of: [{ type: 'string' }],
+      options: { layout: 'tags' },
+      description: 'Nomi precedenti o usati altrove (es. con un vecchio sponsor). Servono a riconoscere la squadra nella classifica della Lega anche se il nome cambia.',
+    }),
   ],
   preview: { select: { title: 'nome', subtitle: 'citta', media: 'logo' } },
 });

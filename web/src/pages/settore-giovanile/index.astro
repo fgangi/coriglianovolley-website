@@ -16,6 +16,22 @@ const [squadre, news, settings] = await Promise.all([
 const isc = settings?.iscrizioni ?? {};
 const iscrizioniAttive = isc.aperte !== false && !!isc.moduloUrl;
 const categorie: string[] = isc.categorie ?? [];
+
+// Tre blocchi, nell'ordine FIPAV: prima il minivolley, poi femminile e maschile.
+// Un gruppo senza settore (inserito prima che il campo esistesse) va in fondo.
+const SETTORI = [
+  { id: 'minivolley', label: 'Minivolley - S3', genere: '' },
+  { id: 'femminile', label: 'Femminile', genere: 'Femminile' },
+  { id: 'maschile', label: 'Maschile', genere: 'Maschile' },
+];
+const settori = [
+  ...SETTORI.map((st) => ({ ...st, squadre: squadre.filter((sq) => sq.settore === st.id) })),
+  { id: 'altri', label: 'Altri gruppi', genere: '', squadre: squadre.filter((sq) => !SETTORI.some((st) => st.id === sq.settore)) },
+].filter((st) => st.squadre.length > 0);
+// Nel pannello il nome è completo ("Under 14 Femminile"); dentro il blocco
+// Femminile ripeterlo cinque volte non aggiunge nulla, quindi si toglie.
+const breve = (nome: string, genere: string) =>
+  genere ? nome.replace(new RegExp(`\\s+${genere}$`, 'i'), '') : nome;
 ---
 <Layout title="Settore giovanile" description="Il settore giovanile della Corigliano Volley: corsi di minivolley e pallavolo maschile e femminile, iscrizioni e notizie del vivaio.">
   <PageHero eyebrow="Il vivaio" title="Settore giovanile" lead="Le squadre del nostro vivaio, le iscrizioni ai corsi e le notizie che le riguardano." />
@@ -45,25 +61,33 @@ const categorie: string[] = isc.categorie ?? [];
   )}
 
   {/* La sezione compare solo quando ci sono gruppi inseriti: senza squadre
-      mostrava un segnaposto vuoto. Aggiungendole nel pannello ricompare. */}
+      mostrava un segnaposto vuoto. Aggiungendole nel pannello ricompare.
+      I gruppi sono divisi in tre blocchi, dal campo "Settore" del pannello. */}
   {squadre.length > 0 && (
     <section class="section">
       <div class="container">
         <div class="section-head" id="gruppi"><span class="eyebrow">Le squadre</span><h2>I nostri gruppi</h2></div>
-        <div class="grid cols-3">
-          {squadre.map((sq) => {
-            const foto = img(sq.foto, 640, 400);
-            return (
-              <div class="card team-card">
-                <div class="ph">{foto ? <img src={foto} alt={sq.nome} loading="lazy" /> : <div class="ph-empty" aria-hidden="true"></div>}</div>
-                <div class="body">
-                  <h3>{sq.nome}</h3>
-                  {sq.campionato && <span class="tag">{sq.campionato}</span>}
-                  {sq.descrizione && <p>{sq.descrizione}</p>}
-                </div>
-              </div>
-            );
-          })}
+        <div class="settori">
+          {settori.map((st) => (
+            <div class="settore">
+              <h3 class="liv-title">{st.label}</h3>
+              <ul class="gruppi">
+                {st.squadre.map((sq) => {
+                  const foto = img(sq.foto, 640, 400);
+                  return (
+                    <li class="card gruppo">
+                      {foto && <div class="ph"><img src={foto} alt={sq.nome} loading="lazy" /></div>}
+                      <div class="body">
+                        <h4>{breve(sq.nome, st.genere)}</h4>
+                        {sq.campionato && <span class="tag">{sq.campionato}</span>}
+                        {sq.descrizione && <p>{sq.descrizione}</p>}
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          ))}
         </div>
       </div>
     </section>
@@ -98,10 +122,22 @@ const categorie: string[] = isc.categorie ?? [];
   .isc-nota { font-size: .8rem; color: var(--ink-faint); text-align: center; }
   @media (max-width: 860px) { .iscrizioni { grid-template-columns: minmax(0, 1fr); align-items: start; } }
 
-  .team-card { display: flex; flex-direction: column; }
+  /* PC: i tre blocchi affiancati; tablet e telefono: uno sotto l'altro, con
+     i gruppi su tre colonne (due sul telefono): i nomi sono corti, una
+     colonna sola sprecherebbe metà schermo. */
+  .settori { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: clamp(24px, 3vw, 40px); align-items: start; }
+  .gruppi { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+  .gruppo { display: flex; flex-direction: column; overflow: hidden; }
+  .gruppo .body { padding: 14px 18px; display: flex; flex-direction: column; gap: 4px; }
+  .gruppo h4 { font-family: var(--font-display); font-size: 1.25rem; font-weight: 800; line-height: 1.15; margin: 0; }
+  .gruppo .body p { font-size: .92rem; }
   .ph { aspect-ratio: 16 / 10; background: var(--surface-2); overflow: hidden; }
   .ph img { width: 100%; height: 100%; object-fit: cover; }
-  .ph-empty { width: 100%; height: 100%; background: linear-gradient(180deg, var(--surface-2), var(--surface)); }
-  .team-card .body { padding: 16px 18px 18px; display: flex; flex-direction: column; gap: 6px; }
-  .team-card .body p { font-size: .92rem; }
+  @media (max-width: 1023px) {
+    .settori { grid-template-columns: minmax(0, 1fr); gap: 36px; }
+    .gruppi { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  }
+  @media (max-width: 639px) { .gruppi { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  .liv-title { font-size: .95rem; text-transform: uppercase; letter-spacing: .12em; color: var(--ink-faint); font-weight: 700;
+    margin: 0 0 20px; padding-bottom: 10px; border-bottom: 1px solid var(--line); }
 </style>

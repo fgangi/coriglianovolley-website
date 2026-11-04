@@ -38,13 +38,24 @@ export function img(source: any, w = 800, h?: number, inquadratura?: string): st
 }
 
 /**
+ * Anteprima delle bozze, solo in sviluppo: avviando il server locale con
+ * SANITY_ANTEPRIMA_TOKEN (token di lettura) il sito mostra anche i contenuti
+ * salvati come bozza nel pannello, che online non compaiono finché non si
+ * pubblicano. Senza la variabile legge i soli contenuti pubblicati, come online.
+ */
+function lettore() {
+  const token = import.meta.env.DEV ? process.env.SANITY_ANTEPRIMA_TOKEN : undefined;
+  return token ? client.withConfig({ token, perspective: 'drafts', useCdn: false }) : client;
+}
+
+/**
  * Esegue una query GROQ. Se il progetto Sanity non è ancora collegato
  * (ID placeholder o rete non disponibile) restituisce il fallback,
  * così il sito continua a renderizzare gli stati "vuoti".
  */
 export async function sfetch<T>(query: string, params: Record<string, any> = {}, fallback: T): Promise<T> {
   try {
-    return await client.fetch<T>(query, params);
+    return await lettore().fetch<T>(query, params);
   } catch (err) {
     if (import.meta.env.DEV) {
       console.warn('[sanity] query non riuscita (progetto non collegato?):', (err as Error).message);
@@ -111,6 +122,15 @@ export function posizione(p?: { x?: number; y?: number } | null): string {
  * indicarlo, gli orari delle partite verrebbero mostrati sfasati di un'ora.
  */
 export const FUSO = 'Europe/Rome';
+
+/**
+ * Nome della prima squadra nelle partite, come lo scrive la Lega: con il main
+ * sponsor è diverso da quello della società ("Maricor Corigliano" e
+ * "Corigliano Volley"). Il sito, i titoli e il piè di pagina usano la società.
+ */
+export function nomeInCampionato(settings: any): string {
+  return settings?.nomeCampionato || settings?.nomeSquadra || 'Corigliano Volley';
+}
 
 /** Data in formato italiano leggibile. */
 export function formatData(iso?: string, withTime = false): string {

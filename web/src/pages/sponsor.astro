@@ -14,8 +14,9 @@ const mikasaUrl = settings?.loghiLega?.mikasaUrl;
 // Stessa gerarchia di dimensioni della home: qui però le file restano ferme,
 // perché questa è la pagina dell'elenco completo e ogni marchio deve restare
 // sempre visibile, non passare ogni tanto.
-const SEZIONI: { label: string; livelli: string[]; h: number }[] = [
-  { label: 'Main sponsor', livelli: ['main'], h: 92 },
+const SEZIONI: { label: string; livelli: string[]; h: number; centrata?: boolean }[] = [
+  // Uno solo, con logo verticale: più grande e al centro, come in home
+  { label: 'Main sponsor', livelli: ['main'], h: 150, centrata: true },
   { label: 'Gold sponsor', livelli: ['gold'], h: 78 },
   { label: 'Silver sponsor', livelli: ['silver'], h: 66 },
   { label: 'Bronze sponsor', livelli: ['bronze'], h: 58 },
@@ -48,7 +49,7 @@ for (const g of gruppi) {
         gruppi.map((g) => (
           <div class="liv-group">
             <h2 class="liv-title">{g.label}</h2>
-            <div class="sponsor-grid">
+            <div class:list={['sponsor-grid', { centrata: g.centrata }]}>
               {g.items.map((sp) => {
                 const pronto = loghiPronti.get(sp._id);
                 const misura = pronto ? misuraLogo(pronto.prop, g.h) : undefined;
@@ -95,6 +96,8 @@ for (const g of gruppi) {
   /* Le misure arrivano dalla pagina come --lh/--lw, calcolate sul logo già
      privo dei margini vuoti. Chi non ha logo non le ha e resta a dimensione
      naturale: lì dentro c'è solo il nome scritto. */
+  .sponsor-grid.centrata { justify-content: center; }
+  @media (max-width: 639px) { .sponsor-grid.centrata { grid-template-columns: minmax(0, 1fr); } }
   .sp-logo { flex: none; display: inline-flex; align-items: center; justify-content: center;
     height: var(--lh, auto); width: var(--lw, auto);
     max-width: 100%; transition: transform .14s ease; }

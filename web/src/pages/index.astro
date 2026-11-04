@@ -12,7 +12,7 @@ import HeroVideo from '../components/HeroVideo.astro';
 import StrisciaDiretta from '../components/StrisciaDiretta.astro';
 import TabelloneTorneo from '../components/TabelloneTorneo.astro';
 import CampagnaAbbonamenti from '../components/CampagnaAbbonamenti.astro';
-import { sfetch, img, formatData } from '../lib/sanity';
+import { sfetch, img, formatData, nomeInCampionato } from '../lib/sanity';
 import {
   settingsQuery, risultatiQuery, prossimePartiteQuery,
   newsInEvidenzaQuery, newsUltimeQuery, sponsorQuery, rosterQuery, staffQuery, torneoQuery,
@@ -35,7 +35,8 @@ const featured = evidenza[0] ?? null;
 // L'elenco "Ultime news" esclude la notizia già mostrata in evidenza.
 const latest = ultime.filter((n) => n._id !== featured?._id).slice(0, 3);
 const prossima = settings?.prossimaPartita ?? prossime[0] ?? null;
-const nome = settings?.nomeSquadra ?? 'Corigliano Volley';
+// Nelle partite la squadra ha il nome del campionato, con lo sponsor
+const nome = nomeInCampionato(settings);
 // Logo Mikasa (pallone ufficiale) — il logo Lega/Credem è ora nell'header
 const lega = settings?.loghiLega ?? {};
 const mikasaLogo = img(lega.mikasaLogo, 320);
@@ -48,8 +49,11 @@ const mikasaLogo = img(lega.mikasaLogo, 320);
  * altezza e larghezza per i casi estremi.
  */
 // L'altezza comunica il livello: scala regolare dal main al partner.
-const SEZIONI_SPONSOR: { label: string; livello: string; h: number; fissa?: boolean }[] = [
-  { label: 'Main sponsor', livello: 'main', h: 86 },
+const SEZIONI_SPONSOR: { label: string; livello: string; h: number; fissa?: boolean; centrata?: boolean }[] = [
+  // Il main sponsor è uno solo: riga ferma, logo al centro e più grande.
+  // Il suo logo è verticale: a 86px, come previsto prima, era largo 61px e
+  // sembrava più piccolo dei gold.
+  { label: 'Main sponsor', livello: 'main', h: 150, fissa: true, centrata: true },
   { label: 'Gold sponsor', livello: 'gold', h: 72 },
   { label: 'Silver sponsor', livello: 'silver', h: 62 },
   { label: 'Bronze sponsor', livello: 'bronze', h: 54 },
@@ -153,9 +157,9 @@ const logoUrl = img(settings?.logo, 200);
         {prossima && (
           <aside class="next-match card">
             <span class="eyebrow">Prossima partita</span>
-            <div class="nm-team">{prossima.dove === 'casa' ? nome : prossima.avversario}</div>
+            <div class="nm-team">{prossima.dove === 'casa' ? nome : (prossima.avversaria?.nome ?? prossima.avversario)}</div>
             <div class="nm-vs">vs</div>
-            <div class="nm-team">{prossima.dove === 'casa' ? prossima.avversario : nome}</div>
+            <div class="nm-team">{prossima.dove === 'casa' ? (prossima.avversaria?.nome ?? prossima.avversario) : nome}</div>
             <div class="nm-when">{formatData(prossima.data, true)}</div>
             {prossima.luogo && <div class="nm-where">{prossima.dove === 'casa' ? '🏠' : '✈️'} {prossima.luogo}</div>}
             <div class="nm-cta">
@@ -200,7 +204,7 @@ const logoUrl = img(settings?.logo, 200);
         </div>
         <Carousel etichetta="Prossime partite" grigliaPc={3} allinea="stretch"
           larghezza="340px" larghezzaTablet="340px" larghezzaMobile="92%">
-          {prossimeList.map((m) => <PartitaRow m={m} logoNostro={logoUrl} />)}
+          {prossimeList.map((m) => <PartitaRow m={m} logoNostro={logoUrl} nostra={nome} />)}
         </Carousel>
       </div>
     </section>
@@ -217,7 +221,7 @@ const logoUrl = img(settings?.logo, 200);
         </div>
         <Carousel etichetta="Ultimi risultati" grigliaPc={3} allinea="stretch"
           larghezza="340px" larghezzaTablet="340px" larghezzaMobile="92%">
-          {risultati.map((m) => <PartitaRow m={m} logoNostro={logoUrl} />)}
+          {risultati.map((m) => <PartitaRow m={m} logoNostro={logoUrl} nostra={nome} />)}
         </Carousel>
       </div>
     </section>
@@ -232,7 +236,7 @@ const logoUrl = img(settings?.logo, 200);
           <a class="btn chiaro" href="/squadra/#roster">Tutta la squadra</a>
         </div>
         <Carousel etichetta="Giocatori della rosa" allinea="stretch">
-          {rosterPreview.map((p) => <SchedaGiocatore p={p} href="/squadra/#roster" />)}
+          {rosterPreview.map((p) => <SchedaGiocatore p={p} href={p.schedaUfficiale ?? '/squadra/#roster'} esterno={!!p.schedaUfficiale} />)}
         </Carousel>
       </div>
     </section>
@@ -272,7 +276,7 @@ const logoUrl = img(settings?.logo, 200);
         {gruppiSponsor.map((g, i) => (
           <div class="spon-gruppo">
             <h3 class="spon-titolo">{g.label}</h3>
-            <StrisciaSponsor etichetta={g.label} fissa={g.fissa}
+            <StrisciaSponsor etichetta={g.label} fissa={g.fissa} centrata={g.centrata}
               altezza={`${g.h}px`}
               direzione={i % 2 === 0 ? 'avanti' : 'indietro'}>
               {g.items.map((sp) => {
