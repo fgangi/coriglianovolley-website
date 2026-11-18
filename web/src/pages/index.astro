@@ -15,11 +15,13 @@ import CampagnaAbbonamenti from '../components/CampagnaAbbonamenti.astro';
 import { sfetch, img, formatData, nomeInCampionato } from '../lib/sanity';
 import {
   settingsQuery, risultatiQuery, prossimePartiteQuery,
-  newsInEvidenzaQuery, newsUltimeQuery, sponsorQuery, rosterQuery, staffQuery, torneoQuery,
+  newsInEvidenzaQuery, newsUltimeQuery, sponsorQuery, rosterQuery, staffQuery, torneoQuery, eventiQuery,
 } from '../lib/queries';
+import { ordinaEventi } from '../lib/eventi';
+import EventoCard from '../components/EventoCard.astro';
 
 const settings = await sfetch<any>(settingsQuery, {}, null);
-const [risultati, prossime, evidenza, ultime, sponsor, roster, staff, torneo] = await Promise.all([
+const [risultati, prossime, evidenza, ultime, sponsor, roster, staff, torneo, eventi] = await Promise.all([
   sfetch<any[]>(risultatiQuery, { limit: 3 }, []),
   sfetch<any[]>(prossimePartiteQuery, { limit: 3 }, []),
   sfetch<any[]>(newsInEvidenzaQuery, {}, []),
@@ -30,7 +32,10 @@ const [risultati, prossime, evidenza, ultime, sponsor, roster, staff, torneo] = 
   sfetch<any[]>(rosterQuery, {}, []),
   sfetch<any[]>(staffQuery, {}, []),
   sfetch<any>(torneoQuery, {}, null),
+  sfetch<any[]>(eventiQuery, {}, []),
 ]);
+// Eventi in programma: in home solo quando ce ne sono (al massimo 3, dal più vicino)
+const eventiFuturi = ordinaEventi(eventi).futuri.slice(0, 3);
 const featured = evidenza[0] ?? null;
 // L'elenco "Ultime news" esclude la notizia già mostrata in evidenza.
 const latest = ultime.filter((n) => n._id !== featured?._id).slice(0, 3);
@@ -193,6 +198,22 @@ const logoUrl = img(settings?.logo, 200);
       )}
     </div>
   </section>
+
+  <!-- EVENTI IN PROGRAMMA: compare solo quando ce n'è almeno uno -->
+  {eventiFuturi.length > 0 && (
+    <section class="section">
+      <div class="container">
+        <div class="section-head between">
+          <div><span class="eyebrow">Prossimamente</span><h2>Eventi in programma</h2></div>
+          <a class="btn" href="/eventi/">Tutti gli eventi</a>
+        </div>
+        <Carousel etichetta="Eventi in programma" grigliaPc={3} allinea="stretch"
+          larghezza="320px" larghezzaTablet="min(320px, 44vw)" larghezzaMobile="85%">
+          {eventiFuturi.map((e) => <EventoCard item={e} />)}
+        </Carousel>
+      </div>
+    </section>
+  )}
 
   <!-- PROSSIME PARTITE: fascia rossa, come nel mockup -->
   {prossimeList.length > 0 && (

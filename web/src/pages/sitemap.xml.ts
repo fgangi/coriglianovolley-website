@@ -1,6 +1,6 @@
 import type { APIRoute } from 'astro';
 import { sfetch } from '../lib/sanity';
-import { newsSlugsQuery } from '../lib/queries';
+import { newsSlugsQuery, eventoSlugsQuery } from '../lib/queries';
 
 /**
  * Mappa del sito per i motori di ricerca, generata a ogni pubblicazione: le
@@ -9,14 +9,16 @@ import { newsSlugsQuery } from '../lib/queries';
  */
 export const GET: APIRoute = async ({ site }) => {
   const base = site ?? new URL('https://coriglianovolley.it');
-  const [news, album] = await Promise.all([
+  const [news, album, eventi] = await Promise.all([
     sfetch<{ slug: string }[]>(newsSlugsQuery, {}, []),
     sfetch<number>('count(*[_type == "galleryAlbum"])', {}, 0),
+    sfetch<{ slug: string }[]>(eventoSlugsQuery, {}, []),
   ]);
   const percorsi = [
     '/', '/squadra/', '/squadra/chi-siamo/', '/partite/', '/news/',
     '/settore-giovanile/', '/sponsor/', '/contatti/',
     ...(album > 0 ? ['/gallery/'] : []),
+    ...(eventi.length > 0 ? ['/eventi/', ...eventi.filter((e) => e.slug).map((e) => `/eventi/${e.slug}/`)] : []),
     ...news.filter((n) => n.slug).map((n) => `/news/${n.slug}/`),
   ];
   const corpo = `<?xml version="1.0" encoding="UTF-8"?>

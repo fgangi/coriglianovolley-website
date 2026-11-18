@@ -17,9 +17,11 @@ interface Props {
   gruppiGiovanili?: boolean;
   /** Torneo precampionato in corso: voce temporanea nel menu Partite */
   torneo?: boolean;
+  /** Almeno un evento pubblicato: voce Eventi nel menu */
+  eventi?: boolean;
 }
 const { nomeSquadra, bigliettiUrl, abbonamentiUrl, iscrizioniAperte, social, gallery = true, logoUrl, legaCredemLogo, legaCredemUrl,
-  risultati = false, diretta = false, gruppiGiovanili = false, torneo = false } = Astro.props;
+  risultati = false, diretta = false, gruppiGiovanili = false, torneo = false, eventi = false } = Astro.props;
 const path = Astro.url.pathname.replace(/\/$/, '') || '/';
 
 type Item = { href: string; label: string; children?: { href: string; label: string }[] };
@@ -50,6 +52,8 @@ const nav: Item[] = [
       { href: '/partite/#classifica', label: 'Classifica' },
     ],
   },
+  // Come Gallery: la voce esiste solo quando c'è almeno un evento
+  ...(eventi ? [{ href: '/eventi/', label: 'Eventi' }] : []),
   { href: '/news/', label: 'News' },
   {
     href: '/settore-giovanile/', label: 'Settore giovanile',

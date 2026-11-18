@@ -17,8 +17,10 @@ interface Props {
   title?: string; description?: string;
   /** true sulle pagine da non indicizzare (404) */
   noindex?: boolean;
+  /** Immagine per le anteprime sui social (es. la copertina di un evento) */
+  immagine?: string;
 }
-const { title, description, noindex = false } = Astro.props;
+const { title, description, noindex = false, immagine } = Astro.props;
 
 // Stile della transizione fra pagine: 'zoom' | 'slide' | 'dissolvenza'
 const ANIMAZIONE = 'dissolvenza';
@@ -33,8 +35,9 @@ const sezioni = await sfetch<any>(`{
   "risultati": count(*[_type == "partita" && giocata == true]),
   "direttaPartite": count(*[_type == "partita" && giocata != true && defined(direttaUrl)]),
   "gruppiGiovanili": count(*[_type == "squadraGiovanile"]),
-  "torneo": count(*[_type == "torneo" && attivo == true])
-}`, {}, { risultati: 0, direttaPartite: 0, gruppiGiovanili: 0, torneo: 0 });
+  "torneo": count(*[_type == "torneo" && attivo == true]),
+  "eventi": count(*[_type == "evento" && defined(slug.current)])
+}`, {}, { risultati: 0, direttaPartite: 0, gruppiGiovanili: 0, torneo: 0, eventi: 0 });
 const nomeSquadra = settings?.nomeSquadra ?? 'Corigliano Volley';
 const logoUrl = img(settings?.logo, 200);
 const legaCredemLogo = img(settings?.loghiLega?.legaCredemLogo, 400);
@@ -55,7 +58,7 @@ const canonico = new URL(Astro.url.pathname, Astro.site ?? 'https://coriglianovo
 const origine = new URL('/', Astro.site ?? 'https://coriglianovolley.it').href;
 // Immagine per le anteprime dei link condivisi (WhatsApp, Facebook…): un
 // fotogramma del video di apertura, 1280x720 (vicino al formato standard 1,91:1)
-const ogImmagine = new URL('/video/hero-poster.jpg', Astro.site ?? 'https://coriglianovolley.it').href;
+const ogImmagine = immagine ?? new URL('/video/hero-poster.jpg', Astro.site ?? 'https://coriglianovolley.it').href;
 const home = Astro.url.pathname === '/';
 // Dati strutturati: dicono a Google il nome del sito (la riga sopra al titolo
 // nei risultati) e che è la squadra, con logo e profili social.
@@ -101,7 +104,7 @@ const datiStrutturati = home ? JSON.stringify({
     <ClientRouter />
   </head>
   <body>
-    <Header nomeSquadra={nomeSquadra} bigliettiUrl={settings?.bigliettiUrl} abbonamentiUrl={campagnaAttiva ? campagna.url : undefined} iscrizioniAperte={iscrizioniAperte} gallery={albumPubblicati > 0} risultati={sezioni.risultati > 0} diretta={sezioni.direttaPartite > 0 || !!settings?.direttaUrl} gruppiGiovanili={sezioni.gruppiGiovanili > 0} torneo={sezioni.torneo > 0} social={settings?.social} logoUrl={logoUrl} legaCredemLogo={legaCredemLogo} legaCredemUrl={legaCredemUrl} />
+    <Header nomeSquadra={nomeSquadra} bigliettiUrl={settings?.bigliettiUrl} abbonamentiUrl={campagnaAttiva ? campagna.url : undefined} iscrizioniAperte={iscrizioniAperte} gallery={albumPubblicati > 0} risultati={sezioni.risultati > 0} diretta={sezioni.direttaPartite > 0 || !!settings?.direttaUrl} gruppiGiovanili={sezioni.gruppiGiovanili > 0} torneo={sezioni.torneo > 0} eventi={sezioni.eventi > 0} social={settings?.social} logoUrl={logoUrl} legaCredemLogo={legaCredemLogo} legaCredemUrl={legaCredemUrl} />
     <main>
       <slot />
     </main>

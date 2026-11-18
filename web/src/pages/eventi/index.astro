@@ -1,0 +1,42 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import PageHero from '../../components/PageHero.astro';
+import EventoCard from '../../components/EventoCard.astro';
+import { sfetch } from '../../lib/sanity';
+import { eventiQuery } from '../../lib/queries';
+import { ordinaEventi } from '../../lib/eventi';
+
+const eventi = await sfetch<any[]>(eventiQuery, {}, []);
+const { futuri, passati } = ordinaEventi(eventi);
+---
+<Layout title="Eventi" description="Gli eventi organizzati dalla Corigliano Volley e quelli a cui ha partecipato: tornei, beach volley, feste e iniziative sul territorio.">
+  <PageHero eyebrow="La società" title="Eventi" lead="I tornei, le feste e le iniziative che organizziamo, e quelli a cui partecipiamo." />
+
+  {eventi.length === 0 && (
+    <section class="section">
+      <div class="container">
+        <div class="empty"><strong>Nessun evento pubblicato</strong>Gli eventi inseriti nel pannello appariranno qui.</div>
+      </div>
+    </section>
+  )}
+
+  {/* Le due sezioni compaiono solo se hanno eventi: senza eventi in
+      programma la pagina parte direttamente dall'archivio. */}
+  {futuri.length > 0 && (
+    <section class="section">
+      <div class="container">
+        <div class="section-head" id="in-programma"><span class="eyebrow">Prossimamente</span><h2>In programma</h2></div>
+        <div class="grid cols-3">{futuri.map((e) => <EventoCard item={e} />)}</div>
+      </div>
+    </section>
+  )}
+
+  {passati.length > 0 && (
+    <section class="section">
+      <div class="container">
+        <div class="section-head" id="realizzati"><span class="eyebrow">Archivio</span><h2>Eventi realizzati</h2></div>
+        <div class="grid cols-3">{passati.map((e) => <EventoCard item={e} />)}</div>
+      </div>
+    </section>
+  )}
+</Layout>

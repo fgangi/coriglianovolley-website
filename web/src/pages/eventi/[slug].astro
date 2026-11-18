@@ -1,0 +1,265 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import NewsCard from '../../components/NewsCard.astro';
+import TabelloneTorneo from '../../components/TabelloneTorneo.astro';
+import Galleria from '../../components/Galleria.astro';
+import { sfetch, img, richText, formatData, youtubeEmbed, FUSO } from '../../lib/sanity';
+import { eventoSlugsQuery, eventoBySlugQuery, eventiQuery, settingsQuery } from '../../lib/queries';
+import { dateEvento, giornoProgramma, inProgramma, ordinaEventi, TIPI, mappaLuogo } from '../../lib/eventi';
+import { partiteTorneo } from '../../lib/torneo';
+
+export async function getStaticPaths() {
+  const slugs = await sfetch<any[]>(eventoSlugsQuery, {}, []);
+  return slugs.filter((s) => s.slug).map((s) => ({ params: { slug: s.slug } }));
+}
+
+const { slug } = Astro.params;
+const [ev, tutti, settings] = await Promise.all([
+  sfetch<any>(eventoBySlugQuery, { slug }, null),
+  sfetch<any[]>(eventiQuery, {}, []),
+  sfetch<any>(settingsQuery, {}, null),
+]);
+if (!ev) return Astro.redirect('/eventi/');
+
+// Copertina intera, come negli articoli: nessun ritaglio
+const cover = img(ev.copertina, 1400);
+const html = richText(ev.descrizione);
+const futuro = inProgramma(ev);
+const mappa = mappaLuogo(ev.luogo);
+const logoNostro = img(settings?.logo, 200);
+
+// "In breve": solo le voci compilate
+const breve = [
+  ['Date', [dateEvento(ev.dataInizio, ev.dataFine), ev.orario].filter(Boolean).join(', ')],
+  ['Luogo', ev.luogo],
+  ['Organizzato da', ev.organizzatore],
+  ['In collaborazione con', ev.collaborazione],
+  ['Ingresso', ev.ingresso],
+].filter(([, v]) => v) as [string, string][];
+const numeri: any[] = (ev.numeri ?? []).filter((n: any) => n?.valore && n?.etichetta);
+
+// Programma: quello del pannello; per un torneo senza programma scritto si
+// ricava dalle partite (giorno, ora, fase e squadre).
+const oraDi = (iso: string) => new Date(iso).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit', timeZone: FUSO });
+const giornoDi = (iso: string) => new Date(iso).toLocaleDateString('sv-SE', { timeZone: FUSO });
+const momenti: { giorno: string; ora?: string; attivita: string }[] = (ev.programma?.length
+  ? ev.programma
+  : ev.torneo
+    ? partiteTorneo(ev.torneo).filter((p) => p.data).map((p) => ({
+        giorno: giornoDi(p.data!),
+        ora: oraDi(p.data!),
+        attivita: `${p.titolo}${p.casa && p.ospite ? `: ${p.casa} – ${p.ospite}` : ''}`,
+      }))
+    : []
+).filter((m: any) => m.giorno && m.attivita)
+  .sort((a: any, b: any) => `${a.giorno} ${a.ora ?? ''}`.localeCompare(`${b.giorno} ${b.ora ?? ''}`));
+const programma = [...new Set(momenti.map((m) => m.giorno))].map((g) => ({ giorno: g, voci: momenti.filter((m) => m.giorno === g) }));
+
+const torneoConPartite = ev.torneo?.partite?.length ? ev.torneo : null;
+const video = (ev.video ?? []).map(youtubeEmbed).filter(Boolean) as string[];
+const news = (ev.news ?? []).filter((n: any) => n?.slug).sort((a: any, b: any) => String(a.data).localeCompare(String(b.data)));
+const link = (ev.link ?? []).filter((l: any) => l?.url && l?.titolo);
+
+// Evento precedente e successivo nello stesso ordine dell'elenco
+const ordine = (() => { const { futuri, passati } = ordinaEventi(tutti); return [...futuri, ...passati]; })();
+const qui = ordine.findIndex((e) => e.slug === ev.slug);
+const prima = qui > 0 ? ordine[qui - 1] : null;
+const dopo = qui >= 0 && qui < ordine.length - 1 ? ordine[qui + 1] : null;
+
+const titoloPagina = ev.edizione ? `${ev.titolo} (${ev.edizione})` : ev.titolo;
+const descrizione = ev.estratto ?? `${ev.titolo}: ${dateEvento(ev.dataInizio, ev.dataFine)}${ev.luogo ? `, ${ev.luogo}` : ''}.`;
+---
+<Layout title={titoloPagina} description={descrizione} immagine={img(ev.copertina, 1200, 630) ?? undefined}>
+  <article class="evento">
+    <div class="container narrow">
+      <a class="back" href="/eventi/">← Tutti gli eventi</a>
+      <div class="ev-meta">
+        {futuro && <span class="pill futuro">In programma</span>}
+        <span class="pill">{TIPI[ev.tipo] ?? 'Evento'}</span>
+        {ev.categoria && <span class="tag">{ev.categoria}</span>}
+      </div>
+      {ev.edizione && <span class="eyebrow">{ev.edizione}</span>}
+      <h1>{ev.titolo}</h1>
+      <ul class="ev-info">
+        <li><span aria-hidden="true">📅</span> {dateEvento(ev.dataInizio, ev.dataFine)}{ev.orario && `, ${ev.orario}`}</li>
+        {ev.luogo && (
+          <li><span aria-hidden="true">📍</span> {mappa
+            ? <a href={mappa} target="_blank" rel="noopener">{ev.luogo}<span class="sr-only"> (mappa, si apre in una nuova finestra)</span></a>
+            : ev.luogo}</li>
+        )}
+      </ul>
+      {ev.estratto && <p class="lead">{ev.estratto}</p>}
+    </div>
+
+    {cover && <figure class="cover"><div class="container narrow"><img src={cover} alt={ev.titolo} /></div></figure>}
+
+    <div class="container narrow blocchi">
+      {(breve.length > 0 || numeri.length > 0) && (
+        <section class="blocco in-breve card" aria-labelledby="t-breve">
+          <h2 id="t-breve" class="liv-title">In breve</h2>
+          {breve.length > 0 && (
+            <dl class="breve">
+              {breve.map(([k, v]) => <div><dt>{k}</dt><dd>{v}</dd></div>)}
+            </dl>
+          )}
+          {numeri.length > 0 && (
+            <ul class="numeri">
+              {numeri.map((n) => <li><strong class="tabnums">{n.valore}</strong><span>{n.etichetta}</span></li>)}
+            </ul>
+          )}
+        </section>
+      )}
+
+      {html && (
+        <section class="blocco" aria-labelledby="t-evento">
+          <h2 id="t-evento" class="liv-title">L'evento</h2>
+          <div class="prose" set:html={html} />
+        </section>
+      )}
+
+      {programma.length > 0 && (
+        <section class="blocco" aria-labelledby="t-programma">
+          <h2 id="t-programma" class="liv-title">Programma</h2>
+          <div class="programma">
+            {programma.map((g) => (
+              <div class="prog-giorno">
+                <h3>{giornoProgramma(g.giorno)}</h3>
+                <ul>
+                  {g.voci.map((v) => <li><span class="prog-ora tabnums">{v.ora ?? ''}</span><span>{v.attivita}</span></li>)}
+                </ul>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+    </div>
+
+    {/* Tutti i blocchi stanno nella stessa colonna: i titoli restano allineati */}
+    {torneoConPartite && (
+      <section class="container narrow blocco" aria-labelledby="t-risultati">
+        <h2 id="t-risultati" class="liv-title">Risultati</h2>
+        <TabelloneTorneo torneo={torneoConPartite} logoNostro={logoNostro} />
+      </section>
+    )}
+
+    {ev.foto?.length > 0 && (
+      <section class="container narrow blocco" aria-labelledby="t-foto">
+        <h2 id="t-foto" class="liv-title">Foto</h2>
+        <Galleria foto={ev.foto} titolo={ev.titolo} />
+      </section>
+    )}
+
+    <div class="container narrow blocchi">
+      {video.length > 0 && (
+        <section class="blocco" aria-labelledby="t-video">
+          <h2 id="t-video" class="liv-title">Video</h2>
+          <div class="video">
+            {video.map((v, i) => (
+              <div class="video-box">
+                <iframe src={v} title={`${ev.titolo}, video ${i + 1}`} loading="lazy"
+                  allow="accelerometer; encrypted-media; gyroscope; picture-in-picture; fullscreen" allowfullscreen></iframe>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {(news.length > 0 || link.length > 0) && (
+        <section class="blocco" aria-labelledby="t-approf">
+          <h2 id="t-approf" class="liv-title">Approfondimenti</h2>
+          {link.length > 0 && (
+            <ul class="link-esterni">
+              {link.map((l: any) => (
+                <li>
+                  <a href={l.url} target="_blank" rel="noopener">
+                    <span class="le-titolo">{l.titolo} <span aria-hidden="true">↗</span></span>
+                    <span class="tag">{[l.fonte, l.data && formatData(l.data)].filter(Boolean).join(' · ')}</span>
+                  </a>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+      )}
+    </div>
+
+    {news.length > 0 && (
+      <div class="container narrow">
+        <div class="grid cols-2 news-collegate">{news.map((n: any) => <NewsCard item={n} />)}</div>
+      </div>
+    )}
+
+    {(prima || dopo) && (
+      <nav class="container narrow altri" aria-label="Altri eventi">
+        {prima ? <a href={`/eventi/${prima.slug}/`} class="altro"><span class="tag">← Precedente</span><span>{prima.titolo}</span></a> : <span></span>}
+        {dopo && <a href={`/eventi/${dopo.slug}/`} class="altro dx"><span class="tag">Successivo →</span><span>{dopo.titolo}</span></a>}
+      </nav>
+    )}
+  </article>
+</Layout>
+
+<style>
+  .evento { padding: clamp(30px, 6vw, 60px) 0 clamp(40px, 8vw, 80px); }
+  .back { display: inline-block; margin-bottom: 20px; color: var(--accent); font-weight: 600; font-size: .9rem; }
+  .ev-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin-bottom: 14px; }
+  .pill.futuro { background: var(--accent); color: var(--accent-ink); }
+  .evento .eyebrow { display: block; margin: 0 0 var(--stacco-occhiello); }
+  .evento h1 { margin: 0 0 14px; }
+  .ev-info { list-style: none; margin: 0 0 6px; padding: 0; display: flex; flex-wrap: wrap; gap: 6px 22px;
+    font-weight: 650; color: var(--ink-soft); }
+  .ev-info a { color: inherit; text-decoration: underline; text-decoration-color: var(--line); text-underline-offset: 3px; }
+  .ev-info a:hover { color: var(--accent); text-decoration-color: currentColor; }
+  .evento .lead { margin-top: 14px; }
+  .cover { margin: clamp(24px, 4vw, 40px) 0 0; }
+  .cover img { display: block; margin: 0 auto; max-width: 100%; max-height: 80vh; width: auto; height: auto;
+    border-radius: var(--radius); border: 1px solid var(--line); }
+
+  /* Ogni blocco ha lo stesso stacco e lo stesso sottotitolo di gruppo del sito */
+  .blocchi { display: flex; flex-direction: column; }
+  .blocco { margin-top: clamp(36px, 5vw, 56px); }
+  .liv-title { font-size: .95rem; text-transform: uppercase; letter-spacing: .12em; color: var(--ink-faint); font-weight: 700;
+    margin: 0 0 20px; padding-bottom: 10px; border-bottom: 1px solid var(--line); }
+
+  .in-breve { padding: clamp(18px, 3vw, 28px); }
+  .breve { margin: 0; display: grid; gap: 10px; }
+  .breve > div { display: grid; grid-template-columns: minmax(120px, 30%) 1fr; gap: 16px; }
+  .breve dt { color: var(--ink-faint); font-weight: 600; }
+  .breve dd { margin: 0; font-weight: 650; }
+  .numeri { list-style: none; margin: 22px 0 0; padding: 18px 0 0; border-top: 1px solid var(--line);
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 16px; }
+  .numeri li { display: flex; flex-direction: column; gap: 2px; }
+  .numeri strong { font-family: var(--font-display); font-size: 2.4rem; font-weight: 800; line-height: 1; color: var(--accent); }
+  .numeri span { font-size: .9rem; color: var(--ink-soft); }
+  @media (max-width: 639px) { .breve > div { grid-template-columns: 1fr; gap: 0; } }
+
+  .prose { display: flex; flex-direction: column; gap: 1.05rem; font-size: 1.05rem; line-height: 1.7; }
+  .prose :global(h2) { font-size: 1.5rem; margin-top: 1rem; }
+  .prose :global(h3) { font-size: 1.2rem; margin-top: .6rem; }
+  .prose :global(p) { color: var(--ink-soft); }
+  .prose :global(a) { color: var(--accent); text-decoration: underline; }
+  .prose :global(blockquote) { border-left: 3px solid var(--accent); padding-left: 16px; color: var(--ink-soft); font-style: italic; margin: 0; }
+  .prose :global(ul), .prose :global(ol) { color: var(--ink-soft); padding-left: 1.3rem; display: flex; flex-direction: column; gap: .4rem; }
+
+  .programma { display: grid; gap: 22px; }
+  .prog-giorno h3 { font-size: 1.15rem; margin: 0 0 8px; }
+  .prog-giorno ul { list-style: none; margin: 0; padding: 0; }
+  .prog-giorno li { display: grid; grid-template-columns: 64px 1fr; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+  .prog-ora { font-weight: 800; color: var(--accent); }
+
+  .video { display: grid; gap: 16px; }
+  .video-box { aspect-ratio: 16 / 9; border-radius: var(--radius); overflow: hidden; background: #000; }
+  .video-box iframe { width: 100%; height: 100%; border: 0; display: block; }
+
+  .link-esterni { list-style: none; margin: 0 0 20px; padding: 0; display: grid; gap: 10px; }
+  .link-esterni a { display: flex; flex-direction: column; gap: 4px; padding: 14px 16px; border: 1px solid var(--line);
+    border-radius: 12px; background: var(--surface); color: inherit; }
+  .link-esterni a:hover { border-color: var(--ink-faint); }
+  .le-titolo { font-weight: 700; }
+  .news-collegate { margin-top: 4px; }
+
+  .altri { display: flex; justify-content: space-between; gap: 16px; margin-top: clamp(40px, 6vw, 64px);
+    padding-top: 20px; border-top: 1px solid var(--line); }
+  .altro { display: flex; flex-direction: column; gap: 4px; max-width: 48%; color: inherit; font-weight: 700; }
+  .altro.dx { text-align: right; margin-left: auto; }
+  .altro:hover span:last-child { color: var(--accent); }
+</style>

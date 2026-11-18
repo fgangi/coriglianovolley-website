@@ -69,3 +69,18 @@ export const torneoQuery = groq`*[_type == "torneo" && attivo == true] | order(_
   partite[]{ _key, fase, data, casaNome, ospiteNome, setCasa, setOspite, parziali,
     casa->{nome, logo}, ospite->{nome, logo} }
 }`;
+
+// Eventi: elenco (anteprime) e pagina singola. L'ordine lo decide la pagina:
+// prima quelli in programma, dal più vicino, poi i passati dal più recente.
+const EVENTO_ANTEPRIMA = `_id, titolo, "slug": slug.current, edizione, tipo, categoria,
+  dataInizio, dataFine, orario, luogo, copertina, posizioneAnteprima, estratto`;
+export const eventiQuery = groq`*[_type == "evento" && defined(slug.current)] | order(dataInizio desc){ ${EVENTO_ANTEPRIMA} }`;
+export const eventoSlugsQuery = groq`*[_type == "evento" && defined(slug.current)]{ "slug": slug.current }`;
+export const eventoBySlugQuery = groq`*[_type == "evento" && slug.current == $slug][0]{
+  ${EVENTO_ANTEPRIMA}, descrizione, organizzatore, collaborazione, ingresso, numeri, programma,
+  foto[]{ _key, asset, crop, hotspot, didascalia }, video,
+  torneo->{ nome, edizione, partite[]{ _key, fase, data, casaNome, ospiteNome, setCasa, setOspite, parziali,
+    casa->{nome, logo}, ospite->{nome, logo} } },
+  "news": news[]->{ _id, titolo, "slug": slug.current, data, copertina, posizioneAnteprima, estratto, settore },
+  link
+}`;
