@@ -36,6 +36,7 @@ export const torneo = defineType({
   name: 'torneo',
   title: 'Torneo',
   type: 'document',
+  description: 'Solo il tabellone: squadre, orari e risultati. La pagina con racconto e foto si crea in Eventi, collegando questo torneo.',
   fields: [
     defineField({ name: 'nome', title: 'Nome del torneo', type: 'string', validation: (r) => r.required() }),
     defineField({ name: 'edizione', title: 'Edizione', type: 'string', description: 'Es. "4ª edizione".' }),
